@@ -277,14 +277,15 @@ h3 {
 
 .tool-header {
     display: flex;
-    flex-direction: column; /* Stack by default for mobile */
+    flex-direction: row;
+    align-items: flex-start;
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-sm);
 }
 
 .tool-image-placeholder {
-    width: 100%; /* Full width for mobile */
-    height: 120px;
+    width: 80px;
+    height: 80px;
     background-color: var(--gray-light);
     border-radius: var(--radius-md);
     display: flex;
@@ -293,14 +294,30 @@ h3 {
     flex-shrink: 0;
 }
 
+.tool-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.tool-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.tool-id {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
 @media (min-width: 480px) {
-    .tool-header {
-        flex-direction: row; /* Side-by-side for slightly larger mobile/tablets */
-    }
-    .tool-image-placeholder {
-        width: 80px;
-        height: 80px;
-    }
+    /* Mobile styles cover this range now */
 }
 
 @media (min-width: 768px) {
