@@ -185,17 +185,24 @@ function borrowTool(data) {
     for (let i = 1; i < invData.length; i++) {
       if (invData[i][0] == data.toolId) {
         toolRowIndex = i + 1; // 1-based index
-        currentAvailable = Number(invData[i][3]);
+        currentAvailable = invData[i][3];
+        
+        // Handle "Unlimited" Stock
+        if (currentAvailable === "จำนวนมาก") {
+             // Do nothing to stock
+        } else {
+             currentAvailable = Number(currentAvailable);
+             if (currentAvailable < data.quantity) return { error: "Not enough stock" };
+             
+             // Update Inventory
+             const newAvailable = currentAvailable - data.quantity;
+             inventorySheet.getRange(toolRowIndex, 4).setValue(newAvailable);
+        }
         break;
       }
     }
     
     if (toolRowIndex == -1) return { error: "Tool not found" };
-    if (currentAvailable < data.quantity) return { error: "Not enough stock" };
-    
-    // Update Inventory
-    const newAvailable = currentAvailable - data.quantity;
-    inventorySheet.getRange(toolRowIndex, 4).setValue(newAvailable);
     
     // Record Transaction
     const transId = Utilities.getUuid();
@@ -212,7 +219,7 @@ function borrowTool(data) {
       new Date()
     ]);
     
-    return { success: true, newAvailable: newAvailable };
+    return { success: true };
     
   } catch(e) {
     return { error: e.toString() };
@@ -240,24 +247,12 @@ function returnTool(data) {
     for (let i = 1; i < invData.length; i++) {
       if (invData[i][0] == data.toolId) {
         toolRowIndex = i + 1;
-        // Increment stock (assuming returning 1 unit or we need to know how many were borrowed? 
-        // For simplicity, the prompt implies returning the item. If quantity is involved, we usually return what we borrowed.
-        // The current frontend assumes returning *the* tool. The borrowing allowed quantity.
-        // For this MVP, we will assume 1 return = +1 stock unless specified. 
-        // But the borrow modal allows quantity. 
-        // Let's assume for now we return 1 unit at a time or the user must specify. 
-        // The current 'returnModal' does NOT ask for quantity. It assumes returning the item. 
-        // We'll increment by 1 for safety, or we'd need to fetch the active transaction.
-        // Let's look up the active transaction for this user and tool.
+        let currentAvailable = invData[i][3];
         
-        // However, to keep it simple and robust:
-        // We will just increment by 1 as per typical tool crib operations where you scan an item to return it.
-        // If they borrowed 5, they return 5 times? Or 1 time with qty 5?
-        // The frontend return modal doesn't have quantity. It just has "Confirm Return".
-        // Limitation: We will assume quantity = 1 for return for now.
-        
-        let currentAvailable = Number(invData[i][3]);
-        inventorySheet.getRange(toolRowIndex, 4).setValue(currentAvailable + 1);
+        // Handle "Unlimited" Stock
+        if (currentAvailable !== "จำนวนมาก") {
+             inventorySheet.getRange(toolRowIndex, 4).setValue(Number(currentAvailable) + 1);
+        }
         break;
       }
     }
