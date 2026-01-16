@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Borrow Tool Modal</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#67349d",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#19141e",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2d2433",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#141216] dark:text-white overflow-hidden h-screen w-screen">
+    <!-- Mock Background Content (Simulating the inventory underneath) -->
+    <div class="absolute inset-0 z-0 p-8 opacity-20 pointer-events-none filter blur-[2px] flex flex-wrap gap-4 overflow-hidden">
+        <!-- Just visual noise to imply background content -->
+        <div class="w-full h-16 bg-white dark:bg-surface-dark rounded-xl"></div>
+        <div class="w-64 h-64 bg-white dark:bg-surface-dark rounded-xl"></div>
+        <div class="w-64 h-64 bg-white dark:bg-surface-dark rounded-xl"></div>
+        <div class="w-64 h-64 bg-white dark:bg-surface-dark rounded-xl"></div>
+        <div class="w-64 h-64 bg-white dark:bg-surface-dark rounded-xl"></div>
+        <div class="w-full h-64 bg-white dark:bg-surface-dark rounded-xl"></div>
+    </div>
+    
+    <!-- Modal Overlay -->
+    <div class="relative z-50 flex items-center justify-center min-h-screen w-full bg-black/60 backdrop-blur-sm p-4 sm:p-6 transition-all duration-300">
+        <!-- Modal Content -->
+        <div class="flex flex-col w-full max-w-[640px] max-h-[90vh] bg-surface-light dark:bg-surface-dark rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-[#e0dde3] dark:border-[#4a4550]">
+                <h2 class="text-xl font-bold leading-tight text-[#141216] dark:text-white">Borrow Item</h2>
+                <a href="../index.html" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[#f2f1f4] dark:hover:bg-[#3e3646] text-[#756a81] dark:text-[#a09aa6] transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </a>
+            </div>
+            
+            <!-- Scrollable Body -->
+            <div class="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6">
+                <!-- Tool Summary Card -->
+                <div class="flex flex-col sm:flex-row gap-5 p-4 bg-[#f7f6f8] dark:bg-[#362f3d] rounded-xl border border-[#e0dde3] dark:border-[#4a4550]">
+                    <!-- Tool Image -->
+                    <div class="w-full sm:w-32 aspect-video sm:aspect-square shrink-0 rounded-lg bg-white dark:bg-black bg-center bg-cover border border-[#e0dde3] dark:border-[#4a4550]" data-alt="Makita cordless power drill on a workbench" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuALWCgxGbXncq23hMkPxk2PbcV3S11v7wjt4YWEpmdVf1Z1_JAkch1fatsyOoc0fLFGTr7UPCXqFrspueRQfnJXJ9oDk_Cv2Np9kvuP8olTjSo4lb-9RtbOuKpD_Z8GL6a0YEm7W27vLmBBPCR2H2RWHst2TSFTKGWWZ_Ya2rVGsMRa-_1uzTZ30ilyUxzTmulfxm8-5WSjWesdSwIQOjz2h562fprCzVf6xQV3lEZhu9iShykJYi_Q-sX66w9R891f8pxHJRa5m6d8');">
+                    </div>
+                    
+                    <!-- Tool Details -->
+                    <div class="flex flex-col justify-center flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-[#141216] dark:text-white leading-tight">Makita Cordless Drill 18V</h3>
+                                <p class="text-sm text-[#756a81] dark:text-[#a09aa6] mt-1 font-medium">ID: T-4022 <span class="mx-2 text-[#e0dde3] dark:text-[#5e5666]">|</span> Bin: A-12</p>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-bold whitespace-nowrap border border-green-200 dark:border-green-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-600 dark:bg-green-400 mr-1.5"></span>
+                                12 Available
+                            </span>
+                        </div>
+                        <div class="mt-3 flex items-center gap-2 text-xs text-[#756a81] dark:text-[#a09aa6]">
+                            <span class="material-symbols-outlined text-[16px]">warehouse</span>
+                            <span>Main Warehouse</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Input Group: Quantity & Reason -->
+                <div class="flex flex-col gap-6">
+                    <!-- Quantity Stepper -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[#141216] dark:text-white text-sm font-bold leading-normal">Quantity to Borrow</label>
+                        <div class="flex items-center gap-4 bg-white dark:bg-[#1e1e1e] border border-[#e0dde3] dark:border-[#4a4550] rounded-xl p-3 shadow-sm">
+                            <div class="flex items-center justify-center rounded-lg bg-[#f2f1f4] dark:bg-[#362f3d] text-[#141216] dark:text-white shrink-0 size-10">
+                                <span class="material-symbols-outlined">numbers</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-[#756a81] dark:text-[#a09aa6]">Units</p>
+                            </div>
+                            <div class="flex items-center gap-1 bg-[#f7f6f8] dark:bg-[#2d2433] rounded-lg p-1 border border-[#e0dde3] dark:border-[#4a4550]">
+                                <button class="flex h-10 w-10 items-center justify-center rounded-md bg-white dark:bg-[#3e3646] shadow-sm text-[#141216] dark:text-white hover:bg-gray-50 dark:hover:bg-[#4a4550] transition-colors cursor-pointer border border-[#e0dde3] dark:border-[#4a4550] focus:ring-2 focus:ring-primary focus:outline-none">
+                                    <span class="material-symbols-outlined">remove</span>
+                                </button>
+                                <input class="w-16 h-10 bg-transparent text-center text-lg font-bold text-[#141216] dark:text-white border-none focus:ring-0 p-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" max="12" min="1" type="number" value="1"/>
+                                <button class="flex h-10 w-10 items-center justify-center rounded-md bg-white dark:bg-[#3e3646] shadow-sm text-[#141216] dark:text-white hover:bg-gray-50 dark:hover:bg-[#4a4550] transition-colors cursor-pointer border border-[#e0dde3] dark:border-[#4a4550] focus:ring-2 focus:ring-primary focus:outline-none">
+                                    <span class="material-symbols-outlined">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Reason Dropdown -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[#141216] dark:text-white text-sm font-bold leading-normal">Reason for Borrowing</label>
+                        <div class="relative">
+                            <select class="w-full appearance-none rounded-xl text-[#141216] dark:text-white bg-white dark:bg-[#1e1e1e] border border-[#e0dde3] dark:border-[#4a4550] focus:border-primary focus:ring-2 focus:ring-primary/20 h-14 pl-4 pr-10 text-base font-normal leading-normal transition-shadow">
+                                <option disabled="" selected="" value="">Select a reason...</option>
+                                <option value="maintenance">Routine Maintenance</option>
+                                <option value="repair">Emergency Repair</option>
+                                <option value="project">Project Work</option>
+                                <option value="inspection">Inspection</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#756a81] dark:text-[#a09aa6]">
+                                <span class="material-symbols-outlined">expand_more</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dates Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[#141216] dark:text-white text-sm font-bold leading-normal">Borrow Date</label>
+                            <div class="relative">
+                                <input class="w-full rounded-xl text-[#756a81] dark:text-[#a09aa6] bg-[#f7f6f8] dark:bg-[#2d2433] border border-[#e0dde3] dark:border-[#4a4550] focus:outline-none h-14 pl-11 pr-4 text-base font-medium cursor-not-allowed" readonly="" value="Oct 24, 2023"/>
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center px-3 text-[#756a81] dark:text-[#a09aa6]">
+                                    <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[#141216] dark:text-white text-sm font-bold leading-normal">Return Date</label>
+                            <div class="relative group">
+                                <input class="w-full rounded-xl text-[#141216] dark:text-white bg-white dark:bg-[#1e1e1e] border border-[#e0dde3] dark:border-[#4a4550] focus:border-primary focus:ring-2 focus:ring-primary/20 h-14 pl-11 pr-4 text-base font-normal transition-shadow" type="date" value="2023-10-25"/>
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center px-3 text-[#67349d] dark:text-[#8b5cf6]">
+                                    <span class="material-symbols-outlined text-[20px]">event_upcoming</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Bar -->
+            <div class="flex flex-col sm:flex-row gap-4 p-6 border-t border-[#e0dde3] dark:border-[#4a4550] bg-gray-50/50 dark:bg-[#252525]">
+                <a href="../index.html" class="flex-1 sm:flex-none sm:w-32 h-12 flex items-center justify-center rounded-xl border border-[#e0dde3] dark:border-[#4a4550] bg-white dark:bg-transparent text-[#141216] dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-[#3e3646] transition-colors focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700">
+                    Cancel
+                </a>
+                <button class="flex-1 h-12 flex items-center justify-center rounded-xl bg-primary hover:bg-[#582d86] text-white font-bold tracking-wide shadow-lg shadow-primary/25 transition-all active:scale-[0.98] focus:ring-4 focus:ring-primary/30">
+                    <span class="material-symbols-outlined mr-2 text-[20px]">check</span>
+                    Confirm Borrow
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

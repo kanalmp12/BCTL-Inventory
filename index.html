@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Crib Automation</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>Loading tools...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <span class="material-symbols-outlined icon-primary">construction</span>
+                <h1>Tool Crib Automation</h1>
+            </div>
+            <div class="user-info">
+                <span id="userName">Loading...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search tools by name or ID...">
+            <span class="material-symbols-outlined search-icon">search</span>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-chips">
+            <button class="filter-btn active" data-filter="all">All Items</button>
+            <button class="filter-btn" data-filter="available">Available</button>
+            <button class="filter-btn" data-filter="borrowed">Borrowed</button>
+            <button class="filter-btn" data-filter="overdue">Overdue</button>
+        </div>
+
+        <!-- Tools Grid -->
+        <div id="toolsGrid" class="tools-grid">
+            <!-- Tool cards will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- User Registration Modal -->
+    <div id="registrationModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>User Registration</h2>
+                <button id="closeRegistrationModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="lineLoginSection" class="hidden" style="text-align: center; margin-bottom: 20px;">
+                    <p style="margin-bottom: 10px;">Please login with LINE to verify your identity.</p>
+                    <button id="lineLoginBtn" class="btn-primary" style="background-color: #00C300; border-color: #00C300; width: 100%;">
+                        <span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 5px;">login</span>
+                        Login with LINE
+                    </button>
+                </div>
+                <form id="registrationForm">
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <select id="department" name="department" required>
+                            <option value="">Select Department</option>
+                            <option value="organize">Organize</option>
+                            <option value="public-relations">Public Relations</option>
+                            <option value="media-production">Media Production</option>
+                            <option value="visual-arts">Visual Arts</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cohort">Cohort</label>
+                        <select id="cohort" name="cohort" required>
+                            <option value="">Select Cohort</option>
+                            <option value="12">Cohort 12</option>
+                            <option value="13">Cohort 13</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Register</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrow Tool Modal -->
+    <div id="borrowModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Borrow Tool</h2>
+                <button id="closeBorrowModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tool-summary">
+                    <div class="tool-image-placeholder"></div>
+                    <div class="tool-details">
+                        <h3 id="borrowToolName">Tool Name</h3>
+                        <p>ID: <span id="borrowToolId">T-001</span></p>
+                        <p>Location: <span id="borrowToolLocation">Cabinet A</span></p>
+                        <div class="availability-status">
+                            <span class="status-badge available">Available: <span id="borrowToolAvailable">5</span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="borrowQuantity">Quantity to Borrow</label>
+                    <div class="quantity-control">
+                        <button type="button" id="decreaseQuantity" class="quantity-btn">-</button>
+                        <input type="number" id="borrowQuantity" min="1" value="1" max="1">
+                        <button type="button" id="increaseQuantity" class="quantity-btn">+</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="borrowReason">Reason for Borrowing</label>
+                    <select id="borrowReason" required>
+                        <option value="">Select a reason...</option>
+                        <option value="maintenance">Routine Maintenance</option>
+                        <option value="repair">Emergency Repair</option>
+                        <option value="project">Project Work</option>
+                        <option value="inspection">Inspection</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="dates-grid">
+                    <div class="form-group">
+                        <label for="borrowDate">Borrow Date</label>
+                        <input type="text" id="borrowDate" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="returnDate">Expected Return Date</label>
+                        <input type="date" id="returnDate" required>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button id="cancelBorrow" class="btn-secondary">Cancel</button>
+                    <button id="confirmBorrow" class="btn-primary">Confirm Borrow</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Tool Modal -->
+    <div id="returnModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Return Tool</h2>
+                <button id="closeReturnModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tool-summary">
+                    <div class="tool-image-placeholder"></div>
+                    <div class="tool-details">
+                        <h3 id="returnToolName">Tool Name</h3>
+                        <p>ID: <span id="returnToolId">T-001</span></p>
+                        <p>Location: <span id="returnToolLocation">Cabinet A</span></p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="condition">Tool Condition</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="condition" value="good" checked>
+                            <span class="radio-label">Good</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="condition" value="damaged">
+                            <span class="radio-label">Damaged</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="returnNotes">Notes (optional)</label>
+                    <textarea id="returnNotes" placeholder="Report any issues, missing parts, or operational notes..."></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button id="cancelReturn" class="btn-secondary">Cancel</button>
+                    <button id="confirmReturn" class="btn-primary">Confirm Return</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="messageToast" class="toast hidden">
+        <span id="messageText"></span>
+    </div>
+
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/user.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

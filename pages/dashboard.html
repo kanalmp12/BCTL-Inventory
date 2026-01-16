@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Tool Inventory Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#67349d",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#19141e",
+                        "industrial-slate": "#475569",
+                        "warning": "#f59e0b",
+                        "success": "#10b981",
+                        "danger": "#ef4444",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for industrial feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden antialiased selection:bg-primary/30">
+    <div class="flex h-screen w-full">
+        <!-- Sidebar Navigation (Desktop) -->
+        <aside class="hidden lg:flex flex-col w-72 bg-white dark:bg-[#201a26] border-r border-slate-200 dark:border-slate-800 h-full">
+            <div class="p-6 flex flex-col h-full justify-between">
+                <div class="flex flex-col gap-8">
+                    <!-- Brand -->
+                    <div class="flex items-center gap-3 px-2">
+                        <div class="size-10 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg shadow-primary/30">
+                            <span class="material-symbols-outlined text-[28px]">precision_manufacturing</span>
+                        </div>
+                        <div>
+                            <h1 class="text-slate-900 dark:text-white text-lg font-bold leading-none tracking-tight">TCA System</h1>
+                            <span class="text-xs text-slate-500 font-medium uppercase tracking-wider">v2.0 Automation</span>
+                        </div>
+                    </div>
+                    
+                    <!-- User Profile -->
+                    <div class="flex gap-3 bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                        <div class="bg-center bg-no-repeat bg-cover rounded-full size-12 shadow-inner" data-alt="Portrait of a male factory maintenance worker" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDuyniwJBrmKrULjsWGIvIXwaqeDNoXO7Ocy3MOlwn4apu68QNbYqbKI4exb2cmw9WxtV7ck2tU4-0E8kzHhqJt-Shr-ls6Oeh8tL3mrxxu9cLOncEeiUVl1Q7yy0ZsdXSEn-BBBTEgn5LQsyrmPqhUyeb3IVX2-RGinTRvE_1FNEKm9CL8dDbFvgxNqwkoR0VjFX-LOlsEl1yBaG_GrMQXikkQ5Sm1dqQQ0g6DHK9Zaog1kwG0dFSP__0JOhqZ9f3Der2fc7AjAIWO");'></div>
+                        <div class="flex flex-col justify-center">
+                            <h2 class="text-slate-900 dark:text-white text-sm font-bold leading-tight">John Doe</h2>
+                            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Maintenance Lead</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Nav Links -->
+                    <nav class="flex flex-col gap-2">
+                        <a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group" href="../index.html">
+                            <span class="material-symbols-outlined group-hover:text-primary transition-colors">home</span>
+                            <span class="text-sm font-bold">Home</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary dark:text-white dark:bg-primary/20 transition-colors" href="#">
+                            <span class="material-symbols-outlined fill-1">inventory_2</span>
+                            <span class="text-sm font-bold">Tool Inventory</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group" href="#">
+                            <span class="material-symbols-outlined group-hover:text-primary transition-colors">home_repair_service</span>
+                            <span class="text-sm font-bold">My Tools</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group" href="#">
+                            <span class="material-symbols-outlined group-hover:text-primary transition-colors">assignment</span>
+                            <span class="text-sm font-bold">Reports</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group" href="#">
+                            <span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+                            <span class="text-sm font-bold">Settings</span>
+                        </a>
+                    </nav>
+                </div>
+                
+                <!-- CTA -->
+                <button class="w-full flex items-center justify-center gap-2 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-bold shadow-md hover:translate-y-[-1px] transition-transform">
+                    <span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+                    <span>Quick Scan</span>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative w-full">
+            <!-- Mobile Header -->
+            <header class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-[#201a26] border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="size-8 bg-primary text-white rounded-lg flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[20px]">precision_manufacturing</span>
+                    </div>
+                    <span class="font-bold text-slate-900 dark:text-white">TCA System</span>
+                </div>
+                <div class="size-8 rounded-full bg-cover bg-center" data-alt="User profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBShSpYhEe_vQldXZjRhACXuUG2gfKuqWC4XFPntFUtGQkeyWNciTuVJvTWzF28vkTnc3WGUuCzAkGHJntPjXm82-BanTXegta4SFsyuDD3jICNDjMGq3UmaLT1RcvwhXaCkBnHaw7w35J3kmDEg7sml7L5Ug6w3_G5ahYKesfA-6gKDa5kLDucos8w_U9fvyJBVc8c-fu8A2mmXMSvdo7YQx-p-LIhrm1DG30cV1-yHyzO-5BgifsM--t94v5tUupoCTXx5zPA-H5x");'></div>
+            </header>
+            
+            <!-- Scrollable Page Content -->
+            <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-10">
+                <div class="max-w-7xl mx-auto flex flex-col gap-6 lg:gap-8">
+                    <!-- Page Heading & Actions -->
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div class="flex flex-col gap-1">
+                            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">Tool Inventory</h1>
+                            <p class="text-slate-500 dark:text-slate-400 font-medium">Browse and manage crib inventory status across all cabinets.</p>
+                        </div>
+                        <button class="flex items-center justify-center gap-2 h-10 px-6 bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white rounded-xl text-sm font-bold hover:bg-slate-300 dark:hover:bg-white/20 transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">add</span>
+                            <span>Add New Tool</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Filter & Search Bar -->
+                    <div class="flex flex-col gap-4 sticky top-0 z-10 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm py-2">
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            <!-- Search -->
+                            <div class="flex-1 relative group">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <span class="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+                                </div>
+                                <input class="w-full h-14 pl-12 pr-14 bg-white dark:bg-[#201a26] border border-slate-200 dark:border-slate-700 rounded-xl text-base font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm" placeholder="Search by Tool Name, ID, or Shelf Location..." type="text"/>
+                                <button class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                    <span class="material-symbols-outlined">qr_code_2</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Filter Chips (Scrollable on mobile) -->
+                            <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
+                                <button class="shrink-0 flex items-center gap-2 h-10 px-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-bold shadow-md">
+                                    <span class="material-symbols-outlined text-[18px]">apps</span>
+                                    All Tools
+                                </button>
+                                <button class="shrink-0 flex items-center gap-2 h-10 px-4 bg-white dark:bg-[#201a26] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-sm font-bold transition-colors">
+                                    <span class="material-symbols-outlined text-[18px] text-green-500">check_circle</span>
+                                    Available
+                                </button>
+                                <button class="shrink-0 flex items-center gap-2 h-10 px-4 bg-white dark:bg-[#201a26] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-sm font-bold transition-colors">
+                                    <span class="material-symbols-outlined text-[18px] text-orange-500">schedule</span>
+                                    Borrowed
+                                </button>
+                                <button class="shrink-0 flex items-center gap-2 h-10 px-4 bg-white dark:bg-[#201a26] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-sm font-bold transition-colors">
+                                    <span class="material-symbols-outlined text-[18px] text-red-500">error</span>
+                                    Overdue
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Inventory Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <!-- Card 1: Available -->
+                        <article class="bg-white dark:bg-[#201a26] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow duration-300 flex flex-col gap-5">
+                            <div class="flex gap-4">
+                                <div class="size-20 shrink-0 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 p-2 flex items-center justify-center overflow-hidden">
+                                    <img alt="Heavy duty cordless drill" class="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" data-alt="Yellow cordless drill on white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfomwHsnxQ1bGEcY8L2J5d2Z_-s7xEn2HEzXTFQrS-TyFrY48F2hpyDLGu1PTuhyaE9zKgc-HFW7gIWL8XxEdsysPpgU-3xTppqLqPSrDTTAxtuA05j_NYbfTovZPGhTxpMxU17L4c6R28CZMOeWD5AuPgf9P5YSB9AOQjm3Q6EQag8mGIe0YixKg_p0B9n-_1ouNLbVRYP2aA5J441vXFwS5kHZjqI0h4crz6573i8vl9BydaZSnWUS5IX1DrfnUz3-sA333s-dYc"/>
+                                </div>
+                                <div class="flex flex-col justify-center flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white truncate">DeWalt Hammer Drill</h3>
+                                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase tracking-wide">
+                                            Available
+                                        </span>
+                                    </div>
+                                    <p class="text-sm font-mono text-slate-500 dark:text-slate-400 mt-1">ID: T-104-B</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Location</span>
+                                    <div class="flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                                        <span class="material-symbols-outlined text-[18px] text-primary">shelves</span>
+                                        Cabinet A-04
+                                    </div>
+                                </div>
+                                <div class="flex flex-col border-l border-slate-200 dark:border-white/10 pl-3">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Stock</span>
+                                    <div class="flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                                        <span class="material-symbols-outlined text-[18px] text-slate-400">inventory</span>
+                                        5 / 5 Units
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mt-auto">
+                                <button class="flex items-center justify-center gap-2 h-12 rounded-xl bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 active:scale-95 transition-all">
+                                    Borrow
+                                </button>
+                                <button class="flex items-center justify-center gap-2 h-12 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white font-bold text-sm hover:bg-slate-200 dark:hover:bg-white/20 active:scale-95 transition-all">
+                                    Details
+                                </button>
+                            </div>
+                        </article>
+                        
+                        <!-- Card 2: Borrowed -->
+                        <article class="bg-white dark:bg-[#201a26] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow duration-300 flex flex-col gap-5 relative overflow-hidden">
+                            <!-- Active indicator strip -->
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-warning"></div>
+                            <div class="flex gap-4">
+                                <div class="size-20 shrink-0 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 p-2 flex items-center justify-center overflow-hidden">
+                                    <img alt="Digital caliper measurement tool" class="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" data-alt="Digital caliper tool" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqrNgcjKj-eFzh-CX_DNZC0cu8yak7wg99FCqwyugSwakJfmcVvjGbi-3iCOcXSmJ3ZZTnRBnPloiJeddNFByrW-3i88t9YmOJR6twCT712voOsoFcX8qo4h0EAUGdO4fzxa6uqlgVJDHE0Yf4ibQJ9cVpkYZ2B8oO9NSCE29iFet_82nsuzfls-7Zq6iMeNO3nBy_SU1CkHh0ET_hIRF0-PKhDSx1RaaHg17PU8b0SwaCRTy6EcoB5mwHA1LOO49n5J1fuNpIvw4d"/>
+                                </div>
+                                <div class="flex flex-col justify-center flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white truncate">Digital Caliper</h3>
+                                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold uppercase tracking-wide">
+                                            Borrowed
+                                        </span>
+                                    </div>
+                                    <p class="text-sm font-mono text-slate-500 dark:text-slate-400 mt-1">ID: M-202-A</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Borrower</span>
+                                    <div class="flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                                        <span class="material-symbols-outlined text-[18px] text-slate-400">person</span>
+                                        M. Chen
+                                    </div>
+                                </div>
+                                <div class="flex flex-col border-l border-slate-200 dark:border-white/10 pl-3">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Due In</span>
+                                    <div class="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-bold">
+                                        <span class="material-symbols-outlined text-[18px]">timer</span>
+                                        2h 15m
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mt-auto">
+                                <button class="col-span-2 flex items-center justify-center gap-2 h-12 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm shadow-md hover:bg-slate-800 dark:hover:bg-slate-200 active:scale-95 transition-all">
+                                    Return Item
+                                </button>
+                            </div>
+                        </article>
+                        
+                        <!-- Card 3: Overdue -->
+                        <article class="bg-white dark:bg-[#201a26] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow duration-300 flex flex-col gap-5 relative overflow-hidden">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-danger"></div>
+                            <div class="flex gap-4">
+                                <div class="size-20 shrink-0 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 p-2 flex items-center justify-center overflow-hidden">
+                                    <img alt="Welding mask industrial" class="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" data-alt="Welding helmet" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQF4E5QWN6FIbWd4GFoXUAhSpc9_-XYdERP0QQY4txHcXsxTS1yJGr56aF1R1asN8R7WLtclLX7nc4_yuSFQkETs5RYHRei4jgGdUOJ_l9FTXcEtSKiT0QXj6RAgsdHeP_oYBzydwS99tYuB2kmE-HSZCovqTWsQ047eC_0TLEnwqCrh9t3i2zZ1C72ox0aHev5T8gXcmGI0URdmC2oAEqiRTOxDNkr0rpz6qx0GtkkaysU3I5mVjMe6y8ho8Qt09wSTSTKRrS7_Vm"/>
+                                </div>
+                                <div class="flex flex-col justify-center flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white truncate">Welding Mask</h3>
+                                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wide">
+                                            Overdue
+                                        </span>
+                                    </div>
+                                    <p class="text-sm font-mono text-slate-500 dark:text-slate-400 mt-1">ID: W-881-X</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 p-3 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/20">
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-red-700/70 dark:text-red-400/70 uppercase font-semibold mb-1">Borrower</span>
+                                    <div class="flex items-center gap-1.5 text-red-900 dark:text-red-300 font-bold">
+                                        J. Smith
+                                    </div>
+                                </div>
+                                <div class="flex flex-col border-l border-red-200 dark:border-red-800 pl-3">
+                                    <span class="text-xs text-red-700/70 dark:text-red-400/70 uppercase font-semibold mb-1">Late By</span>
+                                    <div class="flex items-center gap-1.5 text-red-900 dark:text-red-300 font-bold">
+                                        2 Days
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mt-auto">
+                                <button class="flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 transition-all">
+                                    Report
+                                </button>
+                                <button class="flex items-center justify-center gap-2 h-12 rounded-xl bg-danger text-white font-bold text-sm shadow-md hover:bg-danger/90 active:scale-95 transition-all">
+                                    Force Return
+                                </button>
+                            </div>
+                        </article>
+                        
+                        <!-- Card 4: Available -->
+                        <article class="bg-white dark:bg-[#201a26] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow duration-300 flex flex-col gap-5">
+                            <div class="flex gap-4">
+                                <div class="size-20 shrink-0 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 p-2 flex items-center justify-center overflow-hidden">
+                                    <img alt="Socket wrench set" class="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" data-alt="Socket wrench set case" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq7mXl2ginFDiCVYNhNTqLPWQfS-Z2gDPLAKc8b5nDeLdJaNElIkVAKyO0jvbBfUREtXVblgDW4XNP74KQtg1ASg466gG3FwMmh93rKmhViCES_SGnOY9MwNglm4iK0zD83Ml5ntgkUUDKSnh4usBBe3d6a3HYXGDhfMNibRmrhouxS7jOUOBKZP6sBG404_-dHmf_FGK7tUTs3Nrx8ckWNdXBl3K2x9Mpi-wK_hTIpRskEYmBhyfOkuRm_CavIhAbYAZl0ZryZWAs"/>
+                                </div>
+                                <div class="flex flex-col justify-center flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white truncate">Socket Set (Metric)</h3>
+                                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase tracking-wide">
+                                            Available
+                                        </span>
+                                    </div>
+                                    <p class="text-sm font-mono text-slate-500 dark:text-slate-400 mt-1">ID: T-400-M</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Location</span>
+                                    <div class="flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                                        <span class="material-symbols-outlined text-[18px] text-primary">shelves</span>
+                                        Shelf C-12
+                                    </div>
+                                </div>
+                                <div class="flex flex-col border-l border-slate-200 dark:border-white/10 pl-3">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Stock</span>
+                                    <div class="flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                                        <span class="material-symbols-outlined text-[18px] text-slate-400">inventory</span>
+                                        2 / 3 Units
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mt-auto">
+                                <button class="flex items-center justify-center gap-2 h-12 rounded-xl bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 active:scale-95 transition-all">
+                                    Borrow
+                                </button>
+                                <button class="flex items-center justify-center gap-2 h-12 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white font-bold text-sm hover:bg-slate-200 dark:hover:bg-white/20 active:scale-95 transition-all">
+                                    Details
+                                </button>
+                            </div>
+                        </article>
+                        
+                        <!-- Card 5: Available (Low Stock) -->
+                        <article class="bg-white dark:bg-[#201a26] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow duration-300 flex flex-col gap-5">
+                            <div class="flex gap-4">
+                                <div class="size-20 shrink-0 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 p-2 flex items-center justify-center overflow-hidden">
+                                    <img alt="Portable power generator" class="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" data-alt="Industrial portable generator" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8m_zWyzFWtVlSP7FwYRxA2_D6lwe_o0nBBgKopiOuDH2B0oCG_6wJGnXeylpfOCx8kiRAtI2b5DhoTfaCAnTXxDJ6aRAv1JvVn0zjM7vL6xhFwmEUdTs3i8bzVEn-02_15MIhKdqTmYPczxGB5NfK_qE7AJJlvGFaK2HyYWUBY7_YaoPqUxRcZQ_-eJUyiZ50BIo1uUSsty9kUY3m_pewrG9bcrqKjBPpZL1QmBesOuyVbrIRmxTNBzPT9-ewHCh2JvDpZHIAAvPM"/>
+                                </div>
+                                <div class="flex flex-col justify-center flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white truncate">Portable Generator</h3>
+                                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase tracking-wide">
+                                            Available
+                                        </span>
+                                    </div>
+                                    <p class="text-sm font-mono text-slate-500 dark:text-slate-400 mt-1">ID: G-505-P</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Location</span>
+                                    <div class="flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                                        <span class="material-symbols-outlined text-[18px] text-primary">shelves</span>
+                                        Floor Bay 2
+                                    </div>
+                                </div>
+                                <div class="flex flex-col border-l border-slate-200 dark:border-white/10 pl-3">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Stock</span>
+                                    <div class="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-bold">
+                                        <span class="material-symbols-outlined text-[18px]">warning</span>
+                                        1 / 4 Units
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mt-auto">
+                                <button class="flex items-center justify-center gap-2 h-12 rounded-xl bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 active:scale-95 transition-all">
+                                    Borrow
+                                </button>
+                                <button class="flex items-center justify-center gap-2 h-12 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white font-bold text-sm hover:bg-slate-200 dark:hover:bg-white/20 active:scale-95 transition-all">
+                                    Details
+                                </button>
+                            </div>
+                        </article>
+                        
+                        <!-- Card 6: Borrowed -->
+                        <article class="bg-white dark:bg-[#201a26] rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow duration-300 flex flex-col gap-5 relative overflow-hidden">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-warning"></div>
+                            <div class="flex gap-4">
+                                <div class="size-20 shrink-0 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 p-2 flex items-center justify-center overflow-hidden">
+                                    <img alt="Thermal imaging camera" class="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" data-alt="Orange thermal camera device" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4fyDyOjSNXTDTm16vLbgt2BbEbiVcjLIvIrRyGbbjif_b7htY5_djb6CPe6vIEVN22jE6lKly1DHGMgi-h7y4w1ZP_CA7x0QPS_pAm3nJnjZR966P4SLRntlClOeOpgRQ70B1RvNTHNRuI7MPVR1oo_OlnswQhaGIMnIMD8GRZKlCvp_LKZ5cXF3imX_tanMp3g5R0MJiGUs3LPKHdG-1EdHILoKTUasFBbAbjiBAchIvtX3ED3-wcgZmkyOtCNkE-wQEDI9F1Hpo"/>
+                                </div>
+                                <div class="flex flex-col justify-center flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white truncate">Thermal Camera</h3>
+                                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold uppercase tracking-wide">
+                                            Borrowed
+                                        </span>
+                                    </div>
+                                    <p class="text-sm font-mono text-slate-500 dark:text-slate-400 mt-1">ID: S-330-T</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Borrower</span>
+                                    <div class="flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                                        <span class="material-symbols-outlined text-[18px] text-slate-400">person</span>
+                                        K. Liu
+                                    </div>
+                                </div>
+                                <div class="flex flex-col border-l border-slate-200 dark:border-white/10 pl-3">
+                                    <span class="text-xs text-slate-500 uppercase font-semibold mb-1">Due In</span>
+                                    <div class="flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                                        <span class="material-symbols-outlined text-[18px] text-slate-400">calendar_today</span>
+                                        Tomorrow
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mt-auto">
+                                <button class="col-span-2 flex items-center justify-center gap-2 h-12 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm shadow-md hover:bg-slate-800 dark:hover:bg-slate-200 active:scale-95 transition-all">
+                                    Return Item
+                                </button>
+                            </div>
+                        </article>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="flex justify-center mt-6">
+                        <nav class="flex items-center gap-2">
+                            <button class="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                                <span class="material-symbols-outlined">chevron_left</span>
+                            </button>
+                            <button class="w-10 h-10 rounded-lg bg-primary text-white font-bold shadow-md">1</button>
+                            <button class="w-10 h-10 rounded-lg text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">2</button>
+                            <button class="w-10 h-10 rounded-lg text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">3</button>
+                            <button class="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                                <span class="material-symbols-outlined">chevron_right</span>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile FAB -->
+            <button class="lg:hidden fixed bottom-6 right-6 size-16 bg-primary text-white rounded-2xl shadow-xl shadow-primary/40 flex items-center justify-center z-50 active:scale-95 transition-transform">
+                <span class="material-symbols-outlined text-[32px]">qr_code_scanner</span>
+            </button>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,525 @@
+// main.js - Main application logic
+
+// Global variables
+let currentUser = null;
+let tools = [];
+let filteredTools = [];
+
+// DOM Elements
+const elements = {
+    toolsGrid: document.getElementById('toolsGrid'),
+    searchInput: document.getElementById('searchInput'),
+    filterBtns: document.querySelectorAll('.filter-btn'),
+    registrationModal: document.getElementById('registrationModal'),
+    borrowModal: document.getElementById('borrowModal'),
+    returnModal: document.getElementById('returnModal'),
+    messageToast: document.getElementById('messageToast'),
+    loadingOverlay: document.getElementById('loadingOverlay')
+};
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', async () => {
+    showLoading(true);
+    
+    try {
+        // Check if user is registered
+        const isRegistered = await isUserRegistered();
+        
+        if (!isRegistered) {
+            // Show registration modal
+            showRegistrationModal();
+        } else {
+            // Load user info and tools
+            currentUser = getUserInfo();
+            updateUserUI();
+            await loadTools();
+        }
+    } catch (error) {
+        console.error('Initialization error:', error);
+        showMessage('Failed to initialize application. Please try again.', 'error');
+    } finally {
+        showLoading(false);
+    }
+});
+
+// Event Listeners
+elements.searchInput?.addEventListener('input', handleSearch);
+elements.filterBtns.forEach(btn => btn.addEventListener('click', handleFilterClick));
+
+// Modal close buttons
+document.getElementById('closeRegistrationModal')?.addEventListener('click', hideRegistrationModal);
+document.getElementById('closeBorrowModal')?.addEventListener('click', hideBorrowModal);
+document.getElementById('closeReturnModal')?.addEventListener('click', hideReturnModal);
+
+// LINE Login button
+document.getElementById('lineLoginBtn')?.addEventListener('click', () => {
+    if (typeof loginWithLine === 'function') {
+        loginWithLine();
+    } else {
+        console.error('loginWithLine function not found');
+    }
+});
+
+// Form submissions
+document.getElementById('registrationForm')?.addEventListener('submit', handleRegistrationSubmit);
+document.getElementById('confirmBorrow')?.addEventListener('click', handleBorrowSubmit);
+document.getElementById('confirmReturn')?.addEventListener('click', handleReturnSubmit);
+
+// Cancel buttons
+document.getElementById('cancelBorrow')?.addEventListener('click', hideBorrowModal);
+document.getElementById('cancelReturn')?.addEventListener('click', hideReturnModal);
+
+// Quantity controls for borrow modal
+document.getElementById('decreaseQuantity')?.addEventListener('click', () => adjustQuantity(-1));
+document.getElementById('increaseQuantity')?.addEventListener('click', () => adjustQuantity(1));
+
+// Set today as default borrow date
+document.getElementById('borrowDate').value = formatDate(new Date());
+
+// Set default return date to tomorrow
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+document.getElementById('returnDate').value = formatDate(tomorrow);
+
+/**
+ * Load tools from the API and render them
+ */
+async function loadTools() {
+    try {
+        tools = await getTools();
+        filteredTools = [...tools];
+        renderTools(filteredTools);
+    } catch (error) {
+        console.error('Error loading tools:', error);
+        showMessage('Failed to load tools. Please try again.', 'error');
+    }
+}
+
+/**
+ * Render tools in the grid
+ * @param {Array} toolsToRender - Array of tools to render
+ */
+function renderTools(toolsToRender) {
+    if (!elements.toolsGrid) return;
+    
+    elements.toolsGrid.innerHTML = '';
+    
+    if (toolsToRender.length === 0) {
+        elements.toolsGrid.innerHTML = '<p class="no-tools-message">No tools found</p>';
+        return;
+    }
+    
+    toolsToRender.forEach(tool => {
+        const toolCard = createToolCard(tool);
+        elements.toolsGrid.appendChild(toolCard);
+    });
+}
+
+/**
+ * Create a tool card element
+ * @param {Object} tool - Tool object
+ * @returns {HTMLElement} - Tool card element
+ */
+function createToolCard(tool) {
+    const card = document.createElement('article');
+    card.className = `tool-card ${getStatusClass(tool.status)}`;
+    
+    card.innerHTML = `
+        <div class="tool-card-content">
+            <div class="tool-header">
+                <div class="tool-image-placeholder"></div>
+                <div class="tool-info">
+                    <h3 class="tool-name">${tool.toolName}</h3>
+                    <p class="tool-id">ID: ${tool.toolId}</p>
+                    <div class="availability-status">
+                        <span class="status-badge ${getStatusClass(tool.status)}">
+                            ${tool.status}
+                            ${tool.status === 'Available' ? `: ${tool.availableQty}` : ''}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tool-location">
+                <span class="material-symbols-outlined">warehouse</span>
+                <span>${tool.location}</span>
+            </div>
+            
+            <div class="tool-actions">
+                ${tool.status === 'Available' 
+                    ? `<button class="btn-borrow" data-tool-id="${tool.toolId}">
+                         <span class="material-symbols-outlined">add_circle</span>
+                         Borrow
+                       </button>` 
+                    : `<button class="btn-return ${tool.status === 'Overdue' ? 'danger' : ''}" data-tool-id="${tool.toolId}">
+                         <span class="material-symbols-outlined">keyboard_return</span>
+                         ${tool.status === 'Overdue' ? 'Return Now' : 'Return'}
+                       </button>`
+                }
+            </div>
+        </div>
+    `;
+    
+    // Add event listeners to the buttons
+    const borrowBtn = card.querySelector('.btn-borrow');
+    const returnBtn = card.querySelector('.btn-return');
+    
+    if (borrowBtn) {
+        borrowBtn.addEventListener('click', () => showBorrowModal(tool));
+    }
+    
+    if (returnBtn) {
+        returnBtn.addEventListener('click', () => showReturnModal(tool));
+    }
+    
+    return card;
+}
+
+/**
+ * Get CSS class for status
+ * @param {string} status - Tool status
+ * @returns {string} - CSS class name
+ */
+function getStatusClass(status) {
+    switch (status.toLowerCase()) {
+        case 'available':
+            return 'available';
+        case 'borrowed':
+            return 'borrowed';
+        case 'overdue':
+            return 'overdue';
+        default:
+            return 'available';
+    }
+}
+
+/**
+ * Handle search input
+ */
+function handleSearch() {
+    const searchTerm = elements.searchInput.value.toLowerCase();
+    
+    filteredTools = tools.filter(tool => 
+        tool.toolName.toLowerCase().includes(searchTerm) ||
+        tool.toolId.toLowerCase().includes(searchTerm)
+    );
+    
+    renderTools(filteredTools);
+}
+
+/**
+ * Handle filter button click
+ */
+function handleFilterClick(event) {
+    const filterValue = event.target.dataset.filter;
+    
+    // Update active button
+    elements.filterBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filterValue);
+    });
+    
+    // Filter tools based on selection
+    if (filterValue === 'all') {
+        filteredTools = [...tools];
+    } else {
+        filteredTools = tools.filter(tool => {
+            if (filterValue === 'overdue') {
+                return tool.status.toLowerCase() === 'overdue';
+            }
+            return tool.status.toLowerCase() === filterValue;
+        });
+    }
+    
+    renderTools(filteredTools);
+}
+
+/**
+ * Show registration modal
+ */
+async function showRegistrationModal() {
+    if (elements.registrationModal) {
+        elements.registrationModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+        const lineLoginSection = document.getElementById('lineLoginSection');
+        const registrationForm = document.getElementById('registrationForm');
+        
+        // Check LINE Login status
+        // We assume liff is initialized because showRegistrationModal is called after isUserRegistered (which calls initLiff)
+        // Check if liff object exists and is logged in
+        const isLoggedIn = typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn();
+
+        if (!isLoggedIn) {
+            if (lineLoginSection) lineLoginSection.classList.remove('hidden');
+            if (registrationForm) registrationForm.classList.add('hidden');
+        } else {
+            if (lineLoginSection) lineLoginSection.classList.add('hidden');
+            if (registrationForm) {
+                registrationForm.classList.remove('hidden');
+                
+                // Pre-fill name from LINE profile
+                try {
+                    const profile = await liff.getProfile();
+                    const nameInput = document.getElementById('fullName');
+                    if (nameInput && !nameInput.value) {
+                        nameInput.value = profile.displayName;
+                    }
+                } catch (e) {
+                    console.error('Error getting LINE profile:', e);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Hide registration modal
+ */
+function hideRegistrationModal() {
+    if (elements.registrationModal) {
+        elements.registrationModal.classList.add('hidden');
+        document.body.style.overflow = ''; // Re-enable scrolling
+    }
+}
+
+/**
+ * Show borrow modal
+ * @param {Object} tool - Tool to borrow
+ */
+function showBorrowModal(tool) {
+    // Populate modal with tool information
+    document.getElementById('borrowToolName').textContent = tool.toolName;
+    document.getElementById('borrowToolId').textContent = tool.toolId;
+    document.getElementById('borrowToolLocation').textContent = tool.location;
+    document.getElementById('borrowToolAvailable').textContent = tool.availableQty;
+    
+    // Set max quantity for the input
+    const quantityInput = document.getElementById('borrowQuantity');
+    quantityInput.max = tool.availableQty;
+    quantityInput.value = Math.min(1, tool.availableQty);
+    
+    // Store tool ID for later use
+    document.getElementById('confirmBorrow').dataset.toolId = tool.toolId;
+    
+    if (elements.borrowModal) {
+        elements.borrowModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+/**
+ * Hide borrow modal
+ */
+function hideBorrowModal() {
+    if (elements.borrowModal) {
+        elements.borrowModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+/**
+ * Show return modal
+ * @param {Object} tool - Tool to return
+ */
+function showReturnModal(tool) {
+    // Populate modal with tool information
+    document.getElementById('returnToolName').textContent = tool.toolName;
+    document.getElementById('returnToolId').textContent = tool.toolId;
+    document.getElementById('returnToolLocation').textContent = tool.location;
+    
+    // Store tool ID for later use
+    document.getElementById('confirmReturn').dataset.toolId = tool.toolId;
+    
+    if (elements.returnModal) {
+        elements.returnModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+/**
+ * Hide return modal
+ */
+function hideReturnModal() {
+    if (elements.returnModal) {
+        elements.returnModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+/**
+ * Handle registration form submission
+ */
+async function handleRegistrationSubmit(event) {
+    event.preventDefault();
+    
+    const fullName = document.getElementById('fullName').value;
+    const department = document.getElementById('department').value;
+    const cohort = document.getElementById('cohort').value;
+    
+    if (!fullName || !department || !cohort) {
+        showMessage('Please fill in all fields', 'error');
+        return;
+    }
+    
+    showLoading(true);
+    
+    try {
+        const userData = { fullName, department, cohort };
+        await registerNewUser(userData);
+        
+        // Update UI after successful registration
+        updateUserUI();
+        hideRegistrationModal();
+        
+        // Load tools after registration
+        await loadTools();
+        
+        showMessage('Registration successful!', 'success');
+    } catch (error) {
+        console.error('Registration error:', error);
+        showMessage('Registration failed. Please try again.', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+/**
+ * Handle borrow form submission
+ */
+async function handleBorrowSubmit() {
+    const toolId = document.getElementById('confirmBorrow').dataset.toolId;
+    const quantity = parseInt(document.getElementById('borrowQuantity').value);
+    const reason = document.getElementById('borrowReason').value;
+    const returnDate = document.getElementById('returnDate').value;
+    
+    if (!reason) {
+        showMessage('Please select a reason for borrowing', 'error');
+        return;
+    }
+    
+    showLoading(true);
+    
+    try {
+        const borrowData = {
+            toolId,
+            userId: getUserId(),
+            quantity,
+            reason,
+            expectedReturnDate: returnDate
+        };
+        
+        await borrowTool(borrowData);
+        
+        // Close modal and refresh tools
+        hideBorrowModal();
+        await loadTools();
+        
+        showMessage('Tool borrowed successfully!', 'success');
+    } catch (error) {
+        console.error('Borrow error:', error);
+        showMessage('Failed to borrow tool. Please try again.', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+/**
+ * Handle return form submission
+ */
+async function handleReturnSubmit() {
+    const toolId = document.getElementById('confirmReturn').dataset.toolId;
+    const condition = document.querySelector('input[name="condition"]:checked').value;
+    const notes = document.getElementById('returnNotes').value;
+    
+    showLoading(true);
+    
+    try {
+        const returnData = {
+            toolId,
+            userId: getUserId(),
+            condition,
+            notes: notes || null
+        };
+        
+        await returnTool(returnData);
+        
+        // Close modal and refresh tools
+        hideReturnModal();
+        await loadTools();
+        
+        showMessage('Tool returned successfully!', 'success');
+    } catch (error) {
+        console.error('Return error:', error);
+        showMessage('Failed to return tool. Please try again.', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+/**
+ * Adjust quantity in borrow modal
+ * @param {number} change - Amount to change quantity by
+ */
+function adjustQuantity(change) {
+    const quantityInput = document.getElementById('borrowQuantity');
+    const currentValue = parseInt(quantityInput.value);
+    const maxValue = parseInt(quantityInput.max);
+    const minValue = parseInt(quantityInput.min) || 1;
+    
+    let newValue = currentValue + change;
+    newValue = Math.max(minValue, Math.min(newValue, maxValue));
+    
+    quantityInput.value = newValue;
+}
+
+/**
+ * Show/hide loading overlay
+ * @param {boolean} show - Whether to show or hide the loading overlay
+ */
+function showLoading(show) {
+    if (elements.loadingOverlay) {
+        elements.loadingOverlay.classList.toggle('hidden', !show);
+    }
+}
+
+/**
+ * Show a message toast
+ * @param {string} message - Message to display
+ * @param {string} type - Type of message ('success' or 'error')
+ */
+function showMessage(message, type) {
+    if (!elements.messageToast) return;
+    
+    const messageText = document.getElementById('messageText');
+    if (messageText) {
+        messageText.textContent = message;
+    }
+    
+    // Remove any existing classes
+    elements.messageToast.classList.remove('show', 'success', 'error');
+    
+    // Add appropriate classes
+    elements.messageToast.classList.add(type);
+    
+    // Show the toast
+    setTimeout(() => {
+        elements.messageToast.classList.add('show');
+    }, 10);
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        elements.messageToast.classList.remove('show');
+    }, 3000);
+}
+
+/**
+ * Format date as YYYY-MM-DD
+ * @param {Date} date - Date to format
+ * @returns {string} - Formatted date string
+ */
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
