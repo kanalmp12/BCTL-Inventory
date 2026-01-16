@@ -361,8 +361,14 @@ function showBorrowModal(tool) {
     
     // Set max quantity for the input
     const quantityInput = document.getElementById('borrowQuantity');
-    quantityInput.max = tool.availableQty;
-    quantityInput.value = Math.min(1, tool.availableQty);
+    
+    if (tool.availableQty === 'จำนวนมาก') {
+        quantityInput.max = 999; // Allow high number for unlimited items
+        quantityInput.value = 1;
+    } else {
+        quantityInput.max = tool.availableQty;
+        quantityInput.value = Math.min(1, tool.availableQty);
+    }
     
     // Store tool ID for later use
     document.getElementById('confirmBorrow').dataset.toolId = tool.toolId;

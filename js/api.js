@@ -73,10 +73,14 @@ async function callMockApi(action, payload) {
         case 'borrowTool':
              const tIdx = mockTools.findIndex(t => t.toolId === payload.toolId);
              if (tIdx === -1) throw new Error('Tool not found');
-             if (mockTools[tIdx].availableQty < payload.quantity) throw new Error('Not enough stock');
              
-             mockTools[tIdx].availableQty -= payload.quantity;
-             mockTools[tIdx].status = mockTools[tIdx].availableQty > 0 ? 'Available' : 'Borrowed';
+             // Handle unlimited stock
+             if (mockTools[tIdx].availableQty !== 'จำนวนมาก') {
+                 if (mockTools[tIdx].availableQty < payload.quantity) throw new Error('Not enough stock');
+                 mockTools[tIdx].availableQty -= payload.quantity;
+                 // Only update status if not unlimited
+                 mockTools[tIdx].status = mockTools[tIdx].availableQty > 0 ? 'Available' : 'Borrowed';
+             }
              
              mockTransactions.push({
                 toolId: payload.toolId,
@@ -90,8 +94,11 @@ async function callMockApi(action, payload) {
              const rIdx = mockTools.findIndex(t => t.toolId === payload.toolId);
              if (rIdx === -1) throw new Error('Tool not found');
              
-             mockTools[rIdx].availableQty += 1; // Assuming returning 1 unit at a time or strictly managing per item
-             mockTools[rIdx].status = 'Available';
+             // Handle unlimited stock (do not increment)
+             if (mockTools[rIdx].availableQty !== 'จำนวนมาก') {
+                 mockTools[rIdx].availableQty += 1; 
+                 mockTools[rIdx].status = 'Available';
+             }
              
              // Update transaction
              const transIdx = mockTransactions.findIndex(t => t.toolId === payload.toolId && t.userId === payload.userId && t.status === 'Borrowed');
