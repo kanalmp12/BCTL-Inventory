@@ -183,7 +183,7 @@ function createToolCard(tool) {
                 Return
             </button>
         `;
-    } else if (tool.availableQty > 0) {
+    } else if (tool.availableQty === 'จำนวนมาก' || tool.availableQty > 0) {
         actionButton = `
             <button class="btn-borrow" data-tool-id="${tool.toolId}">
                 <span class="material-symbols-outlined">add_circle</span>
