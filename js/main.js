@@ -117,7 +117,21 @@ document.getElementById('returnDate').value = formatDate(tomorrow);
  */
 async function loadTools() {
     try {
-        tools = await getTools();
+        const [fetchedTools, userBorrows] = await Promise.all([
+            getTools(),
+            currentUser ? getUserActiveBorrows(currentUser.userId) : { borrows: [] }
+        ]);
+        
+        const myBorrows = userBorrows.borrows || [];
+        
+        tools = fetchedTools.map(tool => {
+            const borrow = myBorrows.find(b => b.toolId === tool.toolId);
+            return {
+                ...tool,
+                myBorrowedQty: borrow ? borrow.quantity : 0
+            };
+        });
+
         filteredTools = [...tools];
         renderTools(filteredTools);
     } catch (error) {
@@ -155,6 +169,36 @@ function createToolCard(tool) {
     const card = document.createElement('article');
     card.className = `tool-card ${getStatusClass(tool.status)}`;
     
+    let actionButton = '';
+    
+    // Logic for buttons:
+    // 1. If I have borrowed it, I see "Return".
+    // 2. If I haven't borrowed it, but it's available, I see "Borrow".
+    // 3. If I haven't borrowed it, and it's NOT available, I see "Out of Stock" (disabled).
+    
+    if (tool.myBorrowedQty > 0) {
+        actionButton = `
+            <button class="btn-return" data-tool-id="${tool.toolId}">
+                <span class="material-symbols-outlined">keyboard_return</span>
+                Return
+            </button>
+        `;
+    } else if (tool.availableQty > 0) {
+        actionButton = `
+            <button class="btn-borrow" data-tool-id="${tool.toolId}">
+                <span class="material-symbols-outlined">add_circle</span>
+                Borrow
+            </button>
+        `;
+    } else {
+        actionButton = `
+             <button class="btn-borrow" disabled style="background-color: var(--gray-medium); cursor: not-allowed;">
+                 <span class="material-symbols-outlined">block</span>
+                 Out of Stock
+             </button>
+        `;
+    }
+
     card.innerHTML = `
         <div class="tool-card-content">
             <div class="tool-header">
@@ -177,16 +221,7 @@ function createToolCard(tool) {
             </div>
             
             <div class="tool-actions">
-                ${tool.status === 'Available' 
-                    ? `<button class="btn-borrow" data-tool-id="${tool.toolId}">
-                         <span class="material-symbols-outlined">add_circle</span>
-                         Borrow
-                       </button>` 
-                    : `<button class="btn-return ${tool.status === 'Overdue' ? 'danger' : ''}" data-tool-id="${tool.toolId}">
-                         <span class="material-symbols-outlined">keyboard_return</span>
-                         ${tool.status === 'Overdue' ? 'Return Now' : 'Return'}
-                       </button>`
-                }
+                ${actionButton}
             </div>
         </div>
     `;
@@ -195,7 +230,7 @@ function createToolCard(tool) {
     const borrowBtn = card.querySelector('.btn-borrow');
     const returnBtn = card.querySelector('.btn-return');
     
-    if (borrowBtn) {
+    if (borrowBtn && !borrowBtn.disabled) {
         borrowBtn.addEventListener('click', () => showBorrowModal(tool));
     }
     

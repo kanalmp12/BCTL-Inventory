@@ -10,6 +10,7 @@ let mockTools = [
     { toolId: "T006", toolName: "Hammer Drill 20V", availableQty: 0, location: "Cabinet A-03", status: "Overdue", unit: "เครื่อง" }
 ];
 let mockUsers = [];
+let mockTransactions = [];
 
 /**
  * Simulate network delay for mock
@@ -73,15 +74,35 @@ async function callMockApi(action, payload) {
              const tIdx = mockTools.findIndex(t => t.toolId === payload.toolId);
              if (tIdx === -1) throw new Error('Tool not found');
              if (mockTools[tIdx].availableQty < payload.quantity) throw new Error('Not enough stock');
+             
              mockTools[tIdx].availableQty -= payload.quantity;
              mockTools[tIdx].status = mockTools[tIdx].availableQty > 0 ? 'Available' : 'Borrowed';
+             
+             mockTransactions.push({
+                toolId: payload.toolId,
+                userId: payload.userId,
+                quantity: payload.quantity,
+                status: 'Borrowed',
+                timestamp: new Date()
+             });
              return { success: true };
         case 'returnTool':
              const rIdx = mockTools.findIndex(t => t.toolId === payload.toolId);
              if (rIdx === -1) throw new Error('Tool not found');
-             mockTools[rIdx].availableQty += 1;
+             
+             mockTools[rIdx].availableQty += 1; // Assuming returning 1 unit at a time or strictly managing per item
              mockTools[rIdx].status = 'Available';
+             
+             // Update transaction
+             const transIdx = mockTransactions.findIndex(t => t.toolId === payload.toolId && t.userId === payload.userId && t.status === 'Borrowed');
+             if (transIdx !== -1) {
+                 // In a real app we might mark it returned, here we just remove it or mark returned to clear "active" list
+                 mockTransactions.splice(transIdx, 1);
+             }
              return { success: true };
+        case 'getUserActiveBorrows':
+             const borrows = mockTransactions.filter(t => t.userId === payload.userId && t.status === 'Borrowed');
+             return { borrows };
         default:
             throw new Error('Mock Action not found');
     }
@@ -94,6 +115,13 @@ async function getTools() {
     const result = await callGoogleScript('getTools');
     // Adapt result if needed (GAS returns {tools: []})
     return result.tools || result; 
+}
+
+/**
+ * Get active borrows for a user
+ */
+async function getUserActiveBorrows(userId) {
+    return await callGoogleScript('getUserActiveBorrows', { userId });
 }
 
 /**
@@ -129,6 +157,7 @@ async function returnTool(returnData) {
 if (typeof module === 'undefined') {
     window.apiFunctions = {
         getTools,
+        getUserActiveBorrows,
         registerUser,
         checkUserExists,
         borrowTool,
@@ -140,6 +169,7 @@ if (typeof module === 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         getTools,
+        getUserActiveBorrows,
         registerUser,
         checkUserExists,
         borrowTool,
