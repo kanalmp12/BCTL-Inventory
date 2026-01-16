@@ -2,12 +2,12 @@
 
 // Mock data storage (Fallback)
 let mockTools = [
-    { toolId: "T001", toolName: "Makita Cordless Drill 18V", availableQty: 3, location: "Cabinet A-12", status: "Available" },
-    { toolId: "T002", toolName: "Fluke Digital Multimeter", availableQty: 1, location: "Cabinet B-05", status: "Available" },
-    { toolId: "T003", toolName: "Angle Grinder 4.5\"", availableQty: 0, location: "Cabinet C-08", status: "Borrowed" },
-    { toolId: "T004", toolName: "Socket Set Metric", availableQty: 2, location: "Cabinet D-15", status: "Available" },
-    { toolId: "T005", toolName: "Welding Mask", availableQty: 0, location: "Safety Station", status: "Overdue" },
-    { toolId: "T006", toolName: "Hammer Drill 20V", availableQty: 0, location: "Cabinet A-03", status: "Overdue" }
+    { toolId: "T001", toolName: "Makita Cordless Drill 18V", availableQty: 3, location: "Cabinet A-12", status: "Available", unit: "เครื่อง" },
+    { toolId: "T002", toolName: "Fluke Digital Multimeter", availableQty: 1, location: "Cabinet B-05", status: "Available", unit: "เครื่อง" },
+    { toolId: "T003", toolName: "Angle Grinder 4.5\"", availableQty: 0, location: "Cabinet C-08", status: "Borrowed", unit: "เครื่อง" },
+    { toolId: "T004", toolName: "Socket Set Metric", availableQty: 2, location: "Cabinet D-15", status: "Available", unit: "ชุด" },
+    { toolId: "T005", toolName: "Welding Mask", availableQty: 0, location: "Safety Station", status: "Overdue", unit: "อัน" },
+    { toolId: "T006", toolName: "Hammer Drill 20V", availableQty: 0, location: "Cabinet A-03", status: "Overdue", unit: "เครื่อง" }
 ];
 let mockUsers = [];
 

@@ -60,6 +60,37 @@ document.getElementById('lineLoginBtn')?.addEventListener('click', () => {
     }
 });
 
+// User Dropdown & Logout
+const userInfoContainer = document.getElementById('userInfoContainer');
+const userDropdown = document.getElementById('userDropdown');
+const logoutBtn = document.getElementById('logoutBtn');
+
+if (userInfoContainer && userDropdown) {
+    userInfoContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!userInfoContainer.contains(e.target)) {
+            userDropdown.classList.add('hidden');
+        }
+    });
+}
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        if (typeof logoutFromLine === 'function') {
+            logoutFromLine();
+        } else {
+             console.error('logoutFromLine function not found');
+             // Fallback
+             localStorage.clear();
+             window.location.reload();
+        }
+    });
+}
+
 // Form submissions
 document.getElementById('registrationForm')?.addEventListener('submit', handleRegistrationSubmit);
 document.getElementById('confirmBorrow')?.addEventListener('click', handleBorrowSubmit);
@@ -134,7 +165,7 @@ function createToolCard(tool) {
                     <div class="availability-status">
                         <span class="status-badge ${getStatusClass(tool.status)}">
                             ${tool.status}
-                            ${tool.status === 'Available' ? `: ${tool.availableQty}` : ''}
+                            ${tool.status === 'Available' ? `: ${tool.availableQty} ${tool.unit || 'Units'}` : ''}
                         </span>
                     </div>
                 </div>
@@ -291,7 +322,7 @@ function showBorrowModal(tool) {
     document.getElementById('borrowToolName').textContent = tool.toolName;
     document.getElementById('borrowToolId').textContent = tool.toolId;
     document.getElementById('borrowToolLocation').textContent = tool.location;
-    document.getElementById('borrowToolAvailable').textContent = tool.availableQty;
+    document.getElementById('borrowToolAvailable').textContent = `${tool.availableQty} ${tool.unit || 'Units'}`;
     
     // Set max quantity for the input
     const quantityInput = document.getElementById('borrowQuantity');

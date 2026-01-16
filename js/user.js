@@ -157,6 +157,7 @@ async function registerNewUser(userData) {
 async function updateUserUI() {
     const userInfo = getUserInfo();
     const userNameElement = document.getElementById('userName');
+    const userProfileImg = document.getElementById('userProfileImg');
     
     if (userInfo && userNameElement) {
         userNameElement.textContent = userInfo.fullName || 'User';
@@ -170,6 +171,18 @@ async function updateUserUI() {
         }
     } else {
         if (userNameElement) userNameElement.textContent = 'Guest';
+    }
+
+    // Update Profile Image if logged in
+    if (liffInitialized && liff.isLoggedIn()) {
+        try {
+            const profile = await liff.getProfile();
+            if (userProfileImg && profile.pictureUrl) {
+                userProfileImg.src = profile.pictureUrl;
+            }
+        } catch (e) {
+            console.error('Error getting profile image:', e);
+        }
     }
 }
 
