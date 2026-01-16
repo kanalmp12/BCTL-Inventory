@@ -199,10 +199,16 @@ function createToolCard(tool) {
         `;
     }
 
+    // Image handling
+    let imageContent = '';
+    if (tool.imageUrl && tool.imageUrl.trim() !== '') {
+        imageContent = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:contain;">`;
+    }
+
     card.innerHTML = `
         <div class="tool-card-content">
             <div class="tool-header">
-                <div class="tool-image-placeholder"></div>
+                <div class="tool-image-placeholder" style="overflow:hidden;">${imageContent}</div>
                 <div class="tool-info">
                     <h3 class="tool-name">${tool.toolName}</h3>
                     <p class="tool-id">ID: ${tool.toolId}</p>
@@ -359,6 +365,22 @@ function showBorrowModal(tool) {
     document.getElementById('borrowToolLocation').textContent = tool.location;
     document.getElementById('borrowToolAvailable').textContent = `${tool.availableQty} ${tool.unit || 'Units'}`;
     
+    // Set image
+    const imagePlaceholder = document.querySelector('#borrowModal .tool-image-placeholder');
+    if (imagePlaceholder) {
+        if (tool.imageUrl && tool.imageUrl.trim() !== '') {
+            imagePlaceholder.innerHTML = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:contain;">`;
+            imagePlaceholder.style.overflow = 'hidden';
+            // Remove the default icon pseudo-element if needed, usually by class or content. 
+            // Our CSS uses ::before for the icon. Adding content hides it if we set display:flex properly or replace content.
+            // A simple way is to add a class 'has-image' and style it to hide ::before
+            imagePlaceholder.classList.add('has-image');
+        } else {
+            imagePlaceholder.innerHTML = '';
+            imagePlaceholder.classList.remove('has-image');
+        }
+    }
+    
     // Set max quantity for the input
     const quantityInput = document.getElementById('borrowQuantity');
     
@@ -399,6 +421,19 @@ function showReturnModal(tool) {
     document.getElementById('returnToolId').textContent = tool.toolId;
     document.getElementById('returnToolLocation').textContent = tool.location;
     
+    // Set image
+    const imagePlaceholder = document.querySelector('#returnModal .tool-image-placeholder');
+    if (imagePlaceholder) {
+        if (tool.imageUrl && tool.imageUrl.trim() !== '') {
+            imagePlaceholder.innerHTML = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:contain;">`;
+            imagePlaceholder.style.overflow = 'hidden';
+            imagePlaceholder.classList.add('has-image');
+        } else {
+            imagePlaceholder.innerHTML = '';
+            imagePlaceholder.classList.remove('has-image');
+        }
+    }
+
     // Store tool ID for later use
     document.getElementById('confirmReturn').dataset.toolId = tool.toolId;
     

@@ -297,6 +297,10 @@ h3 {
     font-size: 1.5rem;
 }
 
+.tool-image-placeholder.has-image::before {
+    content: none;
+}
+
 .tool-info {
     flex: 1;
 }
