@@ -357,6 +357,8 @@ async function showRegistrationModal() {
                 registrationForm.classList.add('hidden');
                 registrationForm.classList.remove('flex');
             }
+            const stepText = document.getElementById('registrationStepText');
+            if (stepText) stepText.textContent = 'Step 1 of 2';
         } else {
             // Logged in: Hide LINE Login button, show form
             if (lineLoginSection) {
@@ -366,6 +368,9 @@ async function showRegistrationModal() {
             if (registrationForm) {
                 registrationForm.classList.remove('hidden');
                 registrationForm.classList.add('flex');
+                
+                const stepText = document.getElementById('registrationStepText');
+                if (stepText) stepText.textContent = 'Step 2 of 2';
                 
                 // Pre-fill name from LINE profile
                 try {
