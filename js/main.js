@@ -369,8 +369,11 @@ async function showRegistrationModal() {
                 registrationForm.classList.remove('hidden');
                 registrationForm.classList.add('flex');
                 
-                const stepText = document.getElementById('registrationStepText');
-                if (stepText) stepText.textContent = 'Step 2 of 2';
+                // Force update step text immediately
+                setTimeout(() => {
+                    const stepText = document.getElementById('registrationStepText');
+                    if (stepText) stepText.textContent = 'Step 2 of 2';
+                }, 0);
                 
                 // Pre-fill name from LINE profile
                 try {
