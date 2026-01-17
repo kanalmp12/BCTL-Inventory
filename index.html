@@ -52,21 +52,6 @@
                 <img src="img/BUCA Talent LOGO.png" alt="BUCA Talent LOGO" style="height: 2.5rem; width: auto;">
                 <h1>BUCA Talent Inventory (BETA)</h1>
             </div>
-            
-            <!-- Desktop Search & Filter (Hidden on Mobile) -->
-            <div class="desktop-search-filter hidden md:flex items-center gap-4 flex-1 mx-4">
-                <div class="search-container flex-1 !mb-0">
-                    <input type="text" id="searchInputDesktop" placeholder="Search tools..." class="w-full h-10 pl-10 pr-4 border border-[#e0dde3] rounded-lg text-sm bg-[#f7f6f8] focus:bg-white focus:border-[#67349d] transition-colors">
-                    <span class="material-symbols-outlined search-icon !text-lg !left-3">search</span>
-                </div>
-                <div class="filter-chips !mb-0 !pb-0">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="available">Avail</button>
-                    <button class="filter-btn" data-filter="borrowed">Borrowed</button>
-                    <button class="filter-btn" data-filter="overdue">Overdue</button>
-                </div>
-            </div>
-
             <div class="header-actions" style="display: flex; align-items: center; gap: 10px;">
                 <button id="loginTriggerBtn" class="btn-primary hidden" style="height: 2.5rem; padding: 0 1rem; border-radius: var(--radius-md);">
                     <span class="material-symbols-outlined" style="font-size: 1.25rem;">login</span>
@@ -88,24 +73,24 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Mobile Search & Filter (Visible on Mobile) -->
-        <div class="mobile-search-filter md:hidden mt-3 flex flex-col gap-3">
-            <div class="search-container !mb-0">
-                <input type="text" id="searchInputMobile" placeholder="Search tools..." class="w-full h-10 pl-10 pr-4 border border-[#e0dde3] rounded-lg text-sm bg-[#f7f6f8] focus:bg-white focus:border-[#67349d] transition-colors">
-                <span class="material-symbols-outlined search-icon !text-lg !left-3">search</span>
-            </div>
-            <div class="filter-chips !mb-0 !pb-0">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="available">Available</button>
-                <button class="filter-btn" data-filter="borrowed">Borrowed</button>
-                <button class="filter-btn" data-filter="overdue">Overdue</button>
-            </div>
-        </div>
     </header>
 
     <!-- Main Content -->
-    <main class="main-content" style="padding-top: 1rem;">
+    <main class="main-content">
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search tools by name or ID...">
+            <span class="material-symbols-outlined search-icon">search</span>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-chips">
+            <button class="filter-btn active" data-filter="all">All Items</button>
+            <button class="filter-btn" data-filter="available">Available</button>
+            <button class="filter-btn" data-filter="borrowed">Borrowed</button>
+            <button class="filter-btn" data-filter="overdue">Overdue</button>
+        </div>
+
         <!-- Tools Grid -->
         <div id="toolsGrid" class="tools-grid">
             <!-- Tool cards will be dynamically inserted here -->
