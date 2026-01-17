@@ -582,15 +582,20 @@ input:focus, select:focus, textarea:focus {
     overflow: hidden;
     box-shadow: var(--shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
+    height: 100%; /* Ensure card fills grid cell height */
     padding: 1.25rem;
 }
 
 .tool-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
+}
+
+.tool-card-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 1rem;
 }
 
 /* Remove side borders and use indicators if needed, but reference uses border + badge */
