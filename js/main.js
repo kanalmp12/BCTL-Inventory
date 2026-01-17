@@ -35,8 +35,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadTools();
 
         // If user is logged in via LINE but not registered in our system (no local user info),
-        // we might check registration status, but for now we let them browse.
-        // We will check registration when they try to borrow.
+        // check registration status with backend. If not registered, show registration modal.
+        if (liffInitialized && liff.isLoggedIn() && !currentUser) {
+             const isRegistered = await isUserRegistered();
+             if (!isRegistered) {
+                 showRegistrationModal();
+             } else {
+                 // Fetch user info from backend if registered but not in local storage
+                 // For now, we rely on local storage or just let them re-register/update profile
+                 // Ideally, we should have a getUserProfile(userId) API.
+                 // As a fallback, we let them browse.
+             }
+        }
         
     } catch (error) {
         console.error('Initialization error:', error);
@@ -330,9 +340,12 @@ async function showRegistrationModal() {
         const lineLoginSection = document.getElementById('lineLoginSection');
         const registrationForm = document.getElementById('registrationForm');
         
+        // Ensure LIFF is ready
+        if (!liffInitialized) {
+            await initLiff();
+        }
+        
         // Check LINE Login status
-        // We assume liff is initialized because showRegistrationModal is called after isUserRegistered (which calls initLiff)
-        // Check if liff object exists and is logged in
         const isLoggedIn = typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn();
 
         if (!isLoggedIn) {
@@ -487,6 +500,12 @@ async function handleRegistrationSubmit(event) {
     showLoading(true);
     
     try {
+        // Ensure we have the correct User ID from LIFF or fallback
+        const userId = getUserId();
+        if (!userId) {
+             throw new Error("User ID not found. Please try logging in again.");
+        }
+
         const userData = { fullName, department, cohort };
         await registerNewUser(userData);
         
