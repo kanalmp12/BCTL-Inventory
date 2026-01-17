@@ -202,7 +202,7 @@ function createToolCard(tool) {
     // Image handling
     let imageContent = '';
     if (tool.imageUrl && tool.imageUrl.trim() !== '') {
-        imageContent = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:contain;">`;
+        imageContent = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:cover;">`;
     }
 
     card.innerHTML = `
@@ -369,7 +369,7 @@ function showBorrowModal(tool) {
     const imagePlaceholder = document.querySelector('#borrowModal .tool-image-placeholder');
     if (imagePlaceholder) {
         if (tool.imageUrl && tool.imageUrl.trim() !== '') {
-            imagePlaceholder.innerHTML = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:contain;">`;
+            imagePlaceholder.innerHTML = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:cover;">`;
             imagePlaceholder.style.overflow = 'hidden';
             // Remove the default icon pseudo-element if needed, usually by class or content. 
             // Our CSS uses ::before for the icon. Adding content hides it if we set display:flex properly or replace content.
@@ -425,7 +425,7 @@ function showReturnModal(tool) {
     const imagePlaceholder = document.querySelector('#returnModal .tool-image-placeholder');
     if (imagePlaceholder) {
         if (tool.imageUrl && tool.imageUrl.trim() !== '') {
-            imagePlaceholder.innerHTML = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:contain;">`;
+            imagePlaceholder.innerHTML = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:cover;">`;
             imagePlaceholder.style.overflow = 'hidden';
             imagePlaceholder.classList.add('has-image');
         } else {

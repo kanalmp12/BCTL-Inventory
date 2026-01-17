@@ -622,7 +622,6 @@ input:focus, select:focus, textarea:focus {
     justify-content: center;
     flex-shrink: 0;
     overflow: hidden;
-    padding: 0.5rem;
 }
 
 .tool-info {
