@@ -22,18 +22,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     showLoading(true);
     
     try {
-        // Check if user is registered
-        const isRegistered = await isUserRegistered();
+        // Init LIFF and check status (silently)
+        await initLiff();
         
-        if (!isRegistered) {
-            // Show registration modal
-            showRegistrationModal();
-        } else {
-            // Load user info and tools
-            currentUser = getUserInfo();
-            updateUserUI();
-            await loadTools();
-        }
+        // Load user info (if any)
+        currentUser = getUserInfo();
+        
+        // Update UI (Login btn vs User info)
+        updateUserUI();
+        
+        // Always load tools
+        await loadTools();
+
+        // If user is logged in via LINE but not registered in our system (no local user info),
+        // we might check registration status, but for now we let them browse.
+        // We will check registration when they try to borrow.
+        
     } catch (error) {
         console.error('Initialization error:', error);
         showMessage('Failed to initialize application. Please try again.', 'error');
@@ -45,6 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Event Listeners
 elements.searchInput?.addEventListener('input', handleSearch);
 elements.filterBtns.forEach(btn => btn.addEventListener('click', handleFilterClick));
+
+// Header Login Button
+document.getElementById('loginTriggerBtn')?.addEventListener('click', showRegistrationModal);
 
 // Modal close buttons
 document.getElementById('closeRegistrationModal')?.addEventListener('click', hideRegistrationModal);
@@ -237,7 +244,14 @@ function createToolCard(tool) {
     const returnBtn = card.querySelector('.btn-return');
     
     if (borrowBtn && !borrowBtn.disabled) {
-        borrowBtn.addEventListener('click', () => showBorrowModal(tool));
+        borrowBtn.addEventListener('click', () => {
+            // Check authentication before allowing borrow
+            if (!currentUser && !(typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn())) {
+                showRegistrationModal();
+            } else {
+                showBorrowModal(tool);
+            }
+        });
     }
     
     if (returnBtn) {
@@ -322,9 +336,11 @@ async function showRegistrationModal() {
         const isLoggedIn = typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn();
 
         if (!isLoggedIn) {
+            // Not logged in: Show LINE Login button, hide form
             if (lineLoginSection) lineLoginSection.classList.remove('hidden');
             if (registrationForm) registrationForm.classList.add('hidden');
         } else {
+            // Logged in: Hide LINE Login button, show form
             if (lineLoginSection) lineLoginSection.classList.add('hidden');
             if (registrationForm) {
                 registrationForm.classList.remove('hidden');
@@ -473,6 +489,9 @@ async function handleRegistrationSubmit(event) {
     try {
         const userData = { fullName, department, cohort };
         await registerNewUser(userData);
+        
+        // Update global user state
+        currentUser = getUserInfo();
         
         // Update UI after successful registration
         updateUserUI();

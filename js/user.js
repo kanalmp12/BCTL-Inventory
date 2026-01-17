@@ -158,31 +158,45 @@ async function updateUserUI() {
     const userInfo = getUserInfo();
     const userNameElement = document.getElementById('userName');
     const userProfileImg = document.getElementById('userProfileImg');
+    const userInfoContainer = document.getElementById('userInfoContainer');
+    const loginTriggerBtn = document.getElementById('loginTriggerBtn');
     
-    if (userInfo && userNameElement) {
-        userNameElement.textContent = userInfo.fullName || 'User';
-    } else if (liffInitialized && liff.isLoggedIn()) {
-        // If registered but no local info, or just logged in via LINE but not fully registered in app logic yet
-        try {
-            const profile = await liff.getProfile();
-            if (userNameElement) userNameElement.textContent = profile.displayName;
-        } catch (e) {
-             if (userNameElement) userNameElement.textContent = 'User';
+    // Check if user is logged in (either via local storage or LIFF)
+    const isLoggedIn = (liffInitialized && liff.isLoggedIn()) || !!userInfo;
+
+    if (isLoggedIn) {
+        if (userInfoContainer) userInfoContainer.classList.remove('hidden');
+        if (loginTriggerBtn) loginTriggerBtn.classList.add('hidden');
+
+        if (userInfo && userNameElement) {
+            userNameElement.textContent = userInfo.fullName || 'User';
+        } else if (liffInitialized && liff.isLoggedIn()) {
+            // If registered but no local info
+            try {
+                const profile = await liff.getProfile();
+                if (userNameElement) userNameElement.textContent = profile.displayName;
+            } catch (e) {
+                 if (userNameElement) userNameElement.textContent = 'User';
+            }
+        } else {
+            if (userNameElement) userNameElement.textContent = 'User';
+        }
+
+        // Update Profile Image if logged in via LIFF
+        if (liffInitialized && liff.isLoggedIn()) {
+            try {
+                const profile = await liff.getProfile();
+                if (userProfileImg && profile.pictureUrl) {
+                    userProfileImg.src = profile.pictureUrl;
+                }
+            } catch (e) {
+                console.error('Error getting profile image:', e);
+            }
         }
     } else {
-        if (userNameElement) userNameElement.textContent = 'Guest';
-    }
-
-    // Update Profile Image if logged in
-    if (liffInitialized && liff.isLoggedIn()) {
-        try {
-            const profile = await liff.getProfile();
-            if (userProfileImg && profile.pictureUrl) {
-                userProfileImg.src = profile.pictureUrl;
-            }
-        } catch (e) {
-            console.error('Error getting profile image:', e);
-        }
+        // Not logged in
+        if (userInfoContainer) userInfoContainer.classList.add('hidden');
+        if (loginTriggerBtn) loginTriggerBtn.classList.remove('hidden');
     }
 }
 
