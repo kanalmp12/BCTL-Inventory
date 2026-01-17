@@ -122,12 +122,24 @@ document.getElementById('decreaseQuantity')?.addEventListener('click', () => adj
 document.getElementById('increaseQuantity')?.addEventListener('click', () => adjustQuantity(1));
 
 // Set today as default borrow date
-document.getElementById('borrowDate').value = formatDate(new Date());
+document.getElementById('borrowDate').value = formatDisplayDate(new Date());
 
 // Set default return date to tomorrow
 const tomorrow = new Date();
 tomorrow.setDate(tomorrow.getDate() + 1);
 document.getElementById('returnDate').value = formatDate(tomorrow);
+
+/**
+ * Format date as DD/MM/YY for display
+ * @param {Date} date - Date to format
+ * @returns {string} - Formatted date string (DD/MM/YY)
+ */
+function formatDisplayDate(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
+}
 
 /**
  * Load tools from the API and render them
