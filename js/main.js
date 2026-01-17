@@ -599,7 +599,16 @@ async function handleBorrowSubmit() {
             if (tools[borrowedToolIndex].availableQty !== 'จำนวนมาก') {
                 tools[borrowedToolIndex].availableQty -= quantity;
             }
-            // Re-render only this card or all to reflect change immediately
+            
+            // Re-sort tools to bring borrowed item to top
+            tools.sort((a, b) => {
+                if (a.myBorrowedQty > 0 && b.myBorrowedQty <= 0) return -1;
+                if (a.myBorrowedQty <= 0 && b.myBorrowedQty > 0) return 1;
+                return 0; 
+            });
+            
+            // Update filteredTools and re-render
+            filteredTools = [...tools];
             renderTools(filteredTools);
         }
 
