@@ -161,6 +161,13 @@ async function loadTools() {
             };
         });
 
+        // Sort tools: Borrowed items first
+        tools.sort((a, b) => {
+            if (a.myBorrowedQty > 0 && b.myBorrowedQty <= 0) return -1;
+            if (a.myBorrowedQty <= 0 && b.myBorrowedQty > 0) return 1;
+            return 0; // Keep original order for others
+        });
+
         filteredTools = [...tools];
         renderTools(filteredTools);
     } catch (error) {
