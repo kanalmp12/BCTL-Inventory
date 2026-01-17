@@ -112,7 +112,7 @@ function getTools() {
       availableQty: row[3],
       location: row[4],
       imageUrl: row[5],
-      status: row[3] > 0 ? "Available" : "Borrowed" 
+      status: (row[3] === "จำนวนมาก" || row[3] > 0) ? "Available" : "Borrowed" 
     };
     tools.push(tool);
   }

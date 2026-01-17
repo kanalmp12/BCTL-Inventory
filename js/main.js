@@ -231,8 +231,7 @@ function createToolCard(tool) {
                     <p class="tool-id">ID: ${tool.toolId}</p>
                     <div class="availability-status">
                         <span class="status-badge ${getStatusClass(tool.status)}">
-                            ${tool.status}
-                            ${tool.status === 'Available' ? `: ${tool.availableQty} ${tool.unit || 'Units'}` : ''}
+                            ${tool.status === 'Available' ? (tool.availableQty === 'จำนวนมาก' ? 'Available: จำนวนมาก' : `Available: ${tool.availableQty} ${tool.unit || 'Units'}`) : tool.status}
                         </span>
                     </div>
                 </div>
