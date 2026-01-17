@@ -1,0 +1,36 @@
+@media (min-width: 768px) {
+    h1 {
+        font-size: 1.75rem;
+    }
+    
+    .tools-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+    
+    .dates-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .tool-card .tool-header {
+        flex-direction: column; /* Back to column for grid layout on desktop */
+    }
+    
+    .tool-card .tool-image-placeholder {
+        width: 100%;
+        height: 150px;
+    }
+    
+    .tool-info {
+        margin-top: var(--spacing-sm);
+    }
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        padding: var(--spacing-lg);
+    }
+    
+    .tools-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+}
