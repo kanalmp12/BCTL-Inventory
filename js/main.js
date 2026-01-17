@@ -562,9 +562,20 @@ async function handleBorrowSubmit() {
             expectedReturnDate: returnDate
         };
         
+        // Optimistic UI Update: Assume success immediately
+        const borrowedToolIndex = tools.findIndex(t => t.toolId === toolId);
+        if (borrowedToolIndex !== -1) {
+            tools[borrowedToolIndex].myBorrowedQty = (tools[borrowedToolIndex].myBorrowedQty || 0) + quantity;
+            if (tools[borrowedToolIndex].availableQty !== 'จำนวนมาก') {
+                tools[borrowedToolIndex].availableQty -= quantity;
+            }
+            // Re-render only this card or all to reflect change immediately
+            renderTools(filteredTools);
+        }
+
         await borrowTool(borrowData);
         
-        // Close modal and refresh tools
+        // Close modal and refresh tools from server to confirm
         hideBorrowModal();
         await loadTools();
         
