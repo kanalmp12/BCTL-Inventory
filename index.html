@@ -89,6 +89,10 @@
             <button class="filter-btn" data-filter="available">Available</button>
             <button class="filter-btn" data-filter="borrowed">Borrowed</button>
             <button class="filter-btn" data-filter="overdue">Overdue</button>
+            <button class="filter-btn" id="locationFilterBtn" data-filter="location">
+                Location
+                <span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+            </button>
         </div>
 
         <!-- Tools Grid -->
@@ -281,6 +285,19 @@
                     <button id="confirmReturn" class="btn-primary">Confirm Return</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Location Dropdown Menu -->
+    <div id="locationDropdown" class="hidden absolute bg-white dark:bg-[#231f29] rounded-xl shadow-2xl border border-[#e0dde3] dark:border-[#36323d] z-50 overflow-hidden w-64">
+        <div class="py-2 max-h-64 overflow-y-auto" id="locationDropdownContent">
+            <!-- Dynamic locations will be inserted here -->
+            <button class="w-full text-left px-5 py-3 text-sm hover:bg-[#f7f6f8] dark:hover:bg-[#36323d] transition-colors font-bold text-primary" data-location="all">
+                <span class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+                    All Locations
+                </span>
+            </button>
         </div>
     </div>
 

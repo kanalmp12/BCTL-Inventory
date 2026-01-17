@@ -10,6 +10,8 @@ const elements = {
     toolsGrid: document.getElementById('toolsGrid'),
     searchInput: document.getElementById('searchInput'),
     filterBtns: document.querySelectorAll('.filter-btn'),
+    locationFilterBtn: document.getElementById('locationFilterBtn'),
+    locationDropdown: document.getElementById('locationDropdown'),
     registrationModal: document.getElementById('registrationModal'),
     borrowModal: document.getElementById('borrowModal'),
     returnModal: document.getElementById('returnModal'),
@@ -171,6 +173,7 @@ async function loadTools() {
             return 0; // Keep original order for others
         });
 
+        populateLocationDropdown();
         filteredTools = [...tools];
         renderTools(filteredTools);
     } catch (error) {
@@ -328,12 +331,55 @@ function handleSearch() {
  * Handle filter button click
  */
 function handleFilterClick(event) {
-    const filterValue = event.target.dataset.filter;
+    // Use closest to ensure we get the button even if icon is clicked
+    const btn = event.target.closest('.filter-btn');
+    if (!btn) return;
+    
+    const filterValue = btn.dataset.filter;
+    
+    // Handle Location Filter Dropdown Toggle
+    if (filterValue === 'location') {
+        const dropdown = elements.locationDropdown;
+        
+        if (dropdown.classList.contains('hidden')) {
+            // Show dropdown
+            const rect = btn.getBoundingClientRect();
+            dropdown.style.top = `${rect.bottom + window.scrollY + 8}px`;
+            
+            // Check if it goes off screen right
+            if (rect.left + 200 > window.innerWidth) {
+                dropdown.style.right = '16px';
+                dropdown.style.left = 'auto';
+            } else {
+                 dropdown.style.left = `${rect.left + window.scrollX}px`;
+                 dropdown.style.right = 'auto';
+            }
+            
+            dropdown.classList.remove('hidden');
+        } else {
+            dropdown.classList.add('hidden');
+        }
+        return; // Stop here, don't apply filter yet
+    }
+
+    // Hide location dropdown if any other filter is clicked
+    if (elements.locationDropdown) {
+        elements.locationDropdown.classList.add('hidden');
+    }
     
     // Update active button
-    elements.filterBtns.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.filter === filterValue);
+    elements.filterBtns.forEach(b => {
+        if (b.dataset.filter !== 'location') {
+             b.classList.toggle('active', b.dataset.filter === filterValue);
+        } else {
+             b.classList.remove('active');
+        }
     });
+    
+    // Reset location button text
+    if (elements.locationFilterBtn) {
+        elements.locationFilterBtn.innerHTML = `Location <span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>`;
+    }
     
     // Filter tools based on selection
     if (filterValue === 'all') {
@@ -349,6 +395,101 @@ function handleFilterClick(event) {
     
     renderTools(filteredTools);
 }
+
+/**
+ * Populate location dropdown with unique locations
+ */
+function populateLocationDropdown() {
+    const locations = [...new Set(tools.map(tool => tool.location))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    
+    const dropdownContent = document.getElementById('locationDropdownContent');
+    
+    if (!dropdownContent) return;
+    
+    // Keep the "All Locations" button with its new styled content
+    dropdownContent.innerHTML = `
+        <button class="w-full text-left px-5 py-3 text-sm hover:bg-[#f7f6f8] dark:hover:bg-[#36323d] transition-colors font-bold text-primary" data-location="all">
+            <span class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+                All Locations
+            </span>
+        </button>
+    `;
+    
+    locations.forEach(loc => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left px-5 py-3 text-sm hover:bg-[#f7f6f8] dark:hover:bg-[#36323d] transition-colors text-[#141216] dark:text-white font-medium flex items-center gap-2';
+        btn.innerHTML = `
+            <span class="material-symbols-outlined text-[20px] text-[#756a81] dark:text-[#aba6b3]">location_on</span>
+            <span>${loc}</span>
+        `;
+        btn.dataset.location = loc;
+        btn.addEventListener('click', () => handleLocationSelect(loc));
+        dropdownContent.appendChild(btn);
+    });
+    
+    // Re-attach listener for "All Locations"
+    const allBtn = dropdownContent.querySelector('[data-location="all"]');
+    if (allBtn) {
+        allBtn.addEventListener('click', () => handleLocationSelect('all'));
+    }
+}
+
+/**
+ * Handle selection of a location
+ */
+function handleLocationSelect(location) {
+    // Hide dropdown
+    if (elements.locationDropdown) {
+        elements.locationDropdown.classList.add('hidden');
+    }
+    
+    // Update active state
+    elements.filterBtns.forEach(btn => {
+        btn.classList.remove('active');
+    });
+    if (elements.locationFilterBtn) {
+        elements.locationFilterBtn.classList.add('active');
+    }
+    
+    // Update button text and filter
+    if (location === 'all') {
+        if (elements.locationFilterBtn) {
+            elements.locationFilterBtn.innerHTML = `Location <span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>`;
+        }
+        filteredTools = [...tools];
+        
+        // Reset active state to 'All Items' logically, but visually we kept Location active. 
+        // Actually, 'All Locations' is akin to resetting filters or just filtering by all locations (which is everything).
+        // Let's set 'All Items' as active if they select 'All Locations'
+        if (elements.locationFilterBtn) elements.locationFilterBtn.classList.remove('active');
+        const allItemsBtn = document.querySelector('.filter-btn[data-filter="all"]');
+        if (allItemsBtn) allItemsBtn.classList.add('active');
+        
+    } else {
+        // Truncate if too long
+        const displayLoc = location.length > 12 ? location.substring(0, 10) + '...' : location;
+        if (elements.locationFilterBtn) {
+            elements.locationFilterBtn.innerHTML = `${displayLoc} <span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>`;
+        }
+        
+        filteredTools = tools.filter(tool => tool.location === location);
+    }
+    
+    renderTools(filteredTools);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (elements.locationDropdown && !elements.locationDropdown.classList.contains('hidden')) {
+        // Check if click is outside both button and dropdown
+        if (!elements.locationFilterBtn.contains(e.target) && !elements.locationDropdown.contains(e.target)) {
+            elements.locationDropdown.classList.add('hidden');
+        }
+    }
+});
 
 /**
  * Show registration modal
