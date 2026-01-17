@@ -189,7 +189,7 @@ function createToolCard(tool) {
     let actionButton = '';
     
     // Logic for buttons:
-    // 1. If I have borrowed it, I see "Return".
+    // 1. If I have borrowed it, I see "Return" (Regardless of available stock).
     // 2. If I haven't borrowed it, but it's available, I see "Borrow".
     // 3. If I haven't borrowed it, and it's NOT available, I see "Out of Stock" (disabled).
     
@@ -349,13 +349,23 @@ async function showRegistrationModal() {
 
         if (!isLoggedIn) {
             // Not logged in: Show LINE Login button, hide form
-            if (lineLoginSection) lineLoginSection.classList.remove('hidden');
-            if (registrationForm) registrationForm.classList.add('hidden');
+            if (lineLoginSection) {
+                lineLoginSection.classList.remove('hidden');
+                lineLoginSection.classList.add('flex');
+            }
+            if (registrationForm) {
+                registrationForm.classList.add('hidden');
+                registrationForm.classList.remove('flex');
+            }
         } else {
             // Logged in: Hide LINE Login button, show form
-            if (lineLoginSection) lineLoginSection.classList.add('hidden');
+            if (lineLoginSection) {
+                lineLoginSection.classList.add('hidden');
+                lineLoginSection.classList.remove('flex');
+            }
             if (registrationForm) {
                 registrationForm.classList.remove('hidden');
+                registrationForm.classList.add('flex');
                 
                 // Pre-fill name from LINE profile
                 try {

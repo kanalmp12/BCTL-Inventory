@@ -77,15 +77,15 @@ function generateUserId() {
  * @returns {string} - User ID
  */
 function getUserId() {
+    // If LIFF is logged in, always return the LIFF ID
+    if (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn()) {
+        const userId = localStorage.getItem(CONFIG.USER_ID_KEY);
+        if (userId) return userId;
+    }
+
     let userId = localStorage.getItem(CONFIG.USER_ID_KEY);
     
-    // If we are using LIFF, we expect userId to be there if logged in.
-    // If not, and fallback is allowed (or LIFF failed), we use generated one.
     if (!userId) {
-        // If LIFF is supposed to be used but not logged in, we might return null or handle it.
-        // For now, consistent with previous behavior, generate one if missing (fallback mode)
-        // BUT for LINE Login enforcement, we should return null if we really want to force login.
-        // However, to keep the app working if LIFF isn't set up yet:
         userId = generateUserId();
         localStorage.setItem(CONFIG.USER_ID_KEY, userId);
     }
@@ -95,10 +95,15 @@ function getUserId() {
 
 /**
  * Save user info to localStorage
- * @param {Object} userInfo - User information (name, department)
+ * @param {Object} userInfo - User information (name, department, cohort, etc.)
  */
 function saveUserInfo(userInfo) {
-    localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(userInfo));
+    const userId = getUserId();
+    const dataToSave = {
+        ...userInfo,
+        userId: userId
+    };
+    localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(dataToSave));
 }
 
 /**
