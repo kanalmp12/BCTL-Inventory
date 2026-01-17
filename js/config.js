@@ -1,7 +1,7 @@
 // config.js - Configuration file for API endpoints
 const CONFIG = {
     // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
-    API_URL: 'https://script.google.com/macros/s/AKfycbwmRSjPGT9dfSLIqGVcmXyeTqUYRaG4hD8H53OQLR1iY5h2ciyDU9UBTo6dIzBmOfZmpg/exec',
+    API_URL: 'https://script.google.com/macros/s/AKfycby54KvJdYqJ48YLe7IZrvSBYgT2-GvHjFdHMV8809ltIxJE2F-0tAGyZFHBqrg077UwEA/exec',
 
     // Set to false to use the real Google Sheets API
     USE_MOCK_API: false,
