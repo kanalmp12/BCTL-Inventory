@@ -146,9 +146,12 @@ function formatDisplayDate(date) {
  */
 async function loadTools() {
     try {
+        // Ensure we have the user ID (from LIFF or Local Storage)
+        const userId = getUserId();
+
         const [fetchedTools, userBorrows] = await Promise.all([
             getTools(),
-            currentUser ? getUserActiveBorrows(currentUser.userId) : { borrows: [] }
+            userId ? getUserActiveBorrows(userId) : { borrows: [] }
         ]);
         
         const myBorrows = userBorrows.borrows || [];
