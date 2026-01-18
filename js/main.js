@@ -150,10 +150,13 @@ async function loadTools() {
     try {
         // Ensure we have the user ID (from LIFF or Local Storage)
         const userId = getUserId();
+        
+        // Check authentication status
+        const isLoggedIn = (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn()) || !!getUserInfo();
 
         const [fetchedTools, userBorrows] = await Promise.all([
             getTools(),
-            userId ? getUserActiveBorrows(userId) : { borrows: [] }
+            (isLoggedIn && userId) ? getUserActiveBorrows(userId) : { borrows: [] }
         ]);
         
         const myBorrows = userBorrows.borrows || [];
