@@ -294,4 +294,9 @@ function returnTool(data) {
 function authorizeDrive() {
   const root = DriveApp.getRootFolder();
   console.log("Drive authorized. Root folder: " + root.getName());
+  
+  // Force write permission request
+  const tempFile = root.createFile("temp_auth_check.txt", "Authorization Check");
+  tempFile.setTrashed(true);
+  console.log("Write permission confirmed.");
 }
