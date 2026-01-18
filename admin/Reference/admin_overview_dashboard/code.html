@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ToolMaster Admin Dashboard</title>
+<!-- Fonts -->
+<script type="text/javascript" nonce="66477681968e43b6ad7a2c88779" src="//local.adguard.org?ts=1768740283147&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzJiYTFlMTNlOTA0ZDQ5MDc4MmZhMjAwY2FmMzk2MTA2EgsSBxDBq5v3hwIYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDIwMzY2Mjk4MjQ4MDAxMDU2Ng%26filename%3D%26opi%3D89354086&amp;app=com.google.Chrome&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="66477681968e43b6ad7a2c88779" src="//local.adguard.org?ts=1768740283147&amp;name=AdGuard%20Extra&amp;type=user-script"></script><link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2256a0",
+                        "primary-light": "#e9f0f7", 
+                        "background-light": "#ffffff",
+                        "background-dark": "#1a1f23",
+                        "surface-light": "#f8f9fa",
+                        "surface-dark": "#252b30",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 12px rgba(0, 0, 0, 0.04)',
+                        'card': '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)'
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        }
+        
+        /* Custom CSS for the Pie Chart since we can't use JS libraries */
+        .pie-chart {
+            background: conic-gradient(
+                #2256a0 0% 45%, 
+                #60a5fa 45% 70%, 
+                #93c5fd 70% 85%, 
+                #cbd5e1 85% 100%
+            );
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="bg-[#f3f4f6] dark:bg-black text-[#121417] dark:text-white font-display overflow-hidden selection:bg-primary/30">
+<div class="flex h-screen w-full">
+<!-- Sidebar Navigation -->
+<aside class="w-64 flex-shrink-0 bg-background-light dark:bg-background-dark border-r border-[#e5e7eb] dark:border-[#2d3748] flex flex-col z-20 transition-colors duration-300">
+<!-- Brand -->
+<div class="h-16 flex items-center gap-3 px-6 border-b border-[#f1f2f4] dark:border-[#2d3748]">
+<div class="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
+<span class="material-symbols-outlined text-[20px]">handyman</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-lg font-bold leading-none tracking-tight text-primary dark:text-white">ToolMaster</h1>
+<p class="text-[#667385] dark:text-gray-400 text-xs font-medium">Automation System</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1">
+<p class="px-3 text-xs font-bold text-[#9aa2ac] uppercase tracking-wider mb-2">Main Menu</p>
+<!-- Active Item -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:text-blue-300 group transition-all" href="#">
+<span class="material-symbols-outlined filled text-[22px]">dashboard</span>
+<span class="text-sm font-semibold">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#556070] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">build</span>
+<span class="text-sm font-medium">Tools Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#556070] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">swap_horiz</span>
+<span class="text-sm font-medium">Borrow / Return</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#556070] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">warning</span>
+<span class="text-sm font-medium">Overdue Items</span>
+<span class="ml-auto bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">12</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#556070] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">group</span>
+<span class="text-sm font-medium">Users &amp; Depts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#556070] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">analytics</span>
+<span class="text-sm font-medium">Reports</span>
+</a>
+<div class="my-4 border-t border-[#f1f2f4] dark:border-[#2d3748]"></div>
+<p class="px-3 text-xs font-bold text-[#9aa2ac] uppercase tracking-wider mb-2">System</p>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#556070] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<!-- User Profile Sidebar Footer -->
+<div class="p-4 border-t border-[#f1f2f4] dark:border-[#2d3748]">
+<div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors">
+<div class="size-9 rounded-full bg-cover bg-center" data-alt="Admin user profile picture showing a professional headshot" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD4iF2026aP2D9_35QuVFnGHaERzfe2IRBADdUx3iUKRHGcQlkTbBDIkoczQBv_tza_L-ixgTFU2L-mtZnoGk6QTbk9_zl_5kzirnnuVrWVh8N0HFAWWD94aljCg-ic91rqNZfYY_6PYsqjVzhWjRp7NAK1xuScTsiSfM_bzX7c0gcEVczQSk10NYf6dmK_5lpC65_eOG3L67mU2VP_rLPEUY73fbRSbfynAi5_S_XbpWBmm7SQxlVBjUMZ6WiWl8qGMDKRjSwfHo89");'></div>
+<div class="flex flex-col overflow-hidden">
+<p class="text-sm font-bold text-[#121417] dark:text-white truncate">James Anderson</p>
+<p class="text-xs text-[#667385] dark:text-gray-400 truncate">System Admin</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-gray-400 text-[20px]">logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-[#f8f9fa] dark:bg-[#111418] relative">
+<!-- Top Navbar -->
+<header class="flex-shrink-0 h-16 bg-background-light dark:bg-background-dark border-b border-[#e5e7eb] dark:border-[#2d3748] flex items-center justify-between px-8 z-10">
+<!-- Page Breadcrumb/Title -->
+<div class="flex flex-col justify-center">
+<h2 class="text-lg font-bold text-[#121417] dark:text-white">Dashboard Overview</h2>
+<p class="text-xs text-[#667385] dark:text-gray-400 hidden sm:block">Welcome back, here's what's happening today.</p>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-4">
+<!-- Search -->
+<div class="hidden md:flex items-center bg-[#f3f4f6] dark:bg-[#252b30] rounded-lg h-9 w-64 px-3 border border-transparent focus-within:border-primary/50 focus-within:bg-white dark:focus-within:bg-black transition-all">
+<span class="material-symbols-outlined text-gray-400 text-[20px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full h-full text-[#121417] dark:text-white placeholder:text-gray-500" placeholder="Search tools, users..." type="text"/>
+</div>
+<!-- Notification -->
+<button class="relative size-9 flex items-center justify-center rounded-lg hover:bg-[#f3f4f6] dark:hover:bg-[#252b30] text-[#556070] dark:text-gray-300 transition-colors">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-black"></span>
+</button>
+<!-- Help -->
+<button class="size-9 flex items-center justify-center rounded-lg hover:bg-[#f3f4f6] dark:hover:bg-[#252b30] text-[#556070] dark:text-gray-300 transition-colors">
+<span class="material-symbols-outlined text-[22px]">help</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Dashboard Content -->
+<div class="flex-1 overflow-y-auto p-8 scrollbar-hide">
+<div class="max-w-[1400px] mx-auto flex flex-col gap-6">
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Card 1 -->
+<div class="bg-background-light dark:bg-background-dark p-5 rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-soft flex items-start justify-between group hover:border-primary/30 transition-colors">
+<div class="flex flex-col gap-1">
+<p class="text-[#667385] dark:text-gray-400 text-sm font-medium">Total Tools</p>
+<h3 class="text-2xl font-bold text-[#121417] dark:text-white">1,240</h3>
+<div class="flex items-center gap-1 text-green-600 text-xs font-semibold mt-1 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded w-fit">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span>+1.2%</span>
+</div>
+</div>
+<div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
+<span class="material-symbols-outlined text-[24px]">construction</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-background-light dark:bg-background-dark p-5 rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-soft flex items-start justify-between group hover:border-primary/30 transition-colors">
+<div class="flex flex-col gap-1">
+<p class="text-[#667385] dark:text-gray-400 text-sm font-medium">Borrowed</p>
+<h3 class="text-2xl font-bold text-[#121417] dark:text-white">342</h3>
+<div class="flex items-center gap-1 text-green-600 text-xs font-semibold mt-1 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded w-fit">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span>+4.5%</span>
+</div>
+</div>
+<div class="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400">
+<span class="material-symbols-outlined text-[24px]">output</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-background-light dark:bg-background-dark p-5 rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-soft flex items-start justify-between group hover:border-red-200 transition-colors relative overflow-hidden">
+<div class="absolute right-0 top-0 h-full w-1 bg-red-500"></div>
+<div class="flex flex-col gap-1">
+<p class="text-[#667385] dark:text-gray-400 text-sm font-medium">Overdue Today</p>
+<h3 class="text-2xl font-bold text-[#121417] dark:text-white">12</h3>
+<p class="text-xs text-red-600 font-medium mt-1">Requires Action</p>
+</div>
+<div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600">
+<span class="material-symbols-outlined text-[24px]">priority_high</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-background-light dark:bg-background-dark p-5 rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-soft flex items-start justify-between group hover:border-primary/30 transition-colors">
+<div class="flex flex-col gap-1">
+<p class="text-[#667385] dark:text-gray-400 text-sm font-medium">Total Overdue</p>
+<h3 class="text-2xl font-bold text-[#121417] dark:text-white">45</h3>
+<div class="flex items-center gap-1 text-green-600 text-xs font-semibold mt-1 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded w-fit">
+<span class="material-symbols-outlined text-[14px]">trending_down</span>
+<span>-0.5%</span>
+</div>
+</div>
+<div class="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-orange-600">
+<span class="material-symbols-outlined text-[24px]">history_toggle_off</span>
+</div>
+</div>
+</div>
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Bar Chart -->
+<div class="lg:col-span-2 bg-background-light dark:bg-background-dark p-6 rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-soft">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h3 class="text-base font-bold text-[#121417] dark:text-white">Borrowing Activity</h3>
+<p class="text-sm text-[#667385] dark:text-gray-400">Trends over the last 7 days</p>
+</div>
+<select class="bg-[#f3f4f6] dark:bg-[#252b30] border-none text-xs font-semibold rounded-lg px-3 py-1.5 text-[#121417] dark:text-white focus:ring-0 cursor-pointer">
+<option>Last 7 Days</option>
+<option>Last 30 Days</option>
+</select>
+</div>
+<!-- CSS Bar Chart Representation -->
+<div class="relative h-64 w-full pt-4">
+<!-- Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between text-xs text-gray-400 z-0 pb-6 pointer-events-none">
+<div class="border-b border-dashed border-gray-200 dark:border-gray-700 w-full h-0"></div>
+<div class="border-b border-dashed border-gray-200 dark:border-gray-700 w-full h-0"></div>
+<div class="border-b border-dashed border-gray-200 dark:border-gray-700 w-full h-0"></div>
+<div class="border-b border-dashed border-gray-200 dark:border-gray-700 w-full h-0"></div>
+<div class="border-b border-gray-200 dark:border-gray-700 w-full h-0"></div>
+</div>
+<!-- Bars -->
+<div class="relative z-10 h-full flex items-end justify-between px-2 sm:px-8 pb-6 gap-2 sm:gap-6">
+<div class="flex flex-col items-center gap-2 flex-1 group cursor-pointer">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/30 rounded-t-sm h-[40%] relative group-hover:bg-primary transition-all duration-300">
+<div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap transition-opacity">42 Loans</div>
+</div>
+<span class="text-xs text-gray-500 font-medium">Mon</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group cursor-pointer">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/30 rounded-t-sm h-[65%] relative group-hover:bg-primary transition-all duration-300">
+<div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap transition-opacity">68 Loans</div>
+</div>
+<span class="text-xs text-gray-500 font-medium">Tue</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group cursor-pointer">
+<div class="w-full max-w-[40px] bg-primary rounded-t-sm h-[85%] relative shadow-lg shadow-primary/20">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap">89 Loans</div>
+</div>
+<span class="text-xs text-[#121417] dark:text-white font-bold">Wed</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group cursor-pointer">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/30 rounded-t-sm h-[55%] relative group-hover:bg-primary transition-all duration-300"></div>
+<span class="text-xs text-gray-500 font-medium">Thu</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group cursor-pointer">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/30 rounded-t-sm h-[70%] relative group-hover:bg-primary transition-all duration-300"></div>
+<span class="text-xs text-gray-500 font-medium">Fri</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group cursor-pointer">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/30 rounded-t-sm h-[30%] relative group-hover:bg-primary transition-all duration-300"></div>
+<span class="text-xs text-gray-500 font-medium">Sat</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 group cursor-pointer">
+<div class="w-full max-w-[40px] bg-primary/20 dark:bg-primary/30 rounded-t-sm h-[20%] relative group-hover:bg-primary transition-all duration-300"></div>
+<span class="text-xs text-gray-500 font-medium">Sun</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Donut Chart -->
+<div class="bg-background-light dark:bg-background-dark p-6 rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-soft flex flex-col">
+<div class="mb-6">
+<h3 class="text-base font-bold text-[#121417] dark:text-white">Borrowers by Dept</h3>
+<p class="text-sm text-[#667385] dark:text-gray-400">Current month distribution</p>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center gap-6">
+<!-- CSS Donut Chart -->
+<div class="relative size-48 pie-chart shadow-inner">
+<div class="absolute inset-4 bg-background-light dark:bg-background-dark rounded-full flex items-center justify-center flex-col shadow-sm">
+<span class="text-3xl font-bold text-[#121417] dark:text-white">45%</span>
+<span class="text-xs text-gray-500 uppercase font-semibold">Engineering</span>
+</div>
+</div>
+<!-- Legend -->
+<div class="w-full grid grid-cols-2 gap-3 text-sm">
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-[#2256a0]"></span>
+<span class="text-gray-600 dark:text-gray-300">Engineering</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-[#60a5fa]"></span>
+<span class="text-gray-600 dark:text-gray-300">Maintenance</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-[#93c5fd]"></span>
+<span class="text-gray-600 dark:text-gray-300">R&amp;D</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-[#cbd5e1]"></span>
+<span class="text-gray-600 dark:text-gray-300">Others</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Activity Table -->
+<div class="bg-background-light dark:bg-background-dark rounded-xl border border-[#e5e7eb] dark:border-[#2d3748] shadow-soft overflow-hidden">
+<div class="p-6 border-b border-[#f1f2f4] dark:border-[#2d3748] flex flex-wrap items-center justify-between gap-4">
+<h3 class="text-base font-bold text-[#121417] dark:text-white">Urgent Overdue Items</h3>
+<button class="text-primary text-sm font-bold hover:underline">View All Overdue</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-[#f8f9fa] dark:bg-[#1f2429] border-b border-[#e5e7eb] dark:border-[#2d3748]">
+<th class="py-4 px-6 text-xs font-bold text-[#667385] dark:text-gray-400 uppercase tracking-wider">Tool Name</th>
+<th class="py-4 px-6 text-xs font-bold text-[#667385] dark:text-gray-400 uppercase tracking-wider">Borrower</th>
+<th class="py-4 px-6 text-xs font-bold text-[#667385] dark:text-gray-400 uppercase tracking-wider">Due Date</th>
+<th class="py-4 px-6 text-xs font-bold text-[#667385] dark:text-gray-400 uppercase tracking-wider">Status</th>
+<th class="py-4 px-6 text-xs font-bold text-[#667385] dark:text-gray-400 uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#f1f2f4] dark:divide-[#2d3748]">
+<tr class="group hover:bg-[#f8f9fa] dark:hover:bg-[#1f2429] transition-colors">
+<td class="py-4 px-6">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-500">
+<span class="material-symbols-outlined text-[20px]">tools_power_drill</span>
+</div>
+<div class="flex flex-col">
+<span class="font-bold text-sm text-[#121417] dark:text-white">Makita Cordless Drill</span>
+<span class="text-xs text-gray-500">ID: #TL-4092</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-cover" data-alt="Avatar of user Sarah J." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuACaZ4wLoqrE9IwXDLgg7HJWCJFJVZru5WDafPseKV5o8XnSKeXgKHduhcrZIfMfPnKtw4oqU0dDbu7MFoS3kHcfCRuYTrTHERA2gApX_-tjchXWqUNPjmxLVNB95fR0R8U-Yh3uZFkwrTFUEf_ZTIQVh9ifQtUwaNydRruQXlnz1ZonnObbOt74zo099bHeorCJ_N2IxdVx1ejQR0IIy-aCOu3NrvLiyhU2kKWT4yZo998tmx-ai8VRkc7-o7Bt49Cjq0dgoqkxWJZ')"></div>
+<span class="text-sm text-[#121417] dark:text-gray-200">Sarah Jenkins</span>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="text-sm font-medium text-red-600">Oct 24, 2023</span>
+<span class="text-xs text-gray-400 block">2 days ago</span>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                                Overdue
+                                            </span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-[#f8f9fa] dark:hover:bg-[#1f2429] transition-colors">
+<td class="py-4 px-6">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-500">
+<span class="material-symbols-outlined text-[20px]">square_foot</span>
+</div>
+<div class="flex flex-col">
+<span class="font-bold text-sm text-[#121417] dark:text-white">Digital Caliper</span>
+<span class="text-xs text-gray-500">ID: #TL-1022</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-cover" data-alt="Avatar of user Mike R." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBEfCZw319HX7Bm6I4qkFjEWScIBlJvu7NZZn8gNZhTUt2_w6fzVcoeOFm0tjY91xDzNUxYqe4ag88zxjCaLDJB_LF5jZVnEU8Qo3s5I5JM-aiocOW1s8ql24-qx0A326myFKjLaqtcX-SKCUE8KTG1BHqNFNYUOhFEBL9GOJwFmk2QywE7tsm9lVgU-ip0c3K79VSu-Kr2-1lQ5-qSG5hC7E4oRPdZpYRlq6EIylP-wRcj3sKHIDMhc6AmhN40Ak3OcTLY5N-3CnXQ')"></div>
+<span class="text-sm text-[#121417] dark:text-gray-200">Mike Ross</span>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="text-sm font-medium text-red-600">Oct 25, 2023</span>
+<span class="text-xs text-gray-400 block">1 day ago</span>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                                Overdue
+                                            </span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Footer Info -->
+<div class="flex justify-center py-4">
+<p class="text-xs text-gray-400">ToolMaster v1.0.4 © 2023 Company Inc. All rights reserved.</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

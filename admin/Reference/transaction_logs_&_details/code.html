@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tool Crib Automation - Transaction Logs</title>
+<script type="text/javascript" nonce="66477681968e43b6ad7a2c88779" src="//local.adguard.org?ts=1768740283147&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzVkMmYxN2JhOGJhYjRiMzk5NDg4ZDBjMTg3YjJjOTU1EgsSBxDBq5v3hwIYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDIwMzY2Mjk4MjQ4MDAxMDU2Ng%26filename%3D%26opi%3D89354086&amp;app=com.google.Chrome&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="66477681968e43b6ad7a2c88779" src="//local.adguard.org?ts=1768740283147&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#1d6ca5",
+                "background-light": "#f9fafb",
+                "background-dark": "#21242c",
+                "surface-light": "#ffffff",
+                "surface-dark": "#1a1d21",
+              },
+              fontFamily: {
+                "display": ["Manrope", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+            },
+          },
+        }
+      </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        
+        /* Timeline line */
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 7px; /* center of w-4 (16px) is 8px, minus 1px width/2 */
+            top: 24px;
+            bottom: 0;
+            width: 2px;
+            background-color: #e2e8f0;
+            z-index: 0;
+        }
+        .dark .timeline-line::before {
+            background-color: #334155;
+        }
+        .last-item .timeline-line::before {
+            display: none;
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white h-screen flex overflow-hidden selection:bg-primary/20">
+<!-- Sidebar Navigation -->
+<aside class="w-20 lg:w-64 bg-surface-light dark:bg-surface-dark border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 z-30 flex-shrink-0">
+<!-- Logo -->
+<div class="h-16 flex items-center justify-center lg:justify-start lg:px-6 border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 bg-primary text-white rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">construction</span>
+</div>
+<h1 class="text-lg font-bold tracking-tight hidden lg:block text-slate-900 dark:text-white">ToolCrib<span class="text-primary">.ai</span></h1>
+</div>
+</div>
+<!-- Menu Items -->
+<nav class="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-primary dark:text-slate-400 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">dashboard</span>
+<span class="font-medium hidden lg:block">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-primary dark:text-slate-400 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">inventory_2</span>
+<span class="font-medium hidden lg:block">Inventory</span>
+</a>
+<!-- Active Item -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-white transition-colors" href="#">
+<span class="material-symbols-outlined fill-current" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-semibold hidden lg:block">Transaction Logs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-primary dark:text-slate-400 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">group</span>
+<span class="font-medium hidden lg:block">Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-primary dark:text-slate-400 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">settings</span>
+<span class="font-medium hidden lg:block">Settings</span>
+</a>
+</nav>
+<!-- User Profile Stub -->
+<div class="p-4 border-t border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="size-9 rounded-full bg-slate-200 bg-cover bg-center" data-alt="Admin User Profile Picture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAeekCYpJopegM1Vbr7LCTa9gVkS9rR74guUMn-TnEBcc1Zymw1ro75Hz-0VwAmaJ2RZZ2OhN1ThcADfMQuO0uW_HSc47rHpQtOuUdYeJB-wfnkLhSxvel8BLSM4shSRgEohLmjnNVhbfETX_ZthuWJRmpEDCLZHUzGMBBMnIhCMw7tODoE4sfFhpRY4AcpLjmoc9cFM9VxIZTKxCXY9sDVTbqVpozns9DknGMQjbHBQqQw1xd0D-7qFa-H5VBkXmpqbKREyziycW_x');"></div>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-semibold truncate dark:text-slate-200">Admin User</p>
+<p class="text-xs text-slate-500 truncate">admin@toolcrib.ai</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark relative">
+<!-- Top Header Area -->
+<header class="h-16 flex items-center justify-between px-6 bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20 shrink-0">
+<!-- Breadcrumbs -->
+<div class="flex items-center gap-2 text-sm">
+<span class="text-slate-500">Dashboard</span>
+<span class="material-symbols-outlined text-[16px] text-slate-400">chevron_right</span>
+<span class="font-semibold text-slate-900 dark:text-white">Transaction Logs</span>
+</div>
+<!-- Global Actions -->
+<div class="flex items-center gap-4">
+<button class="relative p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+</button>
+</div>
+</header>
+<!-- Content Split View -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Panel: Data Table -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- Toolbar -->
+<div class="p-6 pb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+<div>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white">Audit Trail</h2>
+<p class="text-slate-500 text-sm mt-1">Manage and track all tool checkout activities.</p>
+</div>
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<!-- Search -->
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors text-[20px]">search</span>
+<input class="pl-10 pr-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm w-full sm:w-64 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" placeholder="Search logs..." type="text"/>
+</div>
+<!-- Filters -->
+<button class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px] text-slate-500">filter_list</span>
+<span class="hidden md:inline">Filter</span>
+</button>
+<!-- Export -->
+<button class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm text-primary">
+<span class="material-symbols-outlined text-[20px]">download</span>
+<span class="hidden md:inline">Export</span>
+</button>
+</div>
+</div>
+<!-- Table Area -->
+<div class="flex-1 overflow-auto p-6 pt-2">
+<div class="bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+<tr>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">
+<input class="rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+</th>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date &amp; Time</th>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tool</th>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-10"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+<!-- Active Row -->
+<tr class="bg-primary/5 dark:bg-primary/10 group cursor-pointer transition-colors relative">
+<td class="px-6 py-4 relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<input checked="" class="rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Oct 24, 2023</div>
+<div class="text-xs text-slate-500">09:42 AM</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-200 bg-cover bg-center" data-alt="Alex Chen Avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDiq7D4xCxEwXB9Hdgzze4Fbu0X94Npy5KCDSDorug5C-5E3C5N7288wUCBeEJtX8ugLRWc_ocN08nSJ9tzIl5w_pgrRgOPQ0PjQM5FX9SZgnip5-7P95kEdEUcFPZC6B0nuuvOJqjTgzOOhkI_LCxERRdHFnTNMzafLz5oJ8ujmTowRuBIu8OuFz2qw3iyCm1Rbk_Ej4T7IDoVdXZ5T_7InQiIeFDiB2USQxhbGDZHstPJkZWg4CSbxo_nAMPG2QvgnHmRaLzIey_J');"></div>
+<div>
+<div class="text-sm font-medium text-slate-900 dark:text-white">Alex Chen</div>
+<div class="text-xs text-slate-500">Engineering</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400">handyman</span>
+<span class="text-sm text-slate-700 dark:text-slate-300">Makita Impact Driver X4</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+<span class="size-1.5 rounded-full bg-amber-500"></span>
+                                            Pending
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="material-symbols-outlined text-primary">chevron_right</span>
+</td>
+</tr>
+<!-- Standard Row -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Oct 23, 2023</div>
+<div class="text-xs text-slate-500">02:15 PM</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">SJ</div>
+<div>
+<div class="text-sm font-medium text-slate-900 dark:text-white">Sarah Jenkins</div>
+<div class="text-xs text-slate-500">Maintenance</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400">construction</span>
+<span class="text-sm text-slate-700 dark:text-slate-300">Fluke 87V Multimeter</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+<span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                            Returned
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="material-symbols-outlined text-slate-400 opacity-0 group-hover:opacity-100">chevron_right</span>
+</td>
+</tr>
+<!-- Overdue Row -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Oct 20, 2023</div>
+<div class="text-xs text-red-500 font-medium">Overdue (4d)</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-200 bg-cover bg-center" data-alt="Mike Ross Avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAbi7CAaELfg_Pb28MoK23scoBftWYl6eMYdTWWPpQkJdOj_ShGeXvnITDCD3X65aoV8Li68yTYYNrwoDohbO46CIoweJ9lGN30WdnDTooQNKtZXaXOyXq7QZEPitUNR3-D1gyeuNzLZA9sfUVl9A14uuSMokLm11ubon7_o-vOUKEwMJKAqhOOJFBVsYo9QnqeFQaUYqxuqCqmJEox-BAfM4MqzCKcWGyizK2Tj53V91w2RE1b-R9jyMQucmsAKQrl0Tb0cVKOY8w1');"></div>
+<div>
+<div class="text-sm font-medium text-slate-900 dark:text-white">Mike Ross</div>
+<div class="text-xs text-slate-500">Contractor</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400">hardware</span>
+<span class="text-sm text-slate-700 dark:text-slate-300">Bosch Rotary Hammer</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                                            Overdue
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="material-symbols-outlined text-slate-400 opacity-0 group-hover:opacity-100">chevron_right</span>
+</td>
+</tr>
+<!-- Standard Row -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Oct 18, 2023</div>
+<div class="text-xs text-slate-500">11:30 AM</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">DK</div>
+<div>
+<div class="text-sm font-medium text-slate-900 dark:text-white">David Kim</div>
+<div class="text-xs text-slate-500">Operations</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400">build</span>
+<span class="text-sm text-slate-700 dark:text-slate-300">Dewalt Grinder</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+<span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                            Returned
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="material-symbols-outlined text-slate-400 opacity-0 group-hover:opacity-100">chevron_right</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination (Simple) -->
+<div class="flex items-center justify-between mt-4 px-2">
+<p class="text-sm text-slate-500">Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of <span class="font-medium">128</span> results</p>
+<div class="flex gap-2">
+<button class="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 disabled:opacity-50">Previous</button>
+<button class="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300">Next</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel: Side Drawer (Detail View) -->
+<aside class="w-[420px] bg-surface-light dark:bg-surface-dark border-l border-slate-200 dark:border-slate-700 flex flex-col shadow-2xl z-20 shrink-0 transform transition-transform duration-300 translate-x-0">
+<!-- Drawer Header -->
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white dark:bg-surface-dark">
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Transaction Details</h3>
+</div>
+<p class="text-xs font-mono text-slate-500 mt-0.5">ID: #TRX-9928-AX</p>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Drawer Content -->
+<div class="flex-1 overflow-y-auto p-6 space-y-8">
+<!-- Status Banner -->
+<div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-lg p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-amber-600 dark:text-amber-500 mt-0.5">info</span>
+<div>
+<h4 class="text-sm font-semibold text-amber-900 dark:text-amber-400">Return Pending Verification</h4>
+<p class="text-xs text-amber-700 dark:text-amber-500/80 mt-1">Item was returned to the drop box but has not been inspected by an admin yet.</p>
+</div>
+</div>
+<!-- User & Tool Info Grid -->
+<div class="grid grid-cols-2 gap-6">
+<!-- User -->
+<div class="flex flex-col gap-2">
+<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Borrower</span>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-slate-200 bg-cover bg-center shadow-sm" data-alt="Alex Chen Profile" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCpEckY1zTMOcOci86NVZD0tksfE_6Oj0yFsZD3FrZ2UHgIX6AvPjfmcvwiYr0sgfKfe2iL_zoLJmIqz38UxPP5-XJYufPwfqfx1ONuyeCDOGn1Nctgs_OsfEwoiKhrVBWzJD6Co-LJIxHYmc2x5v-4_yHY81uNxa7C1sKonoSDLjFtV_bG0VSBENUHahHZ7jYn62krRftJ4YdIrRGxSXPj_Sm78Tq8FibaNILjf0A3MIL3HL2zVfoqF85iPmSeJq8ogZsrB8_fOem2');"></div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Alex Chen</p>
+<p class="text-xs text-slate-500">Engineering Dept.</p>
+</div>
+</div>
+</div>
+<!-- Tool -->
+<div class="flex flex-col gap-2">
+<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Asset</span>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-400">handyman</span>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Makita Driver</p>
+<p class="text-xs text-slate-500">ID: #4451</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Divider -->
+<hr class="border-slate-100 dark:border-slate-800"/>
+<!-- Reason -->
+<div class="space-y-2">
+<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Reason for Borrowing</span>
+<div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700/50">
+<p class="text-sm text-slate-700 dark:text-slate-300 italic">"Replacing HVAC ductwork in Sector 4. Need high torque driver for rusted bolts."</p>
+</div>
+</div>
+<!-- Timeline -->
+<div class="space-y-4">
+<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Activity Timeline</span>
+<div class="relative pl-2">
+<!-- Step 1 -->
+<div class="relative flex gap-4 pb-8 timeline-line">
+<div class="relative z-10 size-4 rounded-full bg-emerald-100 dark:bg-emerald-900/50 border-2 border-emerald-500 flex-shrink-0"></div>
+<div>
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Checked Out</p>
+<p class="text-xs text-slate-500">Oct 24, 09:42 AM</p>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="relative flex gap-4 last-item">
+<div class="relative z-10 size-4 rounded-full bg-amber-100 dark:bg-amber-900/50 border-2 border-amber-500 flex-shrink-0"></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Returned (Pending)</p>
+<p class="text-xs text-slate-500">Oct 24, 04:15 PM</p>
+</div>
+</div>
+<!-- Return Evidence Card inside timeline -->
+<div class="mt-3 group relative overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 z-10"></div>
+<div class="h-32 bg-slate-200 w-full bg-cover bg-center transform group-hover:scale-105 transition-transform duration-500" data-alt="Photo of returned tool in box" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCv56mlTiCMcJ1huw_N5MZ1n1rWC3INY8k61RVhWhySqulhYuWX_8x5rdMeaE9rLX4leCGXs1YN4D9C4xIjESZBbYXN_FNy0cGeWOgSwiI-6bNJyFOdpL9KirGPOYpr3RU512zSI-E2uuthu8wMMYVJrDndnrwdDD91eNeZrbzCmjvnLRoOh0Rc9vst0Hwr4787-UXxmnzgqVKDVZns_fa-WMPS4BlmVarcQOI6hn2ScMITxK3jymmK_QO0SXnKpVYwQOYCYS2TCj_l');"></div>
+<div class="absolute bottom-2 left-3 right-3 z-20 flex justify-between items-end">
+<span class="text-white text-xs font-medium">Return Photo</span>
+<button class="text-xs bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-2 py-1 rounded transition-colors">View Full</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Drawer Footer Actions -->
+<div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-surface-dark/50 shrink-0 gap-3 flex flex-col">
+<button class="w-full py-2.5 px-4 bg-primary hover:bg-sky-700 text-white font-medium rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+                        Verify Return
+                    </button>
+<button class="w-full py-2.5 px-4 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-red-500">flag</span>
+                        Report Issue
+                    </button>
+</div>
+</aside>
+</div>
+</main>
+</body></html>
