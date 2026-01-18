@@ -286,3 +286,12 @@ function returnTool(data) {
     lock.releaseLock();
   }
 }
+
+/**
+ * AUTHORIZATION HELPER
+ * Run this function ONCE from the Apps Script Editor to authorize Google Drive access.
+ */
+function authorizeDrive() {
+  const root = DriveApp.getRootFolder();
+  console.log("Drive authorized. Root folder: " + root.getName());
+}
