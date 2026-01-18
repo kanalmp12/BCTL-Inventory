@@ -669,19 +669,19 @@ function showReturnModal(tool) {
     const notesInput = document.getElementById('returnNotes');
     if (notesInput) notesInput.value = "";
     
-    // Reset Image Input
-    const imageInput = document.getElementById('returnImage');
-    const imagePreview = document.getElementById('returnImagePreview');
-    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
-    const imageError = document.getElementById('returnImageError');
-    
-    if (imageInput) imageInput.value = "";
-    if (imagePreview) {
-        imagePreview.src = "";
-        imagePreview.classList.add('hidden');
+    // Reset Image Input UI
+    if (window.clearReturnImage) {
+        window.clearReturnImage();
+    } else {
+        // Fallback manual reset
+        const cam = document.getElementById('returnImageCamera');
+        const up = document.getElementById('returnImageUpload');
+        if (cam) cam.value = "";
+        if (up) up.value = "";
+        document.getElementById('imagePreviewContainer')?.classList.add('hidden');
+        document.getElementById('imageInputOptions')?.classList.remove('hidden');
+        document.getElementById('returnImageError')?.classList.add('hidden');
     }
-    if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
-    if (imageError) imageError.classList.add('hidden');
     
     if (elements.returnModal) {
         elements.returnModal.classList.remove('hidden');
@@ -813,7 +813,8 @@ async function handleReturnSubmit() {
     const notes = document.getElementById('returnNotes').value;
     
     // Image Validation
-    const imageInput = document.getElementById('returnImage');
+    const cameraInput = document.getElementById('returnImageCamera');
+    const uploadInput = document.getElementById('returnImageUpload');
     const imageError = document.getElementById('returnImageError');
     let imageBase64 = null;
     let imageName = null;
@@ -831,8 +832,15 @@ async function handleReturnSubmit() {
         return;
     }
 
-    // Check if file is selected
-    if (!imageInput || !imageInput.files || imageInput.files.length === 0) {
+    // Check if file is selected in either input
+    let file = null;
+    if (cameraInput && cameraInput.files && cameraInput.files.length > 0) {
+        file = cameraInput.files[0];
+    } else if (uploadInput && uploadInput.files && uploadInput.files.length > 0) {
+        file = uploadInput.files[0];
+    }
+
+    if (!file) {
         if (imageError) imageError.classList.remove('hidden');
         showMessage('Please upload a condition photo', 'error');
         return;
@@ -842,7 +850,6 @@ async function handleReturnSubmit() {
     
     try {
         // Convert image to Base64
-        const file = imageInput.files[0];
         imageBase64 = await convertToBase64(file);
         imageName = `return_${toolId}_${Date.now()}.jpg`;
 
@@ -939,18 +946,22 @@ function formatDate(date) {
 }
 
 /**
- * Handle Return Image Preview
- * @param {HTMLInputElement} input - File input element
+ * Handle Image Selection (Camera or Upload)
  */
-window.previewReturnImage = function(input) {
-    const preview = document.getElementById('returnImagePreview');
-    const placeholder = document.getElementById('uploadPlaceholder');
+window.handleImageSelection = function(input, type) {
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImage = document.getElementById('returnImagePreview');
+    const inputOptions = document.getElementById('imageInputOptions');
     const errorMsg = document.getElementById('returnImageError');
     
+    // Get the other input to clear it
+    const otherInputId = type === 'camera' ? 'returnImageUpload' : 'returnImageCamera';
+    const otherInput = document.getElementById(otherInputId);
+    if (otherInput) otherInput.value = "";
+
     if (input.files && input.files[0]) {
         const file = input.files[0];
         
-        // Validate size (3MB limit)
         if (file.size > 3 * 1024 * 1024) {
             alert('File size too large. Please select an image under 3MB.');
             input.value = '';
@@ -958,20 +969,29 @@ window.previewReturnImage = function(input) {
         }
 
         const reader = new FileReader();
-        
         reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
-            if (placeholder) placeholder.classList.add('hidden');
+            previewImage.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+            inputOptions.classList.add('hidden');
             if (errorMsg) errorMsg.classList.add('hidden');
         }
-        
         reader.readAsDataURL(file);
-    } else {
-        preview.src = '';
-        preview.classList.add('hidden');
-        if (placeholder) placeholder.classList.remove('hidden');
     }
+}
+
+/**
+ * Clear Return Image
+ */
+window.clearReturnImage = function() {
+    document.getElementById('returnImageCamera').value = "";
+    document.getElementById('returnImageUpload').value = "";
+    
+    document.getElementById('imagePreviewContainer').classList.add('hidden');
+    document.getElementById('returnImagePreview').src = "";
+    document.getElementById('imageInputOptions').classList.remove('hidden');
+    
+    const errorMsg = document.getElementById('returnImageError');
+    if (errorMsg) errorMsg.classList.add('hidden');
 }
 
 /**
