@@ -648,6 +648,13 @@ function showReturnModal(tool) {
 
     // Store tool ID for later use
     document.getElementById('confirmReturn').dataset.toolId = tool.toolId;
+
+    // Reset form
+    const conditionSelect = document.getElementById('returnCondition');
+    if (conditionSelect) conditionSelect.value = "";
+    
+    const notesInput = document.getElementById('returnNotes');
+    if (notesInput) notesInput.value = "";
     
     if (elements.returnModal) {
         elements.returnModal.classList.remove('hidden');
@@ -767,8 +774,14 @@ async function handleBorrowSubmit() {
  */
 async function handleReturnSubmit() {
     const toolId = document.getElementById('confirmReturn').dataset.toolId;
-    const condition = document.querySelector('input[name="condition"]:checked').value;
+    const conditionSelect = document.getElementById('returnCondition');
+    const condition = conditionSelect ? conditionSelect.value : null;
     const notes = document.getElementById('returnNotes').value;
+    
+    if (!condition) {
+        showMessage('Please select the tool condition', 'error');
+        return;
+    }
     
     showLoading(true);
     

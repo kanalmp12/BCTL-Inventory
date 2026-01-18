@@ -262,16 +262,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="condition">Tool Condition</label>
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="condition" value="good" checked>
-                            <span class="radio-label">Good</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="condition" value="damaged">
-                            <span class="radio-label">Damaged</span>
-                        </label>
+                    <label for="returnCondition">Tool Condition</label>
+                    <div class="relative">
+                        <select id="returnCondition" class="w-full h-14 pl-4 pr-10 bg-[#f7f6f8] dark:bg-[#19141e] border border-[#e0dde3] dark:border-[#36323d] rounded-lg text-base text-[#141216] dark:text-white focus:ring-2 focus:ring-[#67349d] focus:border-transparent transition-all appearance-none font-medium cursor-pointer" required>
+                            <option value="" disabled selected>Select condition...</option>
+                            <option value="สภาพดี">สภาพดี</option>
+                            <option value="ได้รับความเสียหาย">ได้รับความเสียหาย</option>
+                            <option value="ใช้แล้วหมดไป">ใช้แล้วหมดไป</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#756a81] pointer-events-none">expand_more</span>
                     </div>
                 </div>
                 

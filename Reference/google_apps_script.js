@@ -83,7 +83,7 @@ function setupSheet() {
   let transSheet = ss.getSheetByName(SHEET_TRANSACTIONS);
   if (!transSheet) {
     transSheet = ss.insertSheet(SHEET_TRANSACTIONS);
-    transSheet.appendRow(["Transaction ID", "Tool ID", "User ID", "Action", "Qty", "Reason", "Expected Return", "Actual Return", "Status", "Timestamp"]);
+    transSheet.appendRow(["Transaction ID", "Tool ID", "User ID", "Action", "Qty", "Reason", "Expected Return", "Actual Return", "Status", "Timestamp", "Condition", "Notes"]);
   }
 }
 
@@ -258,6 +258,8 @@ function returnTool(data) {
     if (transRow != -1) {
       transSheet.getRange(transRow, 8).setValue(new Date());
       transSheet.getRange(transRow, 9).setValue("Returned");
+      transSheet.getRange(transRow, 11).setValue(data.condition || "");
+      transSheet.getRange(transRow, 12).setValue(data.notes || "");
     }
     
     return { success: true };
