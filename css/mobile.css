@@ -293,6 +293,7 @@ h3 {
     max-width: 640px;
     max-height: 90vh;
     overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scroll */
     box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
@@ -319,6 +320,7 @@ h3 {
 
 .modal-body {
     padding: 1.5rem;
+    overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .modal-actions {
