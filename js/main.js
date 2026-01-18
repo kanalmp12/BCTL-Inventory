@@ -218,7 +218,7 @@ function createToolCard(tool) {
     // 2. If I haven't borrowed it, but it's available, I see "Borrow".
     // 3. If I haven't borrowed it, and it's NOT available, I see "Out of Stock" (disabled).
     
-    if (tool.myBorrowedQty > 0) {
+    if (currentUser && tool.myBorrowedQty > 0) {
         actionButton = `
             <button class="btn-return" data-tool-id="${tool.toolId}">
                 <span class="material-symbols-outlined">keyboard_return</span>
