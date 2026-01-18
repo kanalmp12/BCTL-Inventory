@@ -277,23 +277,14 @@
                 <div class="form-group">
                     <label>Condition Photo (Required)</label>
                     
-                    <!-- Image Input Options -->
-                    <div id="imageInputOptions" class="grid grid-cols-2 gap-4 mb-4">
-                        <!-- Camera Input -->
-                        <div class="relative">
-                            <input type="file" id="returnImageCamera" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelection(this, 'camera')">
-                            <label for="returnImageCamera" class="flex flex-col items-center justify-center h-32 bg-[#f7f6f8] dark:bg-[#19141e] border-2 border-dashed border-[#e0dde3] dark:border-[#36323d] rounded-xl cursor-pointer hover:bg-[#eecbff] dark:hover:bg-[#36323d] hover:border-[#67349d] transition-all group">
-                                <span class="material-symbols-outlined text-3xl text-[#756a81] group-hover:text-[#67349d] mb-2">photo_camera</span>
-                                <span class="text-sm font-semibold text-[#756a81] group-hover:text-[#67349d]">Take Photo</span>
-                            </label>
-                        </div>
-
+                    <!-- Image Input Option -->
+                    <div id="imageInputOptions" class="mb-4">
                         <!-- Gallery Input -->
                         <div class="relative">
                             <input type="file" id="returnImageUpload" accept="image/*" class="hidden" onchange="handleImageSelection(this, 'upload')">
-                            <label for="returnImageUpload" class="flex flex-col items-center justify-center h-32 bg-[#f7f6f8] dark:bg-[#19141e] border-2 border-dashed border-[#e0dde3] dark:border-[#36323d] rounded-xl cursor-pointer hover:bg-[#eecbff] dark:hover:bg-[#36323d] hover:border-[#67349d] transition-all group">
+                            <label for="returnImageUpload" class="flex flex-col items-center justify-center w-full h-32 bg-[#f7f6f8] dark:bg-[#19141e] border-2 border-dashed border-[#e0dde3] dark:border-[#36323d] rounded-xl cursor-pointer hover:bg-[#eecbff] dark:hover:bg-[#36323d] hover:border-[#67349d] transition-all group">
                                 <span class="material-symbols-outlined text-3xl text-[#756a81] group-hover:text-[#67349d] mb-2">add_photo_alternate</span>
-                                <span class="text-sm font-semibold text-[#756a81] group-hover:text-[#67349d]">Upload Photo</span>
+                                <span class="text-sm font-semibold text-[#756a81] group-hover:text-[#67349d]">Upload Condition Photo</span>
                             </label>
                         </div>
                     </div>

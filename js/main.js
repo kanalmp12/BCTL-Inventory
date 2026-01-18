@@ -674,9 +674,7 @@ function showReturnModal(tool) {
         window.clearReturnImage();
     } else {
         // Fallback manual reset
-        const cam = document.getElementById('returnImageCamera');
         const up = document.getElementById('returnImageUpload');
-        if (cam) cam.value = "";
         if (up) up.value = "";
         document.getElementById('imagePreviewContainer')?.classList.add('hidden');
         document.getElementById('imageInputOptions')?.classList.remove('hidden');
@@ -832,13 +830,9 @@ async function handleReturnSubmit() {
         return;
     }
 
-    // Check if file is selected in either input
-    let file = null;
-    if (cameraInput && cameraInput.files && cameraInput.files.length > 0) {
-        file = cameraInput.files[0];
-    } else if (uploadInput && uploadInput.files && uploadInput.files.length > 0) {
-        file = uploadInput.files[0];
-    }
+    // Check if file is selected
+    const uploadInput = document.getElementById('returnImageUpload');
+    const file = uploadInput && uploadInput.files ? uploadInput.files[0] : null;
 
     if (!file) {
         if (imageError) imageError.classList.remove('hidden');
@@ -946,19 +940,14 @@ function formatDate(date) {
 }
 
 /**
- * Handle Image Selection (Camera or Upload)
+ * Handle Image Selection
  */
-window.handleImageSelection = function(input, type) {
+window.handleImageSelection = function(input) {
     const previewContainer = document.getElementById('imagePreviewContainer');
     const previewImage = document.getElementById('returnImagePreview');
     const inputOptions = document.getElementById('imageInputOptions');
     const errorMsg = document.getElementById('returnImageError');
     
-    // Get the other input to clear it
-    const otherInputId = type === 'camera' ? 'returnImageUpload' : 'returnImageCamera';
-    const otherInput = document.getElementById(otherInputId);
-    if (otherInput) otherInput.value = "";
-
     if (input.files && input.files[0]) {
         const file = input.files[0];
         
@@ -983,8 +972,8 @@ window.handleImageSelection = function(input, type) {
  * Clear Return Image
  */
 window.clearReturnImage = function() {
-    document.getElementById('returnImageCamera').value = "";
-    document.getElementById('returnImageUpload').value = "";
+    const uploadInput = document.getElementById('returnImageUpload');
+    if (uploadInput) uploadInput.value = "";
     
     document.getElementById('imagePreviewContainer').classList.add('hidden');
     document.getElementById('returnImagePreview').src = "";
