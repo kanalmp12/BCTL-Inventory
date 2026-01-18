@@ -499,6 +499,14 @@ input, select, textarea {
     font-size: 1rem;
     background-color: var(--surface);
     transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+    -webkit-appearance: none; /* Remove iOS native styling */
+    appearance: none;
+}
+
+input[type="date"] {
+    min-width: 100%;
+    max-width: 100%;
 }
 
 input, select {
