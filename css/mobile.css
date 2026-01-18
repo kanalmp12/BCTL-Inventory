@@ -571,9 +571,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .dates-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    display: block;
+    width: 100%;
 }
 
 /* Tools Grid & Cards */
