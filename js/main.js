@@ -811,8 +811,6 @@ async function handleReturnSubmit() {
     const notes = document.getElementById('returnNotes').value;
     
     // Image Validation
-    const cameraInput = document.getElementById('returnImageCamera');
-    const uploadInput = document.getElementById('returnImageUpload');
     const imageError = document.getElementById('returnImageError');
     let imageBase64 = null;
     let imageName = null;
