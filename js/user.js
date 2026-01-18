@@ -77,12 +77,19 @@ function generateUserId() {
  * @returns {string} - User ID
  */
 function getUserId() {
-    // If LIFF is logged in, always return the LIFF ID
-    if (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn()) {
+    // 1. If LIFF is initialized and logged in, we trust the stored ID (set by initLiff)
+    if (typeof liff !== 'undefined' && liffInitialized && liff.isLoggedIn()) {
         const userId = localStorage.getItem(CONFIG.USER_ID_KEY);
         if (userId) return userId;
     }
 
+    // 2. If LIFF is configured (Production) but we are NOT logged in:
+    // Return null. Do NOT return a stale ID from localStorage.
+    if (CONFIG.LIFF_ID && CONFIG.LIFF_ID !== 'YOUR_LIFF_ID_HERE') {
+        return null;
+    }
+
+    // 3. Fallback (Only for Dev/Local mode where LIFF_ID is missing)
     let userId = localStorage.getItem(CONFIG.USER_ID_KEY);
     
     if (!userId) {
