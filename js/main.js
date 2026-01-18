@@ -610,6 +610,13 @@ function showBorrowModal(tool) {
     // Store tool ID for later use
     document.getElementById('confirmBorrow').dataset.toolId = tool.toolId;
     
+    // Reset reason and validation
+    const reasonInput = document.getElementById('borrowReason');
+    if (reasonInput) {
+        reasonInput.value = "";
+        reasonInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+    }
+    
     if (elements.borrowModal) {
         elements.borrowModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
@@ -654,7 +661,10 @@ function showReturnModal(tool) {
 
     // Reset form
     const conditionSelect = document.getElementById('returnCondition');
-    if (conditionSelect) conditionSelect.value = "";
+    if (conditionSelect) {
+        conditionSelect.value = "";
+        conditionSelect.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+    }
     
     const notesInput = document.getElementById('returnNotes');
     if (notesInput) notesInput.value = "";
@@ -727,11 +737,18 @@ async function handleRegistrationSubmit(event) {
 async function handleBorrowSubmit() {
     const toolId = document.getElementById('confirmBorrow').dataset.toolId;
     const quantity = parseInt(document.getElementById('borrowQuantity').value);
-    const reason = document.getElementById('borrowReason').value;
+    const reasonInput = document.getElementById('borrowReason');
+    const reason = reasonInput ? reasonInput.value.trim() : "";
     const returnDate = document.getElementById('returnDate').value;
     
     if (!reason) {
-        showMessage('Please select a reason for borrowing', 'error');
+        if (reasonInput) {
+            reasonInput.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+            reasonInput.addEventListener('input', () => {
+                reasonInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+            }, { once: true });
+        }
+        showMessage('Please specify a reason for borrowing', 'error');
         return;
     }
     
@@ -782,6 +799,14 @@ async function handleReturnSubmit() {
     const notes = document.getElementById('returnNotes').value;
     
     if (!condition) {
+        // Highlight in red if not selected
+        if (conditionSelect) {
+            conditionSelect.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+            // Remove highlight on change
+            conditionSelect.addEventListener('change', () => {
+                conditionSelect.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+            }, { once: true });
+        }
         showMessage('Please select the tool condition', 'error');
         return;
     }
