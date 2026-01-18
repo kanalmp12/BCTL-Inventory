@@ -83,7 +83,7 @@ function setupSheet() {
   let transSheet = ss.getSheetByName(SHEET_TRANSACTIONS);
   if (!transSheet) {
     transSheet = ss.insertSheet(SHEET_TRANSACTIONS);
-    transSheet.appendRow(["Transaction ID", "Tool ID", "User ID", "Action", "Qty", "Reason", "Expected Return", "Actual Return", "Status", "Timestamp", "Condition", "Notes"]);
+    transSheet.appendRow(["Transaction ID", "Tool ID", "User ID", "Action", "Qty", "Reason", "Expected Return", "Actual Return", "Status", "Timestamp", "Condition", "Notes", "Return Image"]);
   }
 }
 
@@ -260,6 +260,25 @@ function returnTool(data) {
       transSheet.getRange(transRow, 9).setValue("Returned");
       transSheet.getRange(transRow, 11).setValue(data.condition || "");
       transSheet.getRange(transRow, 12).setValue(data.notes || "");
+      
+      // Handle Image Upload
+      if (data.imageBase64) {
+        try {
+          const folderName = "Tool_Return_Images";
+          const folders = DriveApp.getFoldersByName(folderName);
+          const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+          
+          const base64Data = data.imageBase64.split(',')[1] || data.imageBase64;
+          const blob = Utilities.newBlob(Utilities.base64Decode(base64Data), MimeType.JPEG, data.imageName || `return_${data.toolId}.jpg`);
+          
+          const file = folder.createFile(blob);
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          
+          transSheet.getRange(transRow, 13).setValue(file.getUrl());
+        } catch (e) {
+          transSheet.getRange(transRow, 13).setValue("Upload Error: " + e.toString());
+        }
+      }
     }
     
     return { success: true };

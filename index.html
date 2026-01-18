@@ -273,6 +273,21 @@
                         <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#756a81] pointer-events-none">expand_more</span>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label for="returnImage">Condition Photo (Required)</label>
+                    <div class="relative">
+                        <input type="file" id="returnImage" accept="image/*" capture="environment" class="hidden" onchange="previewReturnImage(this)">
+                        <label for="returnImage" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#e0dde3] dark:border-[#36323d] rounded-xl cursor-pointer hover:bg-[#f7f6f8] dark:hover:bg-[#19141e] transition-colors">
+                            <div id="uploadPlaceholder" class="flex flex-col items-center pt-5 pb-6">
+                                <span class="material-symbols-outlined text-3xl text-[#756a81] mb-2">add_a_photo</span>
+                                <p class="mb-2 text-sm text-[#756a81]"><span class="font-semibold">Tap to take photo</span></p>
+                            </div>
+                            <img id="returnImagePreview" class="hidden h-full w-full object-contain rounded-xl" />
+                        </label>
+                    </div>
+                    <p class="mt-1 text-xs text-red-500 hidden" id="returnImageError">Photo is required</p>
+                </div>
                 
                 <div class="form-group">
                     <label for="returnNotes">Notes (optional)</label>

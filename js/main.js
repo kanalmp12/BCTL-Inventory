@@ -669,6 +669,20 @@ function showReturnModal(tool) {
     const notesInput = document.getElementById('returnNotes');
     if (notesInput) notesInput.value = "";
     
+    // Reset Image Input
+    const imageInput = document.getElementById('returnImage');
+    const imagePreview = document.getElementById('returnImagePreview');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const imageError = document.getElementById('returnImageError');
+    
+    if (imageInput) imageInput.value = "";
+    if (imagePreview) {
+        imagePreview.src = "";
+        imagePreview.classList.add('hidden');
+    }
+    if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
+    if (imageError) imageError.classList.add('hidden');
+    
     if (elements.returnModal) {
         elements.returnModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
@@ -798,6 +812,12 @@ async function handleReturnSubmit() {
     const condition = conditionSelect ? conditionSelect.value : null;
     const notes = document.getElementById('returnNotes').value;
     
+    // Image Validation
+    const imageInput = document.getElementById('returnImage');
+    const imageError = document.getElementById('returnImageError');
+    let imageBase64 = null;
+    let imageName = null;
+    
     if (!condition) {
         // Highlight in red if not selected
         if (conditionSelect) {
@@ -810,15 +830,29 @@ async function handleReturnSubmit() {
         showMessage('Please select the tool condition', 'error');
         return;
     }
+
+    // Check if file is selected
+    if (!imageInput || !imageInput.files || imageInput.files.length === 0) {
+        if (imageError) imageError.classList.remove('hidden');
+        showMessage('Please upload a condition photo', 'error');
+        return;
+    }
     
     showLoading(true);
     
     try {
+        // Convert image to Base64
+        const file = imageInput.files[0];
+        imageBase64 = await convertToBase64(file);
+        imageName = `return_${toolId}_${Date.now()}.jpg`;
+
         const returnData = {
             toolId,
             userId: getUserId(),
             condition,
-            notes: notes || null
+            notes: notes || null,
+            imageBase64,
+            imageName
         };
         
         await returnTool(returnData);
@@ -902,4 +936,54 @@ function formatDate(date) {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+/**
+ * Handle Return Image Preview
+ * @param {HTMLInputElement} input - File input element
+ */
+window.previewReturnImage = function(input) {
+    const preview = document.getElementById('returnImagePreview');
+    const placeholder = document.getElementById('uploadPlaceholder');
+    const errorMsg = document.getElementById('returnImageError');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Validate size (3MB limit)
+        if (file.size > 3 * 1024 * 1024) {
+            alert('File size too large. Please select an image under 3MB.');
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+            if (placeholder) placeholder.classList.add('hidden');
+            if (errorMsg) errorMsg.classList.add('hidden');
+        }
+        
+        reader.readAsDataURL(file);
+    } else {
+        preview.src = '';
+        preview.classList.add('hidden');
+        if (placeholder) placeholder.classList.remove('hidden');
+    }
+}
+
+/**
+ * Convert File to Base64
+ * @param {File} file - File object
+ * @returns {Promise<string>} - Base64 string
+ */
+function convertToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
 }
