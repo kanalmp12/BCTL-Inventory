@@ -538,6 +538,7 @@ input:focus, select:focus, textarea:focus {
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     background-color: var(--surface);
+    width: 100%;
 }
 
 .quantity-control input {
@@ -547,6 +548,7 @@ input:focus, select:focus, textarea:focus {
     font-size: 1.125rem;
     height: auto;
     box-shadow: none;
+    flex: 1;
 }
 
 .quantity-btn {
@@ -566,6 +568,12 @@ input:focus, select:focus, textarea:focus {
 
 .quantity-btn:hover {
     background-color: var(--gray-medium);
+}
+
+.dates-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
 }
 
 /* Tools Grid & Cards */
