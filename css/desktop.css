@@ -42,6 +42,21 @@
         border: 2px solid #FFD700 !important;
         box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3); /* Slightly stronger shadow on desktop */
     }
+
+    /* Fix for User Profile Truncation on Desktop */
+    .user-info {
+        max-width: none; /* Remove the restriction on desktop */
+    }
+
+    .user-name-wrapper {
+        max-width: none; /* Let the name expand fully */
+    }
+    
+    .user-name-wrapper.is-long #userName {
+        animation: none;
+        display: block;
+        transform: none !important;
+    }
 }
 
 @media (min-width: 1024px) {
