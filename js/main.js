@@ -102,6 +102,11 @@ if (userInfoContainer && userDropdown) {
         userDropdown.classList.toggle('hidden');
     });
 
+    // Prevent dropdown from closing when clicking inside it
+    userDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
     document.addEventListener('click', (e) => {
         if (!userInfoContainer.contains(e.target)) {
             userDropdown.classList.add('hidden');
