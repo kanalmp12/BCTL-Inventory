@@ -24,32 +24,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     showLoading(true);
     
     try {
-        // Init LIFF and check status (silently)
+        // 1. Init LIFF
         await initLiff();
         
-        // Load user info (if any)
-        currentUser = getUserInfo();
-        
-        // Update UI (Login btn vs User info)
-        updateUserUI();
-        
-        // Always load tools
-        await loadTools();
-
-        // If user is logged in via LINE but not registered in our system (no local user info),
-        // check registration status with backend. If not registered, show registration modal.
-        if (liffInitialized && liff.isLoggedIn() && !currentUser) {
-             const isRegistered = await isUserRegistered();
-             if (!isRegistered) {
-                 showRegistrationModal();
-             } else {
-                 // Fetch user info from backend if registered but not in local storage
-                 // For now, we rely on local storage or just let them re-register/update profile
-                 // Ideally, we should have a getUserProfile(userId) API.
-                 // As a fallback, we let them browse.
-             }
+        // 2. Check Backend Status & Sync Data (Critical Fix)
+        // We do this BEFORE rendering UI so we have the latest Role and Name
+        if (getUserId()) {
+            const isRegistered = await isUserRegistered(); // This syncs backend data to LocalStorage
+            if (isRegistered) {
+                // Reload currentUser from the freshly updated LocalStorage
+                currentUser = getUserInfo();
+            } else if (liffInitialized && liff.isLoggedIn()) {
+                // Not registered but logged in via LINE -> Show Registration
+                showRegistrationModal();
+            }
+        } else {
+            // Attempt to load from local storage if not logged in via LIFF yet
+            currentUser = getUserInfo();
         }
         
+        // 3. Update UI with the synced data
+        updateUserUI();
+        
+        // 4. Load Tools
+        await loadTools();
+
     } catch (error) {
         console.error('Initialization error:', error);
         showMessage('Failed to initialize application. Please try again.', 'error');
