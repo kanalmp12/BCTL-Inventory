@@ -227,6 +227,15 @@ async function updateUserUI() {
             try {
                 const profile = await liff.getProfile();
                 if (userNameElement) userNameElement.textContent = profile.displayName;
+                
+                // Cleanup Admin UI if falling back to basic LINE profile
+                const existingAdminBtn = document.getElementById('adminPortalBtn');
+                const adminCrown = document.getElementById('adminCrown');
+                
+                if (existingAdminBtn) existingAdminBtn.remove();
+                if (userProfileImg) userProfileImg.classList.remove('admin-gold-border');
+                if (adminCrown) adminCrown.classList.add('hidden');
+                
             } catch (e) {
                  if (userNameElement) userNameElement.textContent = 'User';
             }

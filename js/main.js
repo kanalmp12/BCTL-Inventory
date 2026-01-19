@@ -27,26 +27,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 1. Init LIFF
         await initLiff();
         
-        // 2. Check Backend Status & Sync Data (Critical Fix)
-        // We do this BEFORE rendering UI so we have the latest Role and Name
-        if (getUserId()) {
-            const isRegistered = await isUserRegistered(); // This syncs backend data to LocalStorage
-            if (isRegistered) {
-                // Reload currentUser from the freshly updated LocalStorage
-                currentUser = getUserInfo();
-            } else if (liffInitialized && liff.isLoggedIn()) {
-                // Not registered but logged in via LINE -> Show Registration
-                showRegistrationModal();
+        // 2. Check Backend Status & Sync Data
+        const userId = getUserId();
+        if (userId) {
+            try {
+                // This will attempt to fetch latest data from Google Sheet and update localStorage
+                const isRegistered = await isUserRegistered();
+                
+                if (!isRegistered && liffInitialized && liff.isLoggedIn()) {
+                     // If explicit check says "Not Registered" but logged in, we might show registration
+                     // But we let the user browse first (as per original logic)
+                }
+            } catch (e) {
+                console.warn("Sync failed, using local data", e);
             }
-        } else {
-            // Attempt to load from local storage if not logged in via LIFF yet
-            currentUser = getUserInfo();
         }
         
-        // 3. Update UI with the synced data
+        // 3. Always reload currentUser from LocalStorage (whether Sync worked or failed)
+        currentUser = getUserInfo();
+        
+        // 4. Update UI with the final data
         updateUserUI();
         
-        // 4. Load Tools
+        // 5. Load Tools
         await loadTools();
 
     } catch (error) {
