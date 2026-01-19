@@ -192,12 +192,14 @@ async function updateUserUI() {
         if (userInfo && userNameElement) {
             userNameElement.textContent = userInfo.fullName || 'User';
             
-            // Handle Admin Button
+            // Handle Admin Button & Visuals
             const userDropdown = document.getElementById('userDropdown');
             const logoutBtn = document.getElementById('logoutBtn');
             const existingAdminBtn = document.getElementById('adminPortalBtn');
+            const adminCrown = document.getElementById('adminCrown');
 
             if (userInfo.role === 'admin') {
+                // 1. Add Admin Button
                 if (!existingAdminBtn && logoutBtn) {
                     const adminBtn = document.createElement('a');
                     adminBtn.id = 'adminPortalBtn';
@@ -209,8 +211,16 @@ async function updateUserUI() {
                     `;
                     logoutBtn.parentNode.insertBefore(adminBtn, logoutBtn);
                 }
-            } else if (existingAdminBtn) {
-                existingAdminBtn.remove();
+
+                // 2. Add Gold Border & Crown
+                if (userProfileImg) userProfileImg.classList.add('admin-gold-border');
+                if (adminCrown) adminCrown.classList.remove('hidden');
+
+            } else {
+                // Not admin
+                if (existingAdminBtn) existingAdminBtn.remove();
+                if (userProfileImg) userProfileImg.classList.remove('admin-gold-border');
+                if (adminCrown) adminCrown.classList.add('hidden');
             }
         } else if (liffInitialized && liff.isLoggedIn()) {
             // If registered but no local info

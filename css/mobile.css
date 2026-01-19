@@ -135,6 +135,13 @@ h3 {
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid var(--border);
+    transition: border-color 0.2s;
+}
+
+/* Admin Gold Border */
+.profile-img.admin-gold-border {
+    border: 2px solid #FFD700 !important;
+    box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.3);
 }
 
 .dropdown-icon {
