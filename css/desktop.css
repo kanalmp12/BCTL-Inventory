@@ -45,11 +45,13 @@
 
     /* Fix for User Profile Truncation on Desktop */
     .user-info {
-        max-width: none; /* Remove the restriction on desktop */
+        max-width: none !important; /* Remove the restriction on desktop */
     }
 
     .user-name-wrapper {
-        max-width: none; /* Let the name expand fully */
+        max-width: none !important; /* Let the name expand fully */
+        overflow: visible !important;
+        width: auto !important;
     }
     
     .user-name-wrapper.is-long #userName {
