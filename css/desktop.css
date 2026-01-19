@@ -36,6 +36,12 @@
         white-space: normal; /* Allow wrapping on desktop cards */
         line-height: 1.4;
     }
+
+    /* Admin Styles for Desktop */
+    .profile-img.admin-gold-border {
+        border: 2px solid #FFD700 !important;
+        box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3); /* Slightly stronger shadow on desktop */
+    }
 }
 
 @media (min-width: 1024px) {
