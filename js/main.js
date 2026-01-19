@@ -30,16 +30,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 2. Check Backend Status & Sync Data
         const userId = getUserId();
         if (userId) {
+            let isRegistered = false;
             try {
-                // This will attempt to fetch latest data from Google Sheet and update localStorage
-                const isRegistered = await isUserRegistered();
+                // Attempt 1
+                isRegistered = await isUserRegistered();
                 
-                if (!isRegistered && liffInitialized && liff.isLoggedIn()) {
-                     // If explicit check says "Not Registered" but logged in, we might show registration
-                     // But we let the user browse first (as per original logic)
+                // If not registered but we expect them to be (or API flaked), try once more after a short delay
+                if (!isRegistered) {
+                     console.log("User not found or sync failed, retrying in 1.5s...");
+                     await new Promise(r => setTimeout(r, 1500));
+                     isRegistered = await isUserRegistered();
                 }
             } catch (e) {
-                console.warn("Sync failed, using local data", e);
+                console.warn("First sync failed, retrying...", e);
+                // Attempt 2 (Retry on error)
+                await new Promise(r => setTimeout(r, 1500));
+                try {
+                    isRegistered = await isUserRegistered();
+                } catch (e2) {
+                    console.error("Second sync failed", e2);
+                }
             }
         }
         
