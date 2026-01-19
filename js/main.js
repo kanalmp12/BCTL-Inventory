@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof showUserSkeleton === 'function') {
         showUserSkeleton();
     }
+    
+    // Show skeletons for tools grid immediately
+    renderSkeletons();
 
     try {
         // 1. Init LIFF

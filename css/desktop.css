@@ -63,6 +63,14 @@
         display: block;
         transform: none !important;
     }
+
+    /* Skeleton Loading Fix for Desktop */
+    .skeleton-name {
+        display: inline-block !important;
+        width: 120px; /* Slightly wider on desktop */
+        height: 1rem;
+        vertical-align: middle;
+    }
 }
 
 @media (min-width: 1024px) {
