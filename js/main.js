@@ -168,9 +168,11 @@ function formatDisplayDate(date) {
  * Render skeleton placeholders in the grid
  */
 function renderSkeletons() {
-    if (!elements.toolsGrid) return;
+    // Fetch element directly to ensure we have it even if 'elements' const had issues
+    const grid = document.getElementById('toolsGrid') || elements.toolsGrid;
+    if (!grid) return;
     
-    elements.toolsGrid.innerHTML = '';
+    grid.innerHTML = '';
     
     // Generate 8 skeleton cards
     for (let i = 0; i < 8; i++) {
@@ -188,9 +190,20 @@ function renderSkeletons() {
             <div class="skeleton skeleton-details"></div>
             <div class="skeleton skeleton-btn"></div>
         `;
-        elements.toolsGrid.appendChild(card);
+        grid.appendChild(card);
     }
 }
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', async () => {
+    // Show all skeletons immediately
+    if (typeof showUserSkeleton === 'function') {
+        showUserSkeleton();
+    }
+    renderSkeletons();
+
+    try {
+        // 1. Init LIFF
 
 /**
  * Load tools from the API and render them
