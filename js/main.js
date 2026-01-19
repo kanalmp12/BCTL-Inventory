@@ -21,7 +21,7 @@ const elements = {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
-    showLoading(true);
+    // showLoading(true); // Removed in favor of skeleton loading in loadTools
     
     try {
         // 1. Init LIFF
@@ -65,8 +65,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Initialization error:', error);
         showMessage('Failed to initialize application. Please try again.', 'error');
-    } finally {
-        showLoading(false);
     }
 });
 
@@ -161,10 +159,42 @@ function formatDisplayDate(date) {
 }
 
 /**
+ * Render skeleton placeholders in the grid
+ */
+function renderSkeletons() {
+    if (!elements.toolsGrid) return;
+    
+    elements.toolsGrid.innerHTML = '';
+    
+    // Generate 8 skeleton cards
+    for (let i = 0; i < 8; i++) {
+        const card = document.createElement('article');
+        card.className = 'skeleton-card';
+        card.innerHTML = `
+            <div class="skeleton-header">
+                <div class="skeleton skeleton-img"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton skeleton-text title"></div>
+                    <div class="skeleton skeleton-text short"></div>
+                    <div class="skeleton skeleton-text short" style="width: 40%"></div>
+                </div>
+            </div>
+            <div class="skeleton skeleton-details"></div>
+            <div class="skeleton skeleton-btn"></div>
+        `;
+        elements.toolsGrid.appendChild(card);
+    }
+}
+
+/**
  * Load tools from the API and render them
  */
 async function loadTools() {
     try {
+        // Show skeletons instead of overlay
+        renderSkeletons();
+        // showLoading(true); // Deprecated
+        
         // Ensure we have the user ID (from LIFF or Local Storage)
         const userId = getUserId();
         
@@ -199,6 +229,8 @@ async function loadTools() {
     } catch (error) {
         console.error('Error loading tools:', error);
         showMessage('Failed to load tools. Please try again.', 'error');
+    } finally {
+        // showLoading(false); // Deprecated
     }
 }
 

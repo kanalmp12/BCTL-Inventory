@@ -770,6 +770,78 @@ input:focus, select:focus, textarea:focus {
     color: #b91c1c; /* Red-700 */
 }
 
+/* Skeleton Loading */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-md);
+}
+
+.skeleton-card {
+    height: 250px; /* Approximate height of a tool card */
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    background-color: var(--surface);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border);
+}
+
+.skeleton-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.skeleton-img {
+    width: 5rem;
+    height: 5rem;
+    border-radius: var(--radius-lg);
+    flex-shrink: 0;
+}
+
+.skeleton-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.skeleton-text {
+    height: 1rem;
+    width: 100%;
+}
+
+.skeleton-text.short {
+    width: 60%;
+}
+
+.skeleton-text.title {
+    height: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.skeleton-details {
+    height: 3rem;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.skeleton-btn {
+    height: 3rem;
+    width: 100%;
+    margin-top: auto;
+    border-radius: var(--radius-lg);
+}
+
+
 /* Mobile Modal Optimizations (Sheet-like) */
 @media (max-width: 480px) {
     .modal {
