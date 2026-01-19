@@ -123,10 +123,34 @@ h3 {
     padding: 0.25rem 0.5rem;
     border-radius: var(--radius-md);
     transition: background-color 0.2s;
+    max-width: 200px; /* Restrict max width of the whole user pill */
 }
 
 .user-info:hover {
     background-color: var(--gray-light);
+}
+
+/* Scrolling Text for User Name */
+.user-name-wrapper {
+    max-width: 100px; /* Fixed max width for mobile */
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.user-name-wrapper.is-long #userName {
+    display: inline-block;
+    animation: text-scroll 4s linear infinite alternate;
+    /* We use a delay so it stays readable for a moment before scrolling */
+    animation-delay: 1s; 
+}
+
+@keyframes text-scroll {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(0); } /* Pause at start */
+    100% { transform: translateX(var(--scroll-dist, -100%)); }
 }
 
 .profile-img {
@@ -136,6 +160,7 @@ h3 {
     object-fit: cover;
     border: 1px solid var(--border);
     transition: border-color 0.2s;
+    flex-shrink: 0; /* Prevent squeezing */
 }
 
 /* Admin Gold Border */
@@ -146,6 +171,7 @@ h3 {
 
 .dropdown-icon {
     font-size: 1.25rem;
+    flex-shrink: 0;
 }
 
 .user-dropdown {

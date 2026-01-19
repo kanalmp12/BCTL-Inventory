@@ -254,6 +254,29 @@ async function updateUserUI() {
                 console.error('Error getting profile image:', e);
             }
         }
+
+        // Handle Long Name Animation (Check overflow)
+        setTimeout(() => {
+            const wrapper = document.getElementById('userNameWrapper');
+            const nameSpan = document.getElementById('userName');
+            
+            if (wrapper && nameSpan) {
+                // Reset first to get natural width
+                wrapper.classList.remove('is-long');
+                nameSpan.style.removeProperty('--scroll-dist');
+                
+                // Check if content overflows container
+                if (nameSpan.scrollWidth > wrapper.clientWidth) {
+                    const overflowAmount = nameSpan.scrollWidth - wrapper.clientWidth;
+                    // Add a small buffer (e.g., 5px) to ensure it doesn't feel tight
+                    const scrollDist = overflowAmount + 5; 
+                    
+                    nameSpan.style.setProperty('--scroll-dist', `-${scrollDist}px`);
+                    wrapper.classList.add('is-long');
+                }
+            }
+        }, 100);
+
     } else {
         // Not logged in
         if (userInfoContainer) userInfoContainer.classList.add('hidden');
