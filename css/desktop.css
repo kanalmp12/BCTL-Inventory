@@ -44,14 +44,18 @@
     }
 
     /* Fix for User Profile Truncation on Desktop */
-    .user-info {
+    .app-header .user-info {
         max-width: none !important; /* Remove the restriction on desktop */
+        width: auto !important;
+        flex-shrink: 0 !important;
     }
 
-    .user-name-wrapper {
+    .app-header .user-name-wrapper {
         max-width: none !important; /* Let the name expand fully */
         overflow: visible !important;
         width: auto !important;
+        flex-shrink: 0 !important;
+        display: block !important;
     }
     
     .user-name-wrapper.is-long #userName {
