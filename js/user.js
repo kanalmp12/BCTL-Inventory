@@ -131,9 +131,18 @@ async function isUserRegistered() {
     await initLiff();
 
     const userId = getUserId();
+    if (!userId) return false;
+
     try {
-        const exists = await checkUserExists(userId);
-        return exists;
+        const result = await checkUserExists(userId);
+        
+        if (result.exists && result.user) {
+            // Save user info found in backend to local storage
+            saveUserInfo(result.user);
+            return true;
+        }
+        
+        return false;
     } catch (error) {
         console.error('Error checking user registration:', error);
         // If API fails, check if we have local info
@@ -182,6 +191,27 @@ async function updateUserUI() {
 
         if (userInfo && userNameElement) {
             userNameElement.textContent = userInfo.fullName || 'User';
+            
+            // Handle Admin Button
+            const userDropdown = document.getElementById('userDropdown');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const existingAdminBtn = document.getElementById('adminPortalBtn');
+
+            if (userInfo.role === 'admin') {
+                if (!existingAdminBtn && logoutBtn) {
+                    const adminBtn = document.createElement('a');
+                    adminBtn.id = 'adminPortalBtn';
+                    adminBtn.href = './admin/index.html';
+                    adminBtn.className = 'dropdown-item flex items-center gap-2';
+                    adminBtn.innerHTML = `
+                        <span class="material-symbols-outlined">admin_panel_settings</span>
+                        Admin Portal
+                    `;
+                    logoutBtn.parentNode.insertBefore(adminBtn, logoutBtn);
+                }
+            } else if (existingAdminBtn) {
+                existingAdminBtn.remove();
+            }
         } else if (liffInitialized && liff.isLoggedIn()) {
             // If registered but no local info
             try {

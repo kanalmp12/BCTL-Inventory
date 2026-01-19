@@ -178,6 +178,9 @@ h3 {
 
 .dropdown-item:hover {
     background-color: var(--gray-light);
+}
+
+.dropdown-item-danger:hover {
     color: var(--danger);
 }
 

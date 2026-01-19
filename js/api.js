@@ -63,7 +63,8 @@ async function callMockApi(action, payload) {
         case 'getTools':
             return { tools: [...mockTools] };
         case 'checkUser':
-            const user = mockUsers.find(u => u.userId === payload);
+            const user = mockUsers.find(u => u.userId === payload.userId);
+            if (user && !user.role) user.role = 'user';
             return { exists: !!user, user: user };
         case 'registerUser':
              const existingIdx = mockUsers.findIndex(u => u.userId === payload.userId);
@@ -139,11 +140,11 @@ async function registerUser(userData) {
 }
 
 /**
- * Check if a user exists
+ * Check if a user exists and get their data
  */
 async function checkUserExists(userId) {
     const result = await callGoogleScript('checkUser', { userId });
-    return result.exists;
+    return result; // Return full result { exists: bool, user: {...} }
 }
 
 /**

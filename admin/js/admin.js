@@ -132,19 +132,32 @@ function initCharts() {
     });
 
     // Borrow Activity (Last 7 Days)
-    const last7Days = [...Array(7)].map((_, i) => {
+    const last7DaysLabels = [];
+    const last7DaysData = [];
+
+    for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    }).reverse();
+        last7DaysLabels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+
+        // Count transactions for this specific day
+        const count = allTransactions.filter(t => {
+            const tDate = new Date(t.timestamp);
+            return tDate.getDate() === d.getDate() &&
+                   tDate.getMonth() === d.getMonth() &&
+                   tDate.getFullYear() === d.getFullYear();
+        }).length;
+        
+        last7DaysData.push(count);
+    }
 
     charts.borrow = new Chart(borrowCtx, {
         type: 'line',
         data: {
-            labels: last7Days,
+            labels: last7DaysLabels,
             datasets: [{
                 label: 'Transactions',
-                data: [2, 5, 3, 8, 4, 6, 9], // Mock data for now
+                data: last7DaysData,
                 borderColor: '#67349d',
                 tension: 0.4,
                 fill: true,
@@ -154,7 +167,15 @@ function initCharts() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true } }
+            scales: { 
+                y: { 
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0
+                    }
+                } 
+            }
         }
     });
 }

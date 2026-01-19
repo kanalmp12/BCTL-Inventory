@@ -1,5 +1,5 @@
 /**
- * Tool Crib Automation - Google Apps Script Backend (Updated V2.5)
+ * Tool Crib Automation - Google Apps Script Backend (Updated V3.0 - Role Support)
  * 
  * INSTRUCTIONS:
  * 1. Create a new Google Sheet.
@@ -7,6 +7,7 @@
  * 3. Delete any code in Code.gs and paste this entire script.
  * 4. Save the project.
  * 5. Run the 'setupSheet' function once to create the necessary sheets and headers.
+ *    (If you are updating an existing sheet, manually add a "Role" column to the "Users" sheet).
  * 6. Click 'Deploy' > 'New deployment'.
  * 7. Select type 'Web app', Execute as 'Me', Access 'Anyone'.
  * 8. Copy the 'Web App URL' and paste it into your `js/config.js` file.
@@ -91,7 +92,15 @@ function setupSheet() {
   let usersSheet = ss.getSheetByName(SHEET_USERS);
   if (!usersSheet) {
     usersSheet = ss.insertSheet(SHEET_USERS);
-    usersSheet.appendRow(["User ID", "Full Name", "Department", "Cohort", "Registered Date"]);
+    // Added "Role" column
+    usersSheet.appendRow(["User ID", "Full Name", "Department", "Cohort", "Registered Date", "Role"]);
+  } else {
+    // If sheet exists, check headers (Optional logic for manual update reminder)
+    const headers = usersSheet.getRange(1, 1, 1, 6).getValues()[0];
+    if (headers[5] !== "Role") {
+      // You might want to manually add the header if running this on existing sheet
+      // usersSheet.getRange(1, 6).setValue("Role");
+    }
   }
 
   // 3. Transactions
@@ -168,7 +177,8 @@ function checkUser(userId) {
           userId: data[i][0],
           fullName: data[i][1],
           department: data[i][2],
-          cohort: data[i][3]
+          cohort: data[i][3],
+          role: data[i][5] || "user" // Return Role (Index 5)
         }
       };
     }
@@ -194,7 +204,8 @@ function registerUser(data) {
     }
   }
   
-  sheet.appendRow([data.userId, data.fullName, data.department, data.cohort, new Date()]);
+  // Append new user with default role 'user'
+  sheet.appendRow([data.userId, data.fullName, data.department, data.cohort, new Date(), "user"]);
   return { success: true };
 }
 
@@ -356,8 +367,6 @@ function updateTool(data) {
     if (rowIdx == -1) return { error: "Tool not found" };
     
     // Update values (Tool ID, Tool Name, Total Qty, Avail Qty, Unit, Location, Image URL)
-    // We update Avail Qty based on difference in Total Qty if needed, 
-    // but for simplicity we'll just allow direct edits.
     sheet.getRange(rowIdx, 2).setValue(data.toolName);
     sheet.getRange(rowIdx, 3).setValue(data.totalQty);
     sheet.getRange(rowIdx, 4).setValue(data.availableQty);
@@ -406,7 +415,6 @@ function getTransactions() {
   const transactions = [];
   
   // Columns: [Transaction ID, Tool ID, User ID, Action, Qty, Reason, Expected Return, Actual Return, Status, Timestamp, Condition, Notes, Return Image]
-  // Indexes: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
   
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -427,7 +435,7 @@ function getTransactions() {
     });
   }
   
-  // Sort by timestamp descending (newest first)
+  // Sort by timestamp descending
   transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   
   return { transactions: transactions };
@@ -444,7 +452,7 @@ function getUsers() {
   const data = sheet.getDataRange().getValues();
   const users = [];
   
-  // Columns: [User ID, Full Name, Department, Cohort, Registered Date]
+  // Columns: [User ID, Full Name, Department, Cohort, Registered Date, Role]
   
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -453,7 +461,8 @@ function getUsers() {
       fullName: row[1],
       department: row[2],
       cohort: row[3],
-      registeredDate: row[4]
+      registeredDate: row[4],
+      role: row[5] || "user" // Include Role
     });
   }
   
