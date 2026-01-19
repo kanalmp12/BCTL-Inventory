@@ -173,6 +173,28 @@ async function registerNewUser(userData) {
 }
 
 /**
+ * Show skeleton loading for user profile
+ */
+function showUserSkeleton() {
+    const userInfoContainer = document.getElementById('userInfoContainer');
+    const loginTriggerBtn = document.getElementById('loginTriggerBtn');
+    const userProfileImg = document.getElementById('userProfileImg');
+    const userNameElement = document.getElementById('userName');
+
+    if (loginTriggerBtn) loginTriggerBtn.classList.add('hidden');
+    if (userInfoContainer) userInfoContainer.classList.remove('hidden');
+
+    if (userProfileImg) {
+        userProfileImg.classList.add('skeleton', 'skeleton-avatar');
+    }
+    
+    if (userNameElement) {
+        userNameElement.textContent = ''; // Clear text
+        userNameElement.classList.add('skeleton', 'skeleton-name');
+    }
+}
+
+/**
  * Update the UI with user information
  */
 async function updateUserUI() {
@@ -182,6 +204,10 @@ async function updateUserUI() {
     const userInfoContainer = document.getElementById('userInfoContainer');
     const loginTriggerBtn = document.getElementById('loginTriggerBtn');
     
+    // Remove skeleton classes
+    if (userProfileImg) userProfileImg.classList.remove('skeleton', 'skeleton-avatar');
+    if (userNameElement) userNameElement.classList.remove('skeleton', 'skeleton-name');
+
     // Check if user is logged in (either via local storage or LIFF)
     const isLoggedIn = (liffInitialized && liff.isLoggedIn()) || !!userInfo;
 
@@ -295,6 +321,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getUserInfo,
         isUserRegistered,
         registerNewUser,
-        updateUserUI
+        updateUserUI,
+        showUserSkeleton
     };
 }

@@ -21,8 +21,11 @@ const elements = {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
-    // showLoading(true); // Removed in favor of skeleton loading in loadTools
-    
+    // Show skeletons for user profile
+    if (typeof showUserSkeleton === 'function') {
+        showUserSkeleton();
+    }
+
     try {
         // 1. Init LIFF
         await initLiff();

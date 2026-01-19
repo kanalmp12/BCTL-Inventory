@@ -841,6 +841,18 @@ input:focus, select:focus, textarea:focus {
     border-radius: var(--radius-lg);
 }
 
+.skeleton-avatar {
+    border-radius: 50%;
+}
+
+.skeleton-name {
+    width: 80px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+    border-radius: 4px;
+}
+
 
 /* Mobile Modal Optimizations (Sheet-like) */
 @media (max-width: 480px) {
