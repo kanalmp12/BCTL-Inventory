@@ -2,14 +2,16 @@
 
 // Configuration
 const CONFIG = {
-    ACCESS_PIN: "1234", // Mock PIN
+    // ACCESS_PIN removed, using user's PIN
     SESSION_KEY: "bctl_admin_session",
+    USER_INFO_KEY: 'toolCribUserInfo', // Must match config.js
     // PASTE YOUR API URL HERE (Same as user side)
     API_URL: 'https://script.google.com/macros/s/AKfycby54KvJdYqJ48YLe7IZrvSBYgT2-GvHjFdHMV8809ltIxJE2F-0tAGyZFHBqrg077UwEA/exec'
 };
 
 // State
 let currentTab = 'dashboard';
+let currentUser = null;
 let allTools = []; 
 let allTransactions = []; 
 let allUsers = []; 
@@ -284,16 +286,15 @@ function handleLogin(e) {
     const pinInput = document.getElementById('adminPin');
     const errorMsg = document.getElementById('loginError');
     
-    console.log("Login Attempt:", pinInput.value); // Debug
+    // Use user's PIN if set, otherwise fallback to "1234" for initial setup safety
+    const validPin = (currentUser && currentUser.pin) ? currentUser.pin : "1234";
 
-    if (pinInput.value == CONFIG.ACCESS_PIN) { // Loose equality for safety
+    if (pinInput.value === validPin) {
         console.log("Login Success");
         // Success
         localStorage.setItem(CONFIG.SESSION_KEY, 'true');
         showDashboard();
-        fetchTools(); 
-        fetchTransactions();
-        fetchUsers();
+        fetchAllData();
     } else {
         console.log("Login Failed");
         // Fail
@@ -310,8 +311,26 @@ function handleLogin(e) {
  * Check Login Session
  */
 function checkSession() {
-    const isLogged = localStorage.getItem(CONFIG.SESSION_KEY);
-    if (isLogged === 'true') {
+    // 1. Check if logged in to Main App
+    const userInfoStr = localStorage.getItem(CONFIG.USER_INFO_KEY);
+    if (!userInfoStr) {
+        alert("Please login to the main application first.");
+        window.location.href = '../index.html';
+        return;
+    }
+
+    const userInfo = JSON.parse(userInfoStr);
+    if (userInfo.role !== 'admin') {
+        alert("Access Denied: You do not have admin privileges.");
+        window.location.href = '../index.html';
+        return;
+    }
+
+    currentUser = userInfo;
+
+    // 2. Check Admin Session (PIN Verified)
+    const isAdminSession = localStorage.getItem(CONFIG.SESSION_KEY);
+    if (isAdminSession === 'true') {
         showDashboard();
     } else {
         showLogin();
@@ -324,6 +343,12 @@ function checkSession() {
 function showLogin() {
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('adminLayout').classList.add('hidden');
+    
+    // Optional: Personalize Login Screen
+    const title = document.querySelector('#loginScreen h1');
+    if (title && currentUser) {
+        title.innerHTML = `Hello, ${currentUser.fullName.split(' ')[0]}<br><span class="text-lg font-normal text-gray-500">Enter your PIN</span>`;
+    }
 }
 
 /**
@@ -333,6 +358,20 @@ function showDashboard() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminLayout').classList.remove('hidden');
     document.getElementById('adminLayout').classList.add('flex');
+    
+    // Update Admin Profile in UI
+    if (currentUser) {
+        const profileName = document.getElementById('adminProfileName');
+        const profileDept = document.getElementById('adminProfileDept');
+        const profileContainer = document.getElementById('adminProfileContainer');
+
+        if (profileName) profileName.textContent = currentUser.fullName || 'Admin';
+        if (profileDept) profileDept.textContent = currentUser.department || 'System Manager';
+        
+        if (profileContainer && currentUser.pictureUrl) {
+            profileContainer.innerHTML = `<img src="${currentUser.pictureUrl}" class="w-full h-full object-cover">`;
+        }
+    }
 }
 
 /**
@@ -341,6 +380,7 @@ function showDashboard() {
 function logout() {
     if(confirm('Are you sure you want to logout?')) {
         localStorage.removeItem(CONFIG.SESSION_KEY);
+        // Do NOT remove user info here, they are still logged in to main app
         window.location.reload();
     }
 }

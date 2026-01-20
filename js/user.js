@@ -238,6 +238,20 @@ async function updateUserUI() {
                     logoutBtn.parentNode.insertBefore(adminBtn, logoutBtn);
                 }
 
+                // 1.5 Add Set PIN Button
+                const existingPinBtn = document.getElementById('setPinBtn');
+                if (!existingPinBtn && logoutBtn) {
+                    const pinBtn = document.createElement('button');
+                    pinBtn.id = 'setPinBtn';
+                    pinBtn.className = 'dropdown-item flex items-center gap-2';
+                    pinBtn.innerHTML = `
+                        <span class="material-symbols-outlined">lock_reset</span>
+                        Set Admin PIN
+                    `;
+                    pinBtn.onclick = () => window.showSetPinModal();
+                    logoutBtn.parentNode.insertBefore(pinBtn, logoutBtn);
+                }
+
                 // 2. Add Gold Border & Crown
                 userProfileImgs.forEach(img => img.classList.add('admin-gold-border'));
                 if (adminCrown) adminCrown.classList.remove('hidden');
