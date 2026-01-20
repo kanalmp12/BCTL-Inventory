@@ -55,10 +55,10 @@ function loginWithLine() {
 function logoutFromLine() {
     if (liffInitialized && liff.isLoggedIn()) {
         liff.logout();
-        localStorage.removeItem(CONFIG.USER_ID_KEY);
-        localStorage.removeItem(CONFIG.USER_INFO_KEY);
-        window.location.reload();
     }
+    localStorage.removeItem(CONFIG.USER_ID_KEY);
+    localStorage.removeItem(CONFIG.USER_INFO_KEY);
+    window.location.reload();
 }
 
 /**
@@ -178,7 +178,7 @@ async function registerNewUser(userData) {
 function showUserSkeleton() {
     const userInfoContainer = document.getElementById('userInfoContainer');
     const loginTriggerBtn = document.getElementById('loginTriggerBtn');
-    const userProfileImgs = document.querySelectorAll('.user-profile-img');
+    const userProfileImgs = document.querySelectorAll('.profile-img');
     const userNameElement = document.getElementById('userName');
 
     if (loginTriggerBtn) loginTriggerBtn.classList.add('hidden');
@@ -200,7 +200,7 @@ function showUserSkeleton() {
 async function updateUserUI() {
     const userInfo = getUserInfo();
     const userNameElement = document.getElementById('userName');
-    const userProfileImgs = document.querySelectorAll('.user-profile-img');
+    const userProfileImgs = document.querySelectorAll('.profile-img');
     const userInfoContainer = document.getElementById('userInfoContainer');
     const loginTriggerBtn = document.getElementById('loginTriggerBtn');
     
