@@ -178,15 +178,15 @@ async function registerNewUser(userData) {
 function showUserSkeleton() {
     const userInfoContainer = document.getElementById('userInfoContainer');
     const loginTriggerBtn = document.getElementById('loginTriggerBtn');
-    const userProfileImg = document.getElementById('userProfileImg');
+    const userProfileImgs = document.querySelectorAll('.user-profile-img');
     const userNameElement = document.getElementById('userName');
 
     if (loginTriggerBtn) loginTriggerBtn.classList.add('hidden');
     if (userInfoContainer) userInfoContainer.classList.remove('hidden');
 
-    if (userProfileImg) {
-        userProfileImg.classList.add('skeleton', 'skeleton-avatar');
-    }
+    userProfileImgs.forEach(img => {
+        img.classList.add('skeleton', 'skeleton-avatar');
+    });
     
     if (userNameElement) {
         userNameElement.textContent = ''; // Clear text
@@ -200,12 +200,12 @@ function showUserSkeleton() {
 async function updateUserUI() {
     const userInfo = getUserInfo();
     const userNameElement = document.getElementById('userName');
-    const userProfileImg = document.getElementById('userProfileImg');
+    const userProfileImgs = document.querySelectorAll('.user-profile-img');
     const userInfoContainer = document.getElementById('userInfoContainer');
     const loginTriggerBtn = document.getElementById('loginTriggerBtn');
     
     // Remove skeleton classes
-    if (userProfileImg) userProfileImg.classList.remove('skeleton', 'skeleton-avatar');
+    userProfileImgs.forEach(img => img.classList.remove('skeleton', 'skeleton-avatar'));
     if (userNameElement) userNameElement.classList.remove('skeleton', 'skeleton-name');
 
     // Check if user is logged in (either via local storage or LIFF)
@@ -239,13 +239,13 @@ async function updateUserUI() {
                 }
 
                 // 2. Add Gold Border & Crown
-                if (userProfileImg) userProfileImg.classList.add('admin-gold-border');
+                userProfileImgs.forEach(img => img.classList.add('admin-gold-border'));
                 if (adminCrown) adminCrown.classList.remove('hidden');
 
             } else {
                 // Not admin
                 if (existingAdminBtn) existingAdminBtn.remove();
-                if (userProfileImg) userProfileImg.classList.remove('admin-gold-border');
+                userProfileImgs.forEach(img => img.classList.remove('admin-gold-border'));
                 if (adminCrown) adminCrown.classList.add('hidden');
             }
         } else if (liffInitialized && liff.isLoggedIn()) {
@@ -259,7 +259,7 @@ async function updateUserUI() {
                 const adminCrown = document.getElementById('adminCrown');
                 
                 if (existingAdminBtn) existingAdminBtn.remove();
-                if (userProfileImg) userProfileImg.classList.remove('admin-gold-border');
+                userProfileImgs.forEach(img => img.classList.remove('admin-gold-border'));
                 if (adminCrown) adminCrown.classList.add('hidden');
                 
             } catch (e) {
@@ -273,8 +273,8 @@ async function updateUserUI() {
         if (liffInitialized && liff.isLoggedIn()) {
             try {
                 const profile = await liff.getProfile();
-                if (userProfileImg && profile.pictureUrl) {
-                    userProfileImg.src = profile.pictureUrl;
+                if (profile.pictureUrl) {
+                    userProfileImgs.forEach(img => img.src = profile.pictureUrl);
                 }
             } catch (e) {
                 console.error('Error getting profile image:', e);
