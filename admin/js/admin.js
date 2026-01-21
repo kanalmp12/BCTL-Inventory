@@ -302,59 +302,65 @@ function handleLogin(e) {
  * Check Login Session
  */
 async function checkSession() {
-    // 1. Check if logged in to Main App
-    const userInfoStr = localStorage.getItem(CONFIG.USER_INFO_KEY);
-    if (!userInfoStr) {
-        alert("Please login to the main application first.");
-        window.location.href = '../index.html';
-        return;
-    }
-
-    let userInfo = JSON.parse(userInfoStr);
-    
-    // 1.5 Fetch Fresh User Data from Backend (Crucial for PIN status)
     try {
+        // 1. Initialize LIFF
+        if (!CONFIG.LIFF_ID || CONFIG.LIFF_ID === 'YOUR_LIFF_ID_HERE') {
+            console.error('LIFF ID not configured');
+            alert("System configuration error: Missing LIFF ID.");
+            return;
+        }
+
+        await liff.init({ liffId: CONFIG.LIFF_ID });
+
+        // 2. Force Login if not logged in
+        if (!liff.isLoggedIn()) {
+            console.log("Not logged in to LINE. Redirecting to login...");
+            liff.login({ redirectUri: window.location.href });
+            return;
+        }
+
+        // 3. Get verified LINE Profile
+        const profile = await liff.getProfile();
+        const userId = profile.userId;
+
+        // 4. Fetch Fresh User Data from Backend (Verify Role & PIN)
         const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'checkUser', userId: userInfo.userId })
+            body: JSON.stringify({ action: 'checkUser', userId: userId })
         });
         const result = await response.json();
         
-        if (result.exists && result.user) {
-            // Update local storage with fresh data (including PIN)
-            // Preserve token or other local fields if needed, but here we trust backend
-            userInfo = { ...userInfo, ...result.user };
-            localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(userInfo));
-            console.log("User data refreshed:", userInfo);
+        if (!result.exists || result.user.role !== 'admin') {
+            alert("Access Denied: You do not have admin privileges.");
+            window.location.href = '../index.html';
+            return;
         }
-    } catch (e) {
-        console.error("Failed to refresh user data:", e);
-        // Fallback to local storage data if offline
-    }
 
-    if (userInfo.role !== 'admin') {
-        alert("Access Denied: You do not have admin privileges.");
-        window.location.href = '../index.html';
-        return;
-    }
+        // 5. Update local state with verified data
+        currentUser = result.user;
+        // Also save pictureUrl from LINE if not in sheet
+        if (!currentUser.pictureUrl) currentUser.pictureUrl = profile.pictureUrl;
+        
+        localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(currentUser));
 
-    currentUser = userInfo;
+        // 6. Check PIN Status (Priority 1)
+        if (!currentUser.pin || currentUser.pin.trim() === "") {
+            console.log("No PIN set for this admin. Forcing setup.");
+            showSetupPinModal(true); // true = force setup
+            return;
+        }
 
-    // 2. Check PIN Status (Priority 1)
-    // If no PIN is set, FORCE setup, regardless of session status.
-    if (!currentUser.pin || currentUser.pin.trim() === "") {
-        console.log("No PIN set. Forcing setup.");
-        showSetupPinModal(true); // true = force setup
-        return;
-    }
+        // 7. Check if already unlocked in this session
+        const isAdminSession = localStorage.getItem(CONFIG.SESSION_KEY);
+        if (isAdminSession === 'true') {
+            showDashboard();
+        } else {
+            showLogin();
+        }
 
-    // 3. Check Admin Session (PIN Verified)
-    const isAdminSession = localStorage.getItem(CONFIG.SESSION_KEY);
-    
-    if (isAdminSession === 'true') {
-        showDashboard();
-    } else {
-        showLogin();
+    } catch (error) {
+        console.error("Authentication error:", error);
+        alert("Authentication failed. Please refresh or try again.");
     }
 }
 
