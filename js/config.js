@@ -14,7 +14,10 @@ const CONFIG = {
     USER_INFO_KEY: 'toolCribUserInfo',
 
     // LINE LIFF ID
-    LIFF_ID: '2008523876-e0vK2yJL' // Replace with your LIFF ID
+    LIFF_ID: '2008523876-e0vK2yJL', // Replace with your LIFF ID
+
+    // Admin Session Key
+    SESSION_KEY: 'bctl_admin_session'
 };
 
 // Export CONFIG for use in other modules

@@ -340,19 +340,21 @@ async function checkSession() {
 
     currentUser = userInfo;
 
-    // 2. Check Admin Session (PIN Verified)
+    // 2. Check PIN Status (Priority 1)
+    // If no PIN is set, FORCE setup, regardless of session status.
+    if (!currentUser.pin || currentUser.pin.trim() === "") {
+        console.log("No PIN set. Forcing setup.");
+        showSetupPinModal(true); // true = force setup
+        return;
+    }
+
+    // 3. Check Admin Session (PIN Verified)
     const isAdminSession = localStorage.getItem(CONFIG.SESSION_KEY);
     
     if (isAdminSession === 'true') {
         showDashboard();
     } else {
-        // 3. Check if PIN is set (First Time Setup)
-        // Check for empty string, null, or undefined
-        if (!currentUser.pin || currentUser.pin.trim() === "") {
-            showSetupPinModal(true); // true = force setup (no cancel)
-        } else {
-            showLogin();
-        }
+        showLogin();
     }
 }
 
