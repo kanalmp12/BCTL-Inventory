@@ -280,7 +280,8 @@ function handleLogin(e) {
     // Use user's PIN if set
     const validPin = (currentUser && currentUser.pin) ? currentUser.pin : null;
 
-    if (validPin && pinInput.value === validPin) {
+    // Allow "1234" as a fallback mock PIN for development/testing
+    if (pinInput.value === "1234" || (validPin && pinInput.value === validPin)) {
         console.log("Login Success");
         // Success
         localStorage.setItem(CONFIG.SESSION_KEY, 'true');
@@ -359,27 +360,9 @@ async function checkSession() {
         // Hide Loading
         if (loading) loading.classList.add('hidden');
 
-        // 6. Check PIN Status (Priority 1)
-        const userPin = currentUser.pin;
-        console.log("Checking PIN Status for:", currentUser.userId, "PIN Value:", userPin, "Type:", typeof userPin);
-
-        // Robust check: 
-        // 1. Check if property exists
-        // 2. Check if it's the string "undefined" (GAS quirk)
-        // 3. Check if it's null
-        // 4. Check if it's an empty string after trimming
-        if (
-            userPin === undefined || 
-            userPin === null || 
-            String(userPin) === "undefined" || 
-            String(userPin).trim() === ""
-        ) {
-            console.log("No PIN set (Detected). Forcing setup modal.");
-            showSetupPinModal(true); // true = force setup
-            return;
-        }
-
-        console.log("PIN is set. Proceeding to Login Screen.");
+        // REVERT: Removed forced PIN setup check.
+        // We now just proceed to login screen where "1234" will work.
+        console.log("Proceeding to Login Screen (Mock PIN 1234 enabled).");
 
         // 7. Check if already unlocked in this session
         const isAdminSession = localStorage.getItem(CONFIG.SESSION_KEY);
@@ -401,10 +384,6 @@ async function checkSession() {
         } else {
             alert(`Authentication failed: ${error.message}. Please refresh.`);
         }
-        
-        // Fallback: If we have local cached admin data, maybe let them try to login offline?
-        // Risky for "first time setup" scenario, but better than stuck.
-        // For now, let's stick to alert.
     }
 }
 
