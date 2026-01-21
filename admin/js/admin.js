@@ -532,54 +532,7 @@ async function handleSetupPin(e) {
         document.getElementById('setupPinModal').classList.add('hidden');
     }
 }
-    e.preventDefault();
-    
-    const newPin = document.getElementById('newPin').value;
-    const confirmPin = document.getElementById('confirmPin').value;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    
-    if (newPin !== confirmPin) {
-        alert("PIN codes do not match!");
-        return;
-    }
-    
-    if (newPin.length !== 4) {
-        alert("PIN must be 4 digits!");
-        return;
-    }
-    
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = "Saving...";
-    
-    try {
-        // In a real app, this should be an API call
-        // const response = await fetch(CONFIG.API_URL, ...);
-        // For now, we update local object and simulate API
-        
-        // Update Local State
-        currentUser.pin = newPin;
-        localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(currentUser));
-        
-        // Simulate API delay
-        await new Promise(r => setTimeout(r, 800));
-        
-        alert("PIN code updated successfully!");
-        
-        // Auto-login after setup
-        localStorage.setItem(CONFIG.SESSION_KEY, 'true');
-        showDashboard();
-        fetchAllData();
-        
-    } catch (error) {
-        console.error("Error setting PIN:", error);
-        alert("Failed to save PIN. Please try again.");
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-        document.getElementById('setupPinModal').classList.add('hidden');
-    }
-}
+
 
 /**
  * Show Dashboard (Unlock)
