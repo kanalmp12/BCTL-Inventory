@@ -360,12 +360,26 @@ async function checkSession() {
         if (loading) loading.classList.add('hidden');
 
         // 6. Check PIN Status (Priority 1)
-        // Robust check for empty, null, undefined, or string "undefined"
-        if (!currentUser.pin || currentUser.pin === "undefined" || String(currentUser.pin).trim() === "") {
-            console.log("No PIN set for this admin. Forcing setup.", currentUser);
+        const userPin = currentUser.pin;
+        console.log("Checking PIN Status for:", currentUser.userId, "PIN Value:", userPin, "Type:", typeof userPin);
+
+        // Robust check: 
+        // 1. Check if property exists
+        // 2. Check if it's the string "undefined" (GAS quirk)
+        // 3. Check if it's null
+        // 4. Check if it's an empty string after trimming
+        if (
+            userPin === undefined || 
+            userPin === null || 
+            String(userPin) === "undefined" || 
+            String(userPin).trim() === ""
+        ) {
+            console.log("No PIN set (Detected). Forcing setup modal.");
             showSetupPinModal(true); // true = force setup
             return;
         }
+
+        console.log("PIN is set. Proceeding to Login Screen.");
 
         // 7. Check if already unlocked in this session
         const isAdminSession = localStorage.getItem(CONFIG.SESSION_KEY);
@@ -417,22 +431,36 @@ function showLogin() {
  * @param {boolean} isForced - If true, user cannot cancel/close (for first time setup)
  */
 function showSetupPinModal(isForced = false) {
+    console.log("Showing Setup PIN Modal. Forced:", isForced);
+    
+    // Hide other screens
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminLayout').classList.add('hidden');
-    document.getElementById('setupPinModal').classList.remove('hidden');
+    document.getElementById('adminLoading').classList.add('hidden'); // Ensure loading is gone
+    
+    // Show Modal
+    const modal = document.getElementById('setupPinModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex'); // Ensure flex is added if it was removed
+    } else {
+        console.error("Setup PIN Modal element not found!");
+        return;
+    }
     
     const cancelBtn = document.getElementById('setupPinCancel');
     const title = document.getElementById('setupPinTitle');
     
     if (isForced) {
-        cancelBtn.classList.add('hidden');
-        title.textContent = "Set Admin PIN";
+        if (cancelBtn) cancelBtn.classList.add('hidden');
+        if (title) title.textContent = "Set Admin PIN";
     } else {
-        cancelBtn.classList.remove('hidden');
-        title.textContent = "Change PIN";
+        if (cancelBtn) cancelBtn.classList.remove('hidden');
+        if (title) title.textContent = "Change PIN";
     }
     
-    document.getElementById('setupPinForm').reset();
+    const form = document.getElementById('setupPinForm');
+    if (form) form.reset();
 }
 
 /**
