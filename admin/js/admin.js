@@ -302,12 +302,12 @@ function handleLogin(e) {
  * Check Login Session
  */
 async function checkSession() {
+    const loading = document.getElementById('adminLoading');
+    
     try {
         // 1. Initialize LIFF
         if (!CONFIG.LIFF_ID || CONFIG.LIFF_ID === 'YOUR_LIFF_ID_HERE') {
-            console.error('LIFF ID not configured');
-            alert("System configuration error: Missing LIFF ID.");
-            return;
+            throw new Error("LIFF ID is not configured in config.js");
         }
 
         await liff.init({ liffId: CONFIG.LIFF_ID });
@@ -322,15 +322,28 @@ async function checkSession() {
         // 3. Get verified LINE Profile
         const profile = await liff.getProfile();
         const userId = profile.userId;
+        console.log("Verified User ID:", userId);
 
         // 4. Fetch Fresh User Data from Backend (Verify Role & PIN)
+        // Add timeout controller
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
         const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'checkUser', userId: userId })
+            body: JSON.stringify({ action: 'checkUser', userId: userId }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+
         const result = await response.json();
+        console.log("User Data:", result);
         
-        if (!result.exists || result.user.role !== 'admin') {
+        if (!result.exists || (result.user && result.user.role !== 'admin')) {
             alert("Access Denied: You do not have admin privileges.");
             window.location.href = '../index.html';
             return;
@@ -344,7 +357,6 @@ async function checkSession() {
         localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(currentUser));
 
         // Hide Loading
-        const loading = document.getElementById('adminLoading');
         if (loading) loading.classList.add('hidden');
 
         // 6. Check PIN Status (Priority 1)
@@ -364,8 +376,21 @@ async function checkSession() {
         }
 
     } catch (error) {
-        console.error("Authentication error:", error);
-        alert("Authentication failed. Please refresh or try again.");
+        console.error("Authentication error details:", error);
+        
+        // Hide loading so user isn't stuck
+        if (loading) loading.classList.add('hidden');
+        
+        // Show clearer error
+        if (error.name === 'AbortError') {
+            alert("Connection timed out. Please check your internet or the API URL.");
+        } else {
+            alert(`Authentication failed: ${error.message}. Please refresh.`);
+        }
+        
+        // Fallback: If we have local cached admin data, maybe let them try to login offline?
+        // Risky for "first time setup" scenario, but better than stuck.
+        // For now, let's stick to alert.
     }
 }
 
