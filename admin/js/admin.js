@@ -286,10 +286,10 @@ function handleLogin(e) {
     const pinInput = document.getElementById('adminPin');
     const errorMsg = document.getElementById('loginError');
     
-    // Use user's PIN if set, otherwise fallback to "1234" for initial setup safety
-    const validPin = (currentUser && currentUser.pin) ? currentUser.pin : "1234";
+    // Use user's PIN if set
+    const validPin = (currentUser && currentUser.pin) ? currentUser.pin : null;
 
-    if (pinInput.value === validPin) {
+    if (validPin && pinInput.value === validPin) {
         console.log("Login Success");
         // Success
         localStorage.setItem(CONFIG.SESSION_KEY, 'true');
@@ -330,10 +330,16 @@ function checkSession() {
 
     // 2. Check Admin Session (PIN Verified)
     const isAdminSession = localStorage.getItem(CONFIG.SESSION_KEY);
+    
     if (isAdminSession === 'true') {
         showDashboard();
     } else {
-        showLogin();
+        // 3. Check if PIN is set (First Time Setup)
+        if (!currentUser.pin) {
+            showSetupPinModal(true); // true = force setup (no cancel)
+        } else {
+            showLogin();
+        }
     }
 }
 
@@ -341,6 +347,7 @@ function checkSession() {
  * Show Login Screen
  */
 function showLogin() {
+    document.getElementById('setupPinModal').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('adminLayout').classList.add('hidden');
     
@@ -352,10 +359,152 @@ function showLogin() {
 }
 
 /**
+ * Show Setup PIN Modal
+ * @param {boolean} isForced - If true, user cannot cancel/close (for first time setup)
+ */
+function showSetupPinModal(isForced = false) {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('adminLayout').classList.add('hidden');
+    document.getElementById('setupPinModal').classList.remove('hidden');
+    
+    const cancelBtn = document.getElementById('setupPinCancel');
+    const title = document.getElementById('setupPinTitle');
+    
+    if (isForced) {
+        cancelBtn.classList.add('hidden');
+        title.textContent = "Set Admin PIN";
+    } else {
+        cancelBtn.classList.remove('hidden');
+        title.textContent = "Change PIN";
+    }
+    
+    document.getElementById('setupPinForm').reset();
+}
+
+/**
+ * Close Setup PIN Modal
+ */
+function closeSetupPinModal() {
+    document.getElementById('setupPinModal').classList.add('hidden');
+    // If we are logged in, go back to dashboard
+    if (localStorage.getItem(CONFIG.SESSION_KEY) === 'true') {
+        showDashboard();
+    } else {
+        // If not logged in (e.g. from Forgot PIN), go back to login
+        showLogin();
+    }
+}
+
+/**
+ * Open Change PIN Modal (From Settings)
+ */
+function openChangePinModal() {
+    showSetupPinModal(false);
+}
+
+/**
+ * Handle Setup PIN Submission
+ */
+async function handleSetupPin(e) {
+    e.preventDefault();
+    
+    const newPin = document.getElementById('newPin').value;
+    const confirmPin = document.getElementById('confirmPin').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    if (newPin !== confirmPin) {
+        alert("PIN codes do not match!");
+        return;
+    }
+    
+    if (newPin.length !== 4) {
+        alert("PIN must be 4 digits!");
+        return;
+    }
+    
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "Saving...";
+    
+    try {
+        // Update Local State
+        currentUser.pin = newPin;
+        localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(currentUser));
+        
+        // Simulate API delay
+        await new Promise(r => setTimeout(r, 800));
+        
+        alert("PIN code updated successfully!");
+        
+        // Auto-login after setup
+        localStorage.setItem(CONFIG.SESSION_KEY, 'true');
+        showDashboard();
+        fetchAllData();
+        
+    } catch (error) {
+        console.error("Error setting PIN:", error);
+        alert("Failed to save PIN. Please try again.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        document.getElementById('setupPinModal').classList.add('hidden');
+    }
+}
+    e.preventDefault();
+    
+    const newPin = document.getElementById('newPin').value;
+    const confirmPin = document.getElementById('confirmPin').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    if (newPin !== confirmPin) {
+        alert("PIN codes do not match!");
+        return;
+    }
+    
+    if (newPin.length !== 4) {
+        alert("PIN must be 4 digits!");
+        return;
+    }
+    
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "Saving...";
+    
+    try {
+        // In a real app, this should be an API call
+        // const response = await fetch(CONFIG.API_URL, ...);
+        // For now, we update local object and simulate API
+        
+        // Update Local State
+        currentUser.pin = newPin;
+        localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(currentUser));
+        
+        // Simulate API delay
+        await new Promise(r => setTimeout(r, 800));
+        
+        alert("PIN code updated successfully!");
+        
+        // Auto-login after setup
+        localStorage.setItem(CONFIG.SESSION_KEY, 'true');
+        showDashboard();
+        fetchAllData();
+        
+    } catch (error) {
+        console.error("Error setting PIN:", error);
+        alert("Failed to save PIN. Please try again.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        document.getElementById('setupPinModal').classList.add('hidden');
+    }
+}
+
+/**
  * Show Dashboard (Unlock)
  */
 function showDashboard() {
     document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('setupPinModal').classList.add('hidden');
     document.getElementById('adminLayout').classList.remove('hidden');
     document.getElementById('adminLayout').classList.add('flex');
     
