@@ -1,13 +1,13 @@
 /**
- * Tool Crib Automation - Google Apps Script Backend (Updated V3.0 - Role Support)
+ * Tool Crib Automation - Google Apps Script Backend (Updated V4.0 - Admin PIN)
  * 
  * INSTRUCTIONS:
- * 1. Create a new Google Sheet.
+ * 1. Create a new Google Sheet (or use your existing one).
  * 2. Go to Extensions > Apps Script.
  * 3. Delete any code in Code.gs and paste this entire script.
  * 4. Save the project.
- * 5. Run the 'setupSheet' function once to create the necessary sheets and headers.
- *    (If you are updating an existing sheet, manually add a "Role" column to the "Users" sheet).
+ * 5. Run the 'setupSheet' function once to create/update sheets and headers.
+ *    (IMPORTANT: This version adds a "PIN" column to the "Users" sheet).
  * 6. Click 'Deploy' > 'New deployment'.
  * 7. Select type 'Web app', Execute as 'Me', Access 'Anyone'.
  * 8. Copy the 'Web App URL' and paste it into your `js/config.js` file.
@@ -61,6 +61,9 @@ function doPost(e) {
       case "getUsers":
         result = getUsers();
         break;
+      case "updateUserPin":
+        result = updateUserPin(data);
+        break;
       default:
         result = { error: "Invalid action" };
     }
@@ -92,14 +95,16 @@ function setupSheet() {
   let usersSheet = ss.getSheetByName(SHEET_USERS);
   if (!usersSheet) {
     usersSheet = ss.insertSheet(SHEET_USERS);
-    // Added "Role" column
-    usersSheet.appendRow(["User ID", "Full Name", "Department", "Cohort", "Registered Date", "Role"]);
+    // Columns: User ID, Full Name, Department, Cohort, Registered Date, Role, PIN
+    usersSheet.appendRow(["User ID", "Full Name", "Department", "Cohort", "Registered Date", "Role", "PIN"]);
   } else {
-    // If sheet exists, check headers (Optional logic for manual update reminder)
-    const headers = usersSheet.getRange(1, 1, 1, 6).getValues()[0];
+    // If sheet exists, check headers
+    const headers = usersSheet.getRange(1, 1, 1, 7).getValues()[0];
     if (headers[5] !== "Role") {
-      // You might want to manually add the header if running this on existing sheet
-      // usersSheet.getRange(1, 6).setValue("Role");
+      usersSheet.getRange(1, 6).setValue("Role");
+    }
+    if (headers[6] !== "PIN") {
+      usersSheet.getRange(1, 7).setValue("PIN");
     }
   }
 
@@ -178,7 +183,8 @@ function checkUser(userId) {
           fullName: data[i][1],
           department: data[i][2],
           cohort: data[i][3],
-          role: data[i][5] || "user" // Return Role (Index 5)
+          role: data[i][5] || "user",
+          pin: data[i][6] || null // Return PIN (Index 6)
         }
       };
     }
@@ -199,14 +205,33 @@ function registerUser(data) {
   
   for (let i = 1; i < users.length; i++) {
     if (users[i][0] == data.userId) {
+      // Preserve Role (idx 5) and PIN (idx 6) while updating profile
       sheet.getRange(i + 1, 2, 1, 3).setValues([[data.fullName, data.department, data.cohort]]);
       return { success: true, message: "Profile updated" };
     }
   }
   
-  // Append new user with default role 'user'
-  sheet.appendRow([data.userId, data.fullName, data.department, data.cohort, new Date(), "user"]);
+  // Append new user with default role 'user' and empty PIN
+  sheet.appendRow([data.userId, data.fullName, data.department, data.cohort, new Date(), "user", ""]);
   return { success: true };
+}
+
+/**
+ * Update User PIN
+ */
+function updateUserPin(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_USERS);
+  const users = sheet.getDataRange().getValues();
+  
+  for (let i = 1; i < users.length; i++) {
+    if (users[i][0] == data.userId) {
+      // Update PIN column (Index 6 => Column 7)
+      sheet.getRange(i + 1, 7).setValue(data.pin);
+      return { success: true };
+    }
+  }
+  return { success: false, error: "User not found" };
 }
 
 /**
@@ -452,7 +477,7 @@ function getUsers() {
   const data = sheet.getDataRange().getValues();
   const users = [];
   
-  // Columns: [User ID, Full Name, Department, Cohort, Registered Date, Role]
+  // Columns: [User ID, Full Name, Department, Cohort, Registered Date, Role, PIN]
   
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -462,7 +487,8 @@ function getUsers() {
       department: row[2],
       cohort: row[3],
       registeredDate: row[4],
-      role: row[5] || "user" // Include Role
+      role: row[5] || "user",
+      pin: row[6] || "" // Include PIN
     });
   }
   

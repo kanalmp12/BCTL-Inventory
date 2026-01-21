@@ -1,14 +1,5 @@
 // ADMIN DASHBOARD LOGIC
 
-// Configuration
-const CONFIG = {
-    // ACCESS_PIN removed, using user's PIN
-    SESSION_KEY: "bctl_admin_session",
-    USER_INFO_KEY: 'toolCribUserInfo', // Must match config.js
-    // PASTE YOUR API URL HERE (Same as user side)
-    API_URL: 'https://script.google.com/macros/s/AKfycby54KvJdYqJ48YLe7IZrvSBYgT2-GvHjFdHMV8809ltIxJE2F-0tAGyZFHBqrg077UwEA/exec'
-};
-
 // State
 let currentTab = 'dashboard';
 let currentUser = null;
@@ -310,7 +301,7 @@ function handleLogin(e) {
 /**
  * Check Login Session
  */
-function checkSession() {
+async function checkSession() {
     // 1. Check if logged in to Main App
     const userInfoStr = localStorage.getItem(CONFIG.USER_INFO_KEY);
     if (!userInfoStr) {
@@ -319,7 +310,28 @@ function checkSession() {
         return;
     }
 
-    const userInfo = JSON.parse(userInfoStr);
+    let userInfo = JSON.parse(userInfoStr);
+    
+    // 1.5 Fetch Fresh User Data from Backend (Crucial for PIN status)
+    try {
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'checkUser', userId: userInfo.userId })
+        });
+        const result = await response.json();
+        
+        if (result.exists && result.user) {
+            // Update local storage with fresh data (including PIN)
+            // Preserve token or other local fields if needed, but here we trust backend
+            userInfo = { ...userInfo, ...result.user };
+            localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(userInfo));
+            console.log("User data refreshed:", userInfo);
+        }
+    } catch (e) {
+        console.error("Failed to refresh user data:", e);
+        // Fallback to local storage data if offline
+    }
+
     if (userInfo.role !== 'admin') {
         alert("Access Denied: You do not have admin privileges.");
         window.location.href = '../index.html';
@@ -335,7 +347,8 @@ function checkSession() {
         showDashboard();
     } else {
         // 3. Check if PIN is set (First Time Setup)
-        if (!currentUser.pin) {
+        // Check for empty string, null, or undefined
+        if (!currentUser.pin || currentUser.pin.trim() === "") {
             showSetupPinModal(true); // true = force setup (no cancel)
         } else {
             showLogin();
