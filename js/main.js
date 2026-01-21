@@ -194,58 +194,7 @@ function renderSkeletons() {
     }
 }
 
-// Initialize the application
-document.addEventListener('DOMContentLoaded', async () => {
-    // Show all skeletons immediately
-    if (typeof showUserSkeleton === 'function') {
-        showUserSkeleton();
-    }
-    renderSkeletons();
 
-    try {
-        // 1. Init LIFF
-        await initLiff();
-        
-        // 2. Check Backend Status & Sync Data
-        const userId = getUserId();
-        if (userId) {
-            let isRegistered = false;
-            try {
-                // Attempt 1
-                isRegistered = await isUserRegistered();
-                
-                // If not registered but we expect them to be (or API flaked), try once more after a short delay
-                if (!isRegistered) {
-                     console.log("User not found or sync failed, retrying in 1.5s...");
-                     await new Promise(r => setTimeout(r, 1500));
-                     isRegistered = await isUserRegistered();
-                }
-            } catch (e) {
-                console.warn("First sync failed, retrying...", e);
-                // Attempt 2 (Retry on error)
-                await new Promise(r => setTimeout(r, 1500));
-                try {
-                    isRegistered = await isUserRegistered();
-                } catch (e2) {
-                    console.error("Second sync failed", e2);
-                }
-            }
-        }
-        
-        // 3. Always reload currentUser from LocalStorage (whether Sync worked or failed)
-        currentUser = getUserInfo();
-        
-        // 4. Update UI with the final data
-        updateUserUI();
-        
-        // 5. Load Tools
-        await loadTools();
-
-    } catch (error) {
-        console.error('Initialization error:', error);
-        showMessage('Failed to initialize application. Please try again.', 'error');
-    }
-});
 
 /**
  * Load tools from the API and render them
