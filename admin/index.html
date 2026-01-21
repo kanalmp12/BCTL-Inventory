@@ -33,8 +33,14 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans h-screen overflow-hidden">
 
-    <!-- LOGIN SCREEN -->
-    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100">
+    <!-- LOADING OVERLAY -->
+    <div id="adminLoading" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-gray-50">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <p class="mt-4 text-gray-500 font-medium animate-pulse">Verifying Admin Access...</p>
+    </div>
+
+    <!-- LOGIN SCREEN (Hidden by default) -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 hidden">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-200">
             <div class="text-center mb-8 flex flex-col items-center">
                 <img src="../img/BUCA Talent LOGO.png" alt="BCTL Logo" class="h-16 w-auto mb-4 object-contain">

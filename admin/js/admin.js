@@ -343,9 +343,14 @@ async function checkSession() {
         
         localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(currentUser));
 
+        // Hide Loading
+        const loading = document.getElementById('adminLoading');
+        if (loading) loading.classList.add('hidden');
+
         // 6. Check PIN Status (Priority 1)
-        if (!currentUser.pin || currentUser.pin.trim() === "") {
-            console.log("No PIN set for this admin. Forcing setup.");
+        // Robust check for empty, null, undefined, or string "undefined"
+        if (!currentUser.pin || currentUser.pin === "undefined" || String(currentUser.pin).trim() === "") {
+            console.log("No PIN set for this admin. Forcing setup.", currentUser);
             showSetupPinModal(true); // true = force setup
             return;
         }
@@ -369,7 +374,10 @@ async function checkSession() {
  */
 function showLogin() {
     document.getElementById('setupPinModal').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
+    
+    const loginScreen = document.getElementById('loginScreen');
+    loginScreen.classList.remove('hidden');
+    
     document.getElementById('adminLayout').classList.add('hidden');
     
     // Optional: Personalize Login Screen
