@@ -511,8 +511,10 @@ function renderTransactionsTable(transactions) {
 
         // Image Button
         let imageBtn = '-';
-        if (t.returnImage && t.returnImage.startsWith('http')) {
-            const displayUrl = formatDriveUrl(t.returnImage);
+        const imgUrl = t.returnImage || t.borrowImage; // Check both
+        
+        if (imgUrl && imgUrl.startsWith('http')) {
+            const displayUrl = formatDriveUrl(imgUrl);
             imageBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700"><span class="material-icons-outlined">image</span></button>`;
         }
 

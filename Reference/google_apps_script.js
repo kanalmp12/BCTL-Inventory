@@ -119,7 +119,13 @@ function setupSheet() {
   let transSheet = ss.getSheetByName(SHEET_TRANSACTIONS);
   if (!transSheet) {
     transSheet = ss.insertSheet(SHEET_TRANSACTIONS);
-    transSheet.appendRow(["Transaction ID", "Tool ID", "User ID", "Action", "Qty", "Reason", "Expected Return", "Actual Return", "Status", "Timestamp", "Condition", "Notes", "Return Image"]);
+    transSheet.appendRow(["Transaction ID", "Tool ID", "User ID", "Action", "Qty", "Reason", "Expected Return", "Actual Return", "Status", "Timestamp", "Condition", "Notes", "Return Image", "Borrow Image"]);
+  } else {
+    // Check if Borrow Image column exists (col 14)
+    const lastCol = transSheet.getLastColumn();
+    if (lastCol < 14) {
+      transSheet.getRange(1, 14).setValue("Borrow Image");
+    }
   }
 
   // 4. Activity Logs
@@ -130,51 +136,260 @@ function setupSheet() {
   }
 }
 
-// ... (Existing functions: getTools, getUserActiveBorrows, checkUser, registerUser, updateUserPin, borrowTool, returnTool, addTool, updateTool, deleteTool, getTransactions, getUsers) ...
+// ... (Existing functions: getTools, getUserActiveBorrows, checkUser, registerUser, updateUserPin) ...
 
 /**
- * Get Admin Logs
+ * Borrow Action
  */
-function getAdminLogs() {
+function borrowTool(data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(SHEET_LOGS);
-  if (!sheet) {
-    setupSheet(); // Create if missing
-    sheet = ss.getSheetByName(SHEET_LOGS);
+  const inventorySheet = ss.getSheetByName(SHEET_INVENTORY);
+  const transSheet = ss.getSheetByName(SHEET_TRANSACTIONS);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  
+  try {
+    const invData = inventorySheet.getDataRange().getValues();
+    let toolRowIndex = -1;
+    
+    for (let i = 1; i < invData.length; i++) {
+      if (invData[i][0] == data.toolId) {
+        toolRowIndex = i + 1;
+        if (invData[i][3] !== "จำนวนมาก") {
+          const currentAvail = Number(invData[i][3]);
+          if (currentAvail < data.quantity) return { error: "Not enough stock" };
+          inventorySheet.getRange(toolRowIndex, 4).setValue(currentAvail - data.quantity);
+        }
+        break;
+      }
+    }
+    
+    if (toolRowIndex == -1) return { error: "Tool not found" };
+    
+    // Handle Image Upload
+    let borrowImageUrl = "";
+    if (data.imageBase64) {
+      try {
+        const folderName = "Tool_Borrow_Images";
+        const folders = DriveApp.getFoldersByName(folderName);
+        const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+        
+        const base64Data = data.imageBase64.split(',')[1] || data.imageBase64;
+        const blob = Utilities.newBlob(Utilities.base64Decode(base64Data), MimeType.JPEG, data.imageName || `borrow_${data.toolId}.jpg`);
+        
+        const file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        
+        borrowImageUrl = file.getUrl();
+      } catch (e) {
+        borrowImageUrl = "Upload Error: " + e.toString();
+      }
+    }
+
+    transSheet.appendRow([
+      Utilities.getUuid(), data.toolId, data.userId, "Borrow", 
+      data.quantity, data.reason, data.expectedReturnDate, "", "Borrowed", new Date(),
+      "", "", "", borrowImageUrl
+    ]);
+    
+    return { success: true };
+  } finally {
+    lock.releaseLock();
   }
-  
-  const data = sheet.getDataRange().getValues();
-  const logs = [];
-  
-  // Start from 1 to skip header, iterate backwards to show newest first
-  // Limit to last 50 logs for performance
-  const startIndex = Math.max(1, data.length - 50);
-  
-  for (let i = data.length - 1; i >= startIndex; i--) {
-    const row = data[i];
-    logs.push({
-      time: row[0],
-      action: row[1],
-      user: row[2]
-    });
-  }
-  
-  return { logs: logs };
 }
 
 /**
- * Log Admin Activity
+ * Return Action
  */
-function logAdminActivity(data) {
+function returnTool(data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(SHEET_LOGS);
-  if (!sheet) {
-    setupSheet();
-    sheet = ss.getSheetByName(SHEET_LOGS);
+  const inventorySheet = ss.getSheetByName(SHEET_INVENTORY);
+  const transSheet = ss.getSheetByName(SHEET_TRANSACTIONS);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  
+  try {
+    const transData = transSheet.getDataRange().getValues();
+    let borrowedQty = 0;
+    let transRow = -1;
+    
+    for (let i = transData.length - 1; i >= 1; i--) {
+      if (transData[i][1] == data.toolId && transData[i][2] == data.userId && (transData[i][8] == "Borrowed" || transData[i][8] == "Overdue")) {
+        transRow = i + 1;
+        borrowedQty = Number(transData[i][4]);
+        break;
+      }
+    }
+    
+    const invData = inventorySheet.getDataRange().getValues();
+    for (let i = 1; i < invData.length; i++) {
+      if (invData[i][0] == data.toolId) {
+        if (invData[i][3] !== "จำนวนมาก") {
+          inventorySheet.getRange(i + 1, 4).setValue(Number(invData[i][3]) + borrowedQty);
+        }
+        break;
+      }
+    }
+    
+    if (transRow != -1) {
+      transSheet.getRange(transRow, 8).setValue(new Date());
+      transSheet.getRange(transRow, 9).setValue("Returned");
+      transSheet.getRange(transRow, 11).setValue(data.condition || "");
+      transSheet.getRange(transRow, 12).setValue(data.notes || "");
+      
+      // Handle Image Upload
+      if (data.imageBase64) {
+        try {
+          const folderName = "Tool_Return_Images";
+          const folders = DriveApp.getFoldersByName(folderName);
+          const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+          
+          const base64Data = data.imageBase64.split(',')[1] || data.imageBase64;
+          const blob = Utilities.newBlob(Utilities.base64Decode(base64Data), MimeType.JPEG, data.imageName || `return_${data.toolId}.jpg`);
+          
+          const file = folder.createFile(blob);
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          
+          transSheet.getRange(transRow, 13).setValue(file.getUrl());
+        } catch (e) {
+          transSheet.getRange(transRow, 13).setValue("Upload Error: " + e.toString());
+        }
+      }
+    }
+    
+    return { success: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Add New Tool
+ */
+function addTool(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_INVENTORY);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  
+  try {
+    // Check if ID already exists
+    const invData = sheet.getDataRange().getValues();
+    for (let i = 1; i < invData.length; i++) {
+      if (invData[i][0] == data.toolId) return { error: "Tool ID already exists" };
+    }
+    
+    sheet.appendRow([
+      data.toolId, 
+      data.toolName, 
+      data.totalQty, 
+      data.totalQty, // Available starts as Total
+      data.unit, 
+      data.location, 
+      data.imageUrl || ""
+    ]);
+    return { success: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Update Existing Tool
+ */
+function updateTool(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_INVENTORY);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  
+  try {
+    const invData = sheet.getDataRange().getValues();
+    let rowIdx = -1;
+    
+    for (let i = 1; i < invData.length; i++) {
+      if (invData[i][0] == data.toolId) {
+        rowIdx = i + 1;
+        break;
+      }
+    }
+    
+    if (rowIdx == -1) return { error: "Tool not found" };
+    
+    // Update values (Tool ID, Tool Name, Total Qty, Avail Qty, Unit, Location, Image URL)
+    sheet.getRange(rowIdx, 2).setValue(data.toolName);
+    sheet.getRange(rowIdx, 3).setValue(data.totalQty);
+    sheet.getRange(rowIdx, 4).setValue(data.availableQty);
+    sheet.getRange(rowIdx, 5).setValue(data.unit);
+    sheet.getRange(rowIdx, 6).setValue(data.location);
+    sheet.getRange(rowIdx, 7).setValue(data.imageUrl);
+    
+    return { success: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Delete Tool
+ */
+function deleteTool(toolId) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_INVENTORY);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  
+  try {
+    const invData = sheet.getDataRange().getValues();
+    for (let i = 1; i < invData.length; i++) {
+      if (invData[i][0] == toolId) {
+        sheet.deleteRow(i + 1);
+        return { success: true };
+      }
+    }
+    return { error: "Tool not found" };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Get All Transactions (Admin)
+ */
+function getTransactions() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_TRANSACTIONS);
+  if (!sheet) return { transactions: [] };
+  
+  const data = sheet.getDataRange().getValues();
+  const transactions = [];
+  
+  // Columns: [Transaction ID, Tool ID, User ID, Action, Qty, Reason, Expected Return, Actual Return, Status, Timestamp, Condition, Notes, Return Image, Borrow Image]
+  
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    transactions.push({
+      transactionId: row[0],
+      toolId: row[1],
+      userId: row[2],
+      action: row[3],
+      quantity: row[4],
+      reason: row[5],
+      expectedReturnDate: row[6],
+      actualReturnDate: row[7],
+      status: row[8],
+      timestamp: row[9],
+      condition: row[10],
+      notes: row[11],
+      returnImage: row[12],
+      borrowImage: row[13] || "" // Add borrowImage
+    });
   }
   
-  sheet.appendRow([new Date(), data.logAction, data.logUser]);
-  return { success: true };
+  // Sort by timestamp descending
+  transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  return { transactions: transactions };
 }
 
 /**

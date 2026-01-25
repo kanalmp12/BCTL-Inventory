@@ -686,6 +686,11 @@ function showBorrowModal(tool) {
         reasonInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
     }
     
+    // Reset Image
+    if (window.clearBorrowImage) {
+        window.clearBorrowImage();
+    }
+
     if (elements.borrowModal) {
         elements.borrowModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
@@ -822,6 +827,13 @@ async function handleBorrowSubmit() {
     const reason = reasonInput ? reasonInput.value.trim() : "";
     const returnDate = document.getElementById('returnDate').value;
     
+    // Image Validation
+    const imageError = document.getElementById('borrowImageError');
+    const uploadInput = document.getElementById('borrowImageUpload');
+    const file = uploadInput && uploadInput.files ? uploadInput.files[0] : null;
+    let imageBase64 = null;
+    let imageName = null;
+
     if (!reason) {
         if (reasonInput) {
             reasonInput.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
@@ -832,16 +844,29 @@ async function handleBorrowSubmit() {
         showMessage('Please specify a reason for borrowing', 'error');
         return;
     }
+
+    // Require Photo
+    if (!file) {
+        if (imageError) imageError.classList.remove('hidden');
+        showMessage('Please upload a borrow photo', 'error');
+        return;
+    }
     
     showLoading(true);
     
     try {
+        // Convert image to Base64
+        imageBase64 = await convertToBase64(file);
+        imageName = `borrow_${toolId}_${Date.now()}.jpg`;
+
         const borrowData = {
             toolId,
             userId: getUserId(),
             quantity,
             reason,
-            expectedReturnDate: returnDate
+            expectedReturnDate: returnDate,
+            imageBase64,
+            imageName
         };
         
         // Optimistic UI Update: Assume success immediately
@@ -1009,11 +1034,26 @@ function formatDate(date) {
 /**
  * Handle Image Selection
  */
-window.handleImageSelection = function(input) {
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    const previewImage = document.getElementById('returnImagePreview');
-    const inputOptions = document.getElementById('imageInputOptions');
-    const errorMsg = document.getElementById('returnImageError');
+window.handleImageSelection = function(input, prefix) {
+    let containerId, imgId, optionsId, errorId;
+    
+    if (prefix === 'borrow') {
+        containerId = 'borrowImagePreviewContainer';
+        imgId = 'borrowImagePreview';
+        optionsId = 'borrowImageInputOptions';
+        errorId = 'borrowImageError';
+    } else {
+        // Default to return (legacy IDs)
+        containerId = 'imagePreviewContainer';
+        imgId = 'returnImagePreview';
+        optionsId = 'imageInputOptions';
+        errorId = 'returnImageError';
+    }
+
+    const previewContainer = document.getElementById(containerId);
+    const previewImage = document.getElementById(imgId);
+    const inputOptions = document.getElementById(optionsId);
+    const errorMsg = document.getElementById(errorId);
     
     if (input.files && input.files[0]) {
         const file = input.files[0];
@@ -1047,6 +1087,21 @@ window.clearReturnImage = function() {
     document.getElementById('imageInputOptions').classList.remove('hidden');
     
     const errorMsg = document.getElementById('returnImageError');
+    if (errorMsg) errorMsg.classList.add('hidden');
+}
+
+/**
+ * Clear Borrow Image
+ */
+window.clearBorrowImage = function() {
+    const uploadInput = document.getElementById('borrowImageUpload');
+    if (uploadInput) uploadInput.value = "";
+    
+    document.getElementById('borrowImagePreviewContainer').classList.add('hidden');
+    document.getElementById('borrowImagePreview').src = "";
+    document.getElementById('borrowImageInputOptions').classList.remove('hidden');
+    
+    const errorMsg = document.getElementById('borrowImageError');
     if (errorMsg) errorMsg.classList.add('hidden');
 }
 
