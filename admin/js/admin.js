@@ -509,13 +509,18 @@ function renderTransactionsTable(transactions) {
         if (t.status === 'Returned') statusClass = 'bg-green-100 text-green-700';
         if (t.status === 'Overdue') statusClass = 'bg-red-100 text-red-700';
 
-        // Image Button
-        let imageBtn = '-';
-        const imgUrl = t.returnImage || t.borrowImage; // Check both
-        
-        if (imgUrl && imgUrl.startsWith('http')) {
-            const displayUrl = formatDriveUrl(imgUrl);
-            imageBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700"><span class="material-icons-outlined">image</span></button>`;
+        // Borrow Image Button
+        let borrowBtn = '-';
+        if (t.borrowImage && t.borrowImage.startsWith('http')) {
+            const displayUrl = formatDriveUrl(t.borrowImage);
+            borrowBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700" title="View Borrow Photo"><span class="material-icons-outlined">image</span></button>`;
+        }
+
+        // Return Image Button
+        let returnBtn = '-';
+        if (t.returnImage && t.returnImage.startsWith('http')) {
+            const displayUrl = formatDriveUrl(t.returnImage);
+            returnBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700" title="View Return Photo"><span class="material-icons-outlined">image</span></button>`;
         }
 
         // Format Date
@@ -529,7 +534,8 @@ function renderTransactionsTable(transactions) {
             <td class="px-6 py-4 text-gray-600">${t.toolId}</td>
             <td class="px-6 py-4 font-bold text-xs uppercase tracking-wide text-gray-500">${t.action}</td>
             <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-xs font-bold ${statusClass}">${t.status}</span></td>
-            <td class="px-6 py-4 text-center">${imageBtn}</td>
+            <td class="px-6 py-4 text-center">${borrowBtn}</td>
+            <td class="px-6 py-4 text-center">${returnBtn}</td>
         `;
         tbody.appendChild(tr);
     });
