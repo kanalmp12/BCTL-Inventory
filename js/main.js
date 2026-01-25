@@ -89,6 +89,7 @@ elements.filterBtns.forEach(btn => btn.addEventListener('click', handleFilterCli
 document.getElementById('loginTriggerBtn')?.addEventListener('click', showRegistrationModal);
 
 // Modal close buttons
+document.getElementById('closeRegistrationModal')?.addEventListener('click', hideRegistrationModal);
 document.getElementById('closeBorrowModal')?.addEventListener('click', hideBorrowModal);
 document.getElementById('closeReturnModal')?.addEventListener('click', hideReturnModal);
 
@@ -572,6 +573,7 @@ async function showRegistrationModal() {
 
         const lineLoginSection = document.getElementById('lineLoginSection');
         const registrationForm = document.getElementById('registrationForm');
+        const closeBtn = document.getElementById('closeRegistrationModal');
         
         // Ensure LIFF is ready
         if (!liffInitialized) {
@@ -591,6 +593,7 @@ async function showRegistrationModal() {
                 registrationForm.classList.add('hidden');
                 registrationForm.classList.remove('flex');
             }
+            if (closeBtn) closeBtn.classList.remove('hidden'); // Show close button for LINE Login
             const stepText = document.getElementById('registrationStepText');
             if (stepText) stepText.textContent = 'Step 1 of 2';
         } else {
@@ -620,6 +623,7 @@ async function showRegistrationModal() {
                     console.error('Error getting LINE profile:', e);
                 }
             }
+            if (closeBtn) closeBtn.classList.add('hidden'); // Hide close button for Form step
         }
     }
 }
