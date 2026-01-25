@@ -35,8 +35,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // 2. Check Backend Status & Sync Data
         const userId = getUserId();
+        let isRegistered = false;
+
         if (userId) {
-            let isRegistered = false;
             try {
                 // Attempt 1
                 isRegistered = await isUserRegistered();
@@ -61,6 +62,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // 3. Always reload currentUser from LocalStorage (whether Sync worked or failed)
         currentUser = getUserInfo();
+
+        // If logged in via LINE but not registered, show registration modal
+        if (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn() && !isRegistered && !currentUser) {
+            console.log("User logged in via LINE but not registered. Showing registration modal.");
+            showRegistrationModal();
+        }
         
         // 4. Update UI with the final data
         updateUserUI();
