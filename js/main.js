@@ -85,6 +85,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 elements.searchInput?.addEventListener('input', handleSearch);
 elements.filterBtns.forEach(btn => btn.addEventListener('click', handleFilterClick));
 
+// Language Change Listener
+document.addEventListener('languageChanged', () => {
+    // Re-render tools with new language
+    renderTools(filteredTools);
+    // Update User UI (e.g. "User" vs "ผู้ใช้งาน")
+    updateUserUI();
+});
+
 // Header Login Button
 document.getElementById('loginTriggerBtn')?.addEventListener('click', showRegistrationModal);
 
@@ -294,21 +302,21 @@ function createToolCard(tool) {
         actionButton = `
             <button class="btn-return" data-tool-id="${tool.toolId}">
                 <span class="material-symbols-outlined">keyboard_return</span>
-                Return
+                ${t('btn_card_return')}
             </button>
         `;
     } else if (tool.availableQty === 'จำนวนมาก' || tool.availableQty > 0) {
         actionButton = `
             <button class="btn-borrow" data-tool-id="${tool.toolId}">
                 <span class="material-symbols-outlined">add_circle</span>
-                Borrow
+                ${t('btn_card_borrow')}
             </button>
         `;
     } else {
         actionButton = `
              <button class="btn-borrow" disabled style="background-color: var(--gray-medium); cursor: not-allowed;">
                  <span class="material-symbols-outlined">block</span>
-                 Out of Stock
+                 ${t('btn_card_out_of_stock')}
              </button>
         `;
     }
@@ -317,6 +325,24 @@ function createToolCard(tool) {
     let imageContent = '';
     if (tool.imageUrl && tool.imageUrl.trim() !== '') {
         imageContent = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:cover;">`;
+    }
+
+    // Status Translation
+    let statusText = tool.status;
+    if (tool.status === 'Available') statusText = t('status_available');
+    if (tool.status === 'Borrowed') statusText = t('status_borrowed');
+    if (tool.status === 'Overdue') statusText = t('status_overdue');
+
+    // Available Quantity Text
+    let availText = '';
+    if (tool.status === 'Available') {
+        if (tool.availableQty === 'จำนวนมาก') {
+            availText = `${t('status_available')}: ${t('unit_many')}`;
+        } else {
+            availText = `${t('status_available')}: ${tool.availableQty} ${tool.unit || t('unit_items')}`;
+        }
+    } else {
+        availText = statusText;
     }
 
     card.innerHTML = `
@@ -328,7 +354,7 @@ function createToolCard(tool) {
                     <p class="tool-id">ID: ${tool.toolId}</p>
                     <div class="availability-status">
                         <span class="status-badge ${getStatusClass(tool.status)}">
-                            ${tool.status === 'Available' ? (tool.availableQty === 'จำนวนมาก' ? 'Available: จำนวนมาก' : `Available: ${tool.availableQty} ${tool.unit || 'Units'}`) : tool.status}
+                            ${availText}
                         </span>
                     </div>
                 </div>
@@ -647,7 +673,11 @@ function showBorrowModal(tool) {
     document.getElementById('borrowToolName').textContent = tool.toolName;
     document.getElementById('borrowToolId').textContent = tool.toolId;
     document.getElementById('borrowToolLocation').textContent = tool.location;
-    document.getElementById('borrowToolAvailable').textContent = `${tool.availableQty} ${tool.unit || 'Units'}`;
+    
+    let availText = `${tool.availableQty} ${tool.unit || t('unit_items')}`;
+    if (tool.availableQty === 'จำนวนมาก') availText = t('unit_many');
+    
+    document.getElementById('borrowToolAvailable').textContent = availText;
     
     // Set image
     const imagePlaceholder = document.querySelector('#borrowModal .tool-image-placeholder');
@@ -782,7 +812,7 @@ async function handleRegistrationSubmit(event) {
     const cohort = document.getElementById('cohort').value;
     
     if (!fullName || !department || !cohort) {
-        showMessage('Please fill in all fields', 'error');
+        showMessage(t('msg_fill_all'), 'error');
         return;
     }
     
@@ -808,10 +838,10 @@ async function handleRegistrationSubmit(event) {
         // Load tools after registration
         await loadTools();
         
-        showMessage('Registration successful!', 'success');
+        showMessage(t('msg_reg_success'), 'success');
     } catch (error) {
         console.error('Registration error:', error);
-        showMessage('Registration failed. Please try again.', 'error');
+        showMessage(t('msg_reg_failed'), 'error');
     } finally {
         showLoading(false);
     }
@@ -841,14 +871,14 @@ async function handleBorrowSubmit() {
                 reasonInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
             }, { once: true });
         }
-        showMessage('Please specify a reason for borrowing', 'error');
+        showMessage(t('msg_fill_all'), 'error'); // Reusing msg_fill_all or add specific if needed, but reason is key
         return;
     }
 
     // Require Photo
     if (!file) {
         if (imageError) imageError.classList.remove('hidden');
-        showMessage('Please upload a borrow photo', 'error');
+        showMessage(t('msg_photo_required'), 'error');
         return;
     }
     
@@ -886,7 +916,7 @@ async function handleBorrowSubmit() {
         hideBorrowModal();
         await loadTools();
         
-        showMessage('Tool borrowed successfully!', 'success');
+        showMessage(t('msg_borrow_success'), 'success');
     } catch (error) {
         console.error('Borrow error:', error);
         showMessage('Failed to borrow tool. Please try again.', 'error');
@@ -918,7 +948,7 @@ async function handleReturnSubmit() {
                 conditionSelect.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
             }, { once: true });
         }
-        showMessage('Please select the tool condition', 'error');
+        showMessage(t('msg_fill_all'), 'error');
         return;
     }
 
@@ -928,7 +958,7 @@ async function handleReturnSubmit() {
 
     if (!file) {
         if (imageError) imageError.classList.remove('hidden');
-        showMessage('Please upload a condition photo', 'error');
+        showMessage(t('msg_photo_required'), 'error');
         return;
     }
     
@@ -954,7 +984,7 @@ async function handleReturnSubmit() {
         hideReturnModal();
         await loadTools();
         
-        showMessage('Tool returned successfully!', 'success');
+        showMessage(t('msg_return_success'), 'success');
     } catch (error) {
         console.error('Return error:', error);
         showMessage('Failed to return tool. Please try again.', 'error');

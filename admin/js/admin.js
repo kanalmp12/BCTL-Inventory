@@ -255,7 +255,7 @@ async function renderAdminLogs() {
     const list = document.getElementById('adminLogsList');
     if (!list) return;
     
-    list.innerHTML = `<li class="p-4 text-center text-gray-500"><div class="spinner border-2 border-gray-200 border-t-primary rounded-full w-4 h-4 animate-spin mx-auto mb-2"></div>Loading logs...</li>`;
+    list.innerHTML = `<li class="p-4 text-center text-gray-500"><div class="spinner border-2 border-gray-200 border-t-primary rounded-full w-4 h-4 animate-spin mx-auto mb-2"></div>${t('loading_text')}</li>`;
 
     try {
         const response = await fetch(CONFIG.API_URL, {
@@ -428,12 +428,12 @@ function switchTab(tabName) {
     }
 
     const titles = {
-        'dashboard': 'Dashboard Overview',
-        'tools': 'Tools Management',
-        'transactions': 'Transaction Logs',
-        'overdue': 'Overdue Items',
-        'users': 'User Management',
-        'settings': 'System Settings'
+        'dashboard': t('admin_nav_dashboard'),
+        'tools': t('admin_nav_tools'),
+        'transactions': t('admin_nav_transactions'),
+        'overdue': t('admin_nav_overdue'),
+        'users': t('admin_nav_users'),
+        'settings': t('admin_nav_settings')
     };
     document.getElementById('pageTitle').textContent = titles[tabName] || 'Dashboard';
     
@@ -505,22 +505,33 @@ function renderTransactionsTable(transactions) {
     transactions.forEach(t => {
         // Status Badge
         let statusClass = 'bg-gray-100 text-gray-600';
-        if (t.status === 'Borrowed') statusClass = 'bg-orange-100 text-orange-700';
-        if (t.status === 'Returned') statusClass = 'bg-green-100 text-green-700';
-        if (t.status === 'Overdue') statusClass = 'bg-red-100 text-red-700';
+        let statusText = t.status;
+
+        if (t.status === 'Borrowed') {
+            statusClass = 'bg-orange-100 text-orange-700';
+            statusText = t('status_borrowed');
+        }
+        if (t.status === 'Returned') {
+            statusClass = 'bg-green-100 text-green-700';
+            statusText = t('btn_card_return');
+        }
+        if (t.status === 'Overdue') {
+            statusClass = 'bg-red-100 text-red-700';
+            statusText = t('status_overdue');
+        }
 
         // Borrow Image Button
         let borrowBtn = '-';
         if (t.borrowImage && t.borrowImage.startsWith('http')) {
             const displayUrl = formatDriveUrl(t.borrowImage);
-            borrowBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700" title="View Borrow Photo"><span class="material-icons-outlined">image</span></button>`;
+            borrowBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700" title="${t('admin_table_proof_borrow')}"><span class="material-icons-outlined">image</span></button>`;
         }
 
         // Return Image Button
         let returnBtn = '-';
         if (t.returnImage && t.returnImage.startsWith('http')) {
             const displayUrl = formatDriveUrl(t.returnImage);
-            returnBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700" title="View Return Photo"><span class="material-icons-outlined">image</span></button>`;
+            returnBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700" title="${t('admin_table_proof_return')}"><span class="material-icons-outlined">image</span></button>`;
         }
 
         // Format Date
@@ -533,7 +544,7 @@ function renderTransactionsTable(transactions) {
             <td class="px-6 py-4 font-medium text-gray-900">${t.userId}</td>
             <td class="px-6 py-4 text-gray-600">${t.toolId}</td>
             <td class="px-6 py-4 font-bold text-xs uppercase tracking-wide text-gray-500">${t.action}</td>
-            <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-xs font-bold ${statusClass}">${t.status}</span></td>
+            <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-xs font-bold ${statusClass}">${statusText}</span></td>
             <td class="px-6 py-4 text-center">${borrowBtn}</td>
             <td class="px-6 py-4 text-center">${returnBtn}</td>
         `;
@@ -869,9 +880,19 @@ function renderToolsTable(tools) {
         let statusClass = 'bg-green-100 text-green-700 border-green-200';
         let statusText = tool.status;
         
-        if (tool.status === 'Borrowed') statusClass = 'bg-orange-100 text-orange-700 border-orange-200';
-        if (tool.status === 'Overdue') statusClass = 'bg-red-100 text-red-700 border-red-200';
-        if (tool.availableQty === 0 && tool.status !== 'Borrowed') statusClass = 'bg-gray-100 text-gray-500 border-gray-200';
+        if (tool.status === 'Available') statusText = t('status_available');
+        if (tool.status === 'Borrowed') {
+            statusClass = 'bg-orange-100 text-orange-700 border-orange-200';
+            statusText = t('status_borrowed');
+        }
+        if (tool.status === 'Overdue') {
+            statusClass = 'bg-red-100 text-red-700 border-red-200';
+            statusText = t('status_overdue');
+        }
+        if (tool.availableQty === 0 && tool.status !== 'Borrowed') {
+            statusClass = 'bg-gray-100 text-gray-500 border-gray-200';
+            statusText = t('status_out_of_stock');
+        }
 
         const imageHtml = tool.imageUrl 
             ? `<img src="${tool.imageUrl}" class="w-12 h-12 object-cover rounded-lg border border-gray-200 mx-auto">`

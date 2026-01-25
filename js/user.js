@@ -233,7 +233,7 @@ async function updateUserUI() {
                     adminBtn.className = 'dropdown-item flex items-center gap-2';
                     adminBtn.innerHTML = `
                         <span class="material-symbols-outlined">admin_panel_settings</span>
-                        Admin Portal
+                        ${t('menu_admin')}
                     `;
                     logoutBtn.parentNode.insertBefore(adminBtn, logoutBtn);
                 }
@@ -263,10 +263,10 @@ async function updateUserUI() {
                 if (adminCrown) adminCrown.classList.add('hidden');
                 
             } catch (e) {
-                 if (userNameElement) userNameElement.textContent = 'User';
+                 if (userNameElement) userNameElement.textContent = t('status_available') === 'Available' ? 'User' : 'ผู้ใช้งาน';
             }
         } else {
-            if (userNameElement) userNameElement.textContent = 'User';
+            if (userNameElement) userNameElement.textContent = t('status_available') === 'Available' ? 'User' : 'ผู้ใช้งาน';
         }
 
         // Update Profile Image if logged in via LIFF
