@@ -89,7 +89,6 @@ elements.filterBtns.forEach(btn => btn.addEventListener('click', handleFilterCli
 document.getElementById('loginTriggerBtn')?.addEventListener('click', showRegistrationModal);
 
 // Modal close buttons
-document.getElementById('closeRegistrationModal')?.addEventListener('click', hideRegistrationModal);
 document.getElementById('closeBorrowModal')?.addEventListener('click', hideBorrowModal);
 document.getElementById('closeReturnModal')?.addEventListener('click', hideReturnModal);
 
