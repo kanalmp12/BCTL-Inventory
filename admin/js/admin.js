@@ -228,39 +228,68 @@ function generateQRCode(toolId) {
 }
 
 /**
- * Log Admin Action (Local + Potential Backend)
+ * Log Admin Action (Backend)
  */
-function logAdminAction(action) {
-    const logs = JSON.parse(localStorage.getItem('admin_logs') || '[]');
-    const newLog = {
-        time: new Date().toLocaleString(),
-        action: action,
-        user: 'Super Admin'
-    };
-    logs.unshift(newLog);
-    localStorage.setItem('admin_logs', JSON.stringify(logs.slice(0, 50)));
-    renderAdminLogs();
+async function logAdminAction(action) {
+    const user = (currentUser && currentUser.fullName) ? currentUser.fullName : 'Admin';
+    
+    try {
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'logAdminActivity',
+                logAction: action,
+                logUser: user
+            })
+        });
+        
+        // Refresh logs after logging
+        renderAdminLogs();
+    } catch (error) {
+        console.error("Failed to log admin activity to server:", error);
+        // Fallback to local log for immediate feedback (optional, or just alert)
+    }
 }
 
-function renderAdminLogs() {
+async function renderAdminLogs() {
     const list = document.getElementById('adminLogsList');
     if (!list) return;
     
-    const logs = JSON.parse(localStorage.getItem('admin_logs') || '[]');
-    if (logs.length === 0) {
-        list.innerHTML = `<li class="p-4 text-center text-gray-400">No activity logs recorded yet.</li>`;
-        return;
-    }
+    list.innerHTML = `<li class="p-4 text-center text-gray-500"><div class="spinner border-2 border-gray-200 border-t-primary rounded-full w-4 h-4 animate-spin mx-auto mb-2"></div>Loading logs...</li>`;
 
-    list.innerHTML = logs.map(l => `
-        <li class="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
-            <div>
-                <p class="text-sm font-medium text-gray-900">${l.action}</p>
-                <p class="text-xs text-gray-500">${l.user}</p>
-            </div>
-            <span class="text-[10px] font-mono text-gray-400">${l.time}</span>
-        </li>
-    `).join('');
+    try {
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getAdminLogs' })
+        });
+        const data = await response.json();
+        
+        if (data.logs && Array.isArray(data.logs)) {
+            if (data.logs.length === 0) {
+                list.innerHTML = `<li class="p-4 text-center text-gray-400">No activity logs recorded yet.</li>`;
+                return;
+            }
+
+            list.innerHTML = data.logs.map(l => {
+                const timeStr = new Date(l.time).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                return `
+                <li class="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">${l.action}</p>
+                        <p class="text-xs text-gray-500">${l.user}</p>
+                    </div>
+                    <span class="text-[10px] font-mono text-gray-400">${timeStr}</span>
+                </li>
+                `;
+            }).join('');
+        } else {
+            // Fallback for old backend script or empty
+             list.innerHTML = `<li class="p-4 text-center text-gray-400">No activity logs found (or backend update required).</li>`;
+        }
+    } catch (error) {
+        console.error("Error fetching admin logs:", error);
+        list.innerHTML = `<li class="p-4 text-center text-red-400">Failed to load logs.</li>`;
+    }
 }
 
 // Update renderToolsTable to include QR button

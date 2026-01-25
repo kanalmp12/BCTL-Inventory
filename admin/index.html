@@ -324,20 +324,22 @@
                     </div>
 
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 border-b border-gray-100">
-                                <tr>
-                                    <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">User ID</th>
-                                    <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Full Name</th>
-                                    <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Department</th>
-                                    <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Cohort</th>
-                                    <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Registered</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody" class="divide-y divide-gray-100 text-sm">
-                                <!-- Rows will be injected here -->
-                            </tbody>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse whitespace-nowrap">
+                                <thead class="bg-gray-50 border-b border-gray-100">
+                                    <tr>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">User ID</th>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Full Name</th>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Department</th>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Cohort</th>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Registered</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody" class="divide-y divide-gray-100 text-sm">
+                                    <!-- Rows will be injected here -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 

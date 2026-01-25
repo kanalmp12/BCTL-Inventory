@@ -17,6 +17,7 @@
 const SHEET_INVENTORY = "Inventory";
 const SHEET_USERS = "Users";
 const SHEET_TRANSACTIONS = "Transactions";
+const SHEET_LOGS = "ActivityLogs";
 
 /**
  * Handle POST requests
@@ -63,6 +64,12 @@ function doPost(e) {
         break;
       case "updateUserPin":
         result = updateUserPin(data);
+        break;
+      case "getAdminLogs":
+        result = getAdminLogs();
+        break;
+      case "logAdminActivity":
+        result = logAdminActivity(data);
         break;
       default:
         result = { error: "Invalid action" };
@@ -114,6 +121,60 @@ function setupSheet() {
     transSheet = ss.insertSheet(SHEET_TRANSACTIONS);
     transSheet.appendRow(["Transaction ID", "Tool ID", "User ID", "Action", "Qty", "Reason", "Expected Return", "Actual Return", "Status", "Timestamp", "Condition", "Notes", "Return Image"]);
   }
+
+  // 4. Activity Logs
+  let logsSheet = ss.getSheetByName(SHEET_LOGS);
+  if (!logsSheet) {
+    logsSheet = ss.insertSheet(SHEET_LOGS);
+    logsSheet.appendRow(["Timestamp", "Action", "User"]);
+  }
+}
+
+// ... (Existing functions: getTools, getUserActiveBorrows, checkUser, registerUser, updateUserPin, borrowTool, returnTool, addTool, updateTool, deleteTool, getTransactions, getUsers) ...
+
+/**
+ * Get Admin Logs
+ */
+function getAdminLogs() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_LOGS);
+  if (!sheet) {
+    setupSheet(); // Create if missing
+    sheet = ss.getSheetByName(SHEET_LOGS);
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  const logs = [];
+  
+  // Start from 1 to skip header, iterate backwards to show newest first
+  // Limit to last 50 logs for performance
+  const startIndex = Math.max(1, data.length - 50);
+  
+  for (let i = data.length - 1; i >= startIndex; i--) {
+    const row = data[i];
+    logs.push({
+      time: row[0],
+      action: row[1],
+      user: row[2]
+    });
+  }
+  
+  return { logs: logs };
+}
+
+/**
+ * Log Admin Activity
+ */
+function logAdminActivity(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_LOGS);
+  if (!sheet) {
+    setupSheet();
+    sheet = ss.getSheetByName(SHEET_LOGS);
+  }
+  
+  sheet.appendRow([new Date(), data.logAction, data.logUser]);
+  return { success: true };
 }
 
 /**
