@@ -714,7 +714,7 @@ function getTransactions() {
   const data = sheet.getDataRange().getValues();
   const transactions = [];
   
-  // Columns: [Transaction ID, Tool ID, User ID, Action, Qty, Reason, Expected Return, Actual Return, Status, Timestamp, Condition, Notes, Return Image]
+  // Columns: [Transaction ID, Tool ID, User ID, Action, Qty, Reason, Expected Return, Actual Return, Status, Timestamp, Condition, Notes, Borrow Image, Return Image]
   
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -731,7 +731,8 @@ function getTransactions() {
       timestamp: row[9],
       condition: row[10],
       notes: row[11],
-      returnImage: row[12]
+      borrowImage: row[12] || "", // Index 12 is now Borrow Image
+      returnImage: row[13] || ""  // Index 13 is now Return Image
     });
   }
   
