@@ -502,48 +502,48 @@ function renderTransactionsTable(transactions) {
         return;
     }
 
-    transactions.forEach(t => {
+    transactions.forEach(trans => {
         // Status Badge
         let statusClass = 'bg-gray-100 text-gray-600';
-        let statusText = t.status;
+        let statusText = trans.status;
 
-        if (t.status === 'Borrowed') {
+        if (trans.status === 'Borrowed') {
             statusClass = 'bg-orange-100 text-orange-700';
             statusText = t('status_borrowed');
         }
-        if (t.status === 'Returned') {
+        if (trans.status === 'Returned') {
             statusClass = 'bg-green-100 text-green-700';
             statusText = t('btn_card_return');
         }
-        if (t.status === 'Overdue') {
+        if (trans.status === 'Overdue') {
             statusClass = 'bg-red-100 text-red-700';
             statusText = t('status_overdue');
         }
 
         // Borrow Image Button
         let borrowBtn = '-';
-        if (t.borrowImage && t.borrowImage.startsWith('http')) {
-            const displayUrl = formatDriveUrl(t.borrowImage);
+        if (trans.borrowImage && trans.borrowImage.startsWith('http')) {
+            const displayUrl = formatDriveUrl(trans.borrowImage);
             borrowBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700" title="${t('admin_table_proof_borrow')}"><span class="material-icons-outlined">image</span></button>`;
         }
 
         // Return Image Button
         let returnBtn = '-';
-        if (t.returnImage && t.returnImage.startsWith('http')) {
-            const displayUrl = formatDriveUrl(t.returnImage);
+        if (trans.returnImage && trans.returnImage.startsWith('http')) {
+            const displayUrl = formatDriveUrl(trans.returnImage);
             returnBtn = `<button onclick="openImageModal('${displayUrl}')" class="text-primary hover:text-purple-700" title="${t('admin_table_proof_return')}"><span class="material-icons-outlined">image</span></button>`;
         }
 
         // Format Date
-        const date = new Date(t.timestamp).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const date = new Date(trans.timestamp).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-gray-50/80 transition-colors border-b border-gray-50';
         tr.innerHTML = `
             <td class="px-6 py-4 text-gray-600 font-mono text-xs">${date}</td>
-            <td class="px-6 py-4 font-medium text-gray-900">${t.userId}</td>
-            <td class="px-6 py-4 text-gray-600">${t.toolId}</td>
-            <td class="px-6 py-4 font-bold text-xs uppercase tracking-wide text-gray-500">${t.action}</td>
+            <td class="px-6 py-4 font-medium text-gray-900">${trans.userId}</td>
+            <td class="px-6 py-4 text-gray-600">${trans.toolId}</td>
+            <td class="px-6 py-4 font-bold text-xs uppercase tracking-wide text-gray-500">${trans.action}</td>
             <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-xs font-bold ${statusClass}">${statusText}</span></td>
             <td class="px-6 py-4 text-center">${borrowBtn}</td>
             <td class="px-6 py-4 text-center">${returnBtn}</td>
