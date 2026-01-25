@@ -269,37 +269,6 @@ function renderAdminLogs() {
 // --- AUTHENTICATION ---
 
 /**
- * Handle Login Submission
- */
-function handleLogin(e) {
-    if (e) e.preventDefault(); // Prevent form submission
-    
-    const pinInput = document.getElementById('adminPin');
-    const errorMsg = document.getElementById('loginError');
-    
-    // Use user's PIN if set
-    const validPin = (currentUser && currentUser.pin) ? currentUser.pin : null;
-
-    // Allow "1234" as a fallback mock PIN for development/testing
-    if (pinInput.value === "1234" || (validPin && pinInput.value === validPin)) {
-        console.log("Login Success");
-        // Success
-        localStorage.setItem(CONFIG.SESSION_KEY, 'true');
-        showDashboard();
-        fetchAllData();
-    } else {
-        console.log("Login Failed");
-        // Fail
-        errorMsg.classList.remove('hidden');
-        pinInput.value = '';
-        pinInput.focus();
-        pinInput.classList.add('border-red-500', 'ring-2', 'ring-red-200');
-        setTimeout(() => pinInput.classList.remove('border-red-500', 'ring-2', 'ring-red-200'), 500);
-    }
-    return false; // Stop propagation
-}
-
-/**
  * Check Login Session
  */
 async function checkSession() {
@@ -325,7 +294,7 @@ async function checkSession() {
         const userId = profile.userId;
         console.log("Verified User ID:", userId);
 
-        // 4. Fetch Fresh User Data from Backend (Verify Role & PIN)
+        // 4. Fetch Fresh User Data from Backend (Verify Role)
         // Add timeout controller
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
@@ -360,17 +329,10 @@ async function checkSession() {
         // Hide Loading
         if (loading) loading.classList.add('hidden');
 
-        // REVERT: Removed forced PIN setup check.
-        // We now just proceed to login screen where "1234" will work.
-        console.log("Proceeding to Login Screen (Mock PIN 1234 enabled).");
-
-        // 7. Check if already unlocked in this session
-        const isAdminSession = localStorage.getItem(CONFIG.SESSION_KEY);
-        if (isAdminSession === 'true') {
-            showDashboard();
-        } else {
-            showLogin();
-        }
+        // 6. Direct Access (No PIN)
+        console.log("Admin verified. Access granted.");
+        localStorage.setItem(CONFIG.SESSION_KEY, 'true');
+        showDashboard();
 
     } catch (error) {
         console.error("Authentication error details:", error);
@@ -388,137 +350,9 @@ async function checkSession() {
 }
 
 /**
- * Show Login Screen
- */
-function showLogin() {
-    document.getElementById('setupPinModal').classList.add('hidden');
-    
-    const loginScreen = document.getElementById('loginScreen');
-    loginScreen.classList.remove('hidden');
-    
-    document.getElementById('adminLayout').classList.add('hidden');
-    
-    // Optional: Personalize Login Screen
-    const title = document.querySelector('#loginScreen h1');
-    if (title && currentUser) {
-        title.innerHTML = `Hello, ${currentUser.fullName.split(' ')[0]}<br><span class="text-lg font-normal text-gray-500">Enter your PIN</span>`;
-    }
-}
-
-/**
- * Show Setup PIN Modal
- * @param {boolean} isForced - If true, user cannot cancel/close (for first time setup)
- */
-function showSetupPinModal(isForced = false) {
-    console.log("Showing Setup PIN Modal. Forced:", isForced);
-    
-    // Hide other screens
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('adminLayout').classList.add('hidden');
-    document.getElementById('adminLoading').classList.add('hidden'); // Ensure loading is gone
-    
-    // Show Modal
-    const modal = document.getElementById('setupPinModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex'); // Ensure flex is added if it was removed
-    } else {
-        console.error("Setup PIN Modal element not found!");
-        return;
-    }
-    
-    const cancelBtn = document.getElementById('setupPinCancel');
-    const title = document.getElementById('setupPinTitle');
-    
-    if (isForced) {
-        if (cancelBtn) cancelBtn.classList.add('hidden');
-        if (title) title.textContent = "Set Admin PIN";
-    } else {
-        if (cancelBtn) cancelBtn.classList.remove('hidden');
-        if (title) title.textContent = "Change PIN";
-    }
-    
-    const form = document.getElementById('setupPinForm');
-    if (form) form.reset();
-}
-
-/**
- * Close Setup PIN Modal
- */
-function closeSetupPinModal() {
-    document.getElementById('setupPinModal').classList.add('hidden');
-    // If we are logged in, go back to dashboard
-    if (localStorage.getItem(CONFIG.SESSION_KEY) === 'true') {
-        showDashboard();
-    } else {
-        // If not logged in (e.g. from Forgot PIN), go back to login
-        showLogin();
-    }
-}
-
-/**
- * Open Change PIN Modal (From Settings)
- */
-function openChangePinModal() {
-    showSetupPinModal(false);
-}
-
-/**
- * Handle Setup PIN Submission
- */
-async function handleSetupPin(e) {
-    e.preventDefault();
-    
-    const newPin = document.getElementById('newPin').value;
-    const confirmPin = document.getElementById('confirmPin').value;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    
-    if (newPin !== confirmPin) {
-        alert("PIN codes do not match!");
-        return;
-    }
-    
-    if (newPin.length !== 4) {
-        alert("PIN must be 4 digits!");
-        return;
-    }
-    
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = "Saving...";
-    
-    try {
-        // Update Local State
-        currentUser.pin = newPin;
-        localStorage.setItem(CONFIG.USER_INFO_KEY, JSON.stringify(currentUser));
-        
-        // Simulate API delay
-        await new Promise(r => setTimeout(r, 800));
-        
-        alert("PIN code updated successfully!");
-        
-        // Auto-login after setup
-        localStorage.setItem(CONFIG.SESSION_KEY, 'true');
-        showDashboard();
-        fetchAllData();
-        
-    } catch (error) {
-        console.error("Error setting PIN:", error);
-        alert("Failed to save PIN. Please try again.");
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-        document.getElementById('setupPinModal').classList.add('hidden');
-    }
-}
-
-
-/**
  * Show Dashboard (Unlock)
  */
 function showDashboard() {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('setupPinModal').classList.add('hidden');
     document.getElementById('adminLayout').classList.remove('hidden');
     document.getElementById('adminLayout').classList.add('flex');
     
@@ -538,14 +372,10 @@ function showDashboard() {
 }
 
 /**
- * Logout
+ * Back to Inventory
  */
-function logout() {
-    if(confirm('Are you sure you want to logout?')) {
-        localStorage.removeItem(CONFIG.SESSION_KEY);
-        // Do NOT remove user info here, they are still logged in to main app
-        window.location.reload();
-    }
+function backToInventory() {
+    window.location.href = '../index.html';
 }
 
 // --- NAVIGATION ---
@@ -593,6 +423,13 @@ function switchTab(tabName) {
 }
 
 // ... (Sidebar toggle) ...
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('open');
+    }
+}
+
 // ... (Tool CRUD Logic) ...
 
 // --- TRANSACTION LOGIC ---

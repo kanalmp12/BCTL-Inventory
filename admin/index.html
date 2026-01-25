@@ -39,71 +39,6 @@
         <p class="mt-4 text-gray-500 font-medium animate-pulse">Verifying Admin Access...</p>
     </div>
 
-    <!-- LOGIN SCREEN (Hidden by default) -->
-    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 hidden">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-200">
-            <div class="text-center mb-8 flex flex-col items-center">
-                <img src="../img/BUCA Talent LOGO.png" alt="BCTL Logo" class="h-16 w-auto mb-4 object-contain">
-                <h1 class="text-2xl font-bold text-gray-900">Admin Portal</h1>
-                <p class="text-gray-500 text-sm mt-1">Inventory Management System</p>
-            </div>
-            
-            <form id="loginForm" class="space-y-6" onsubmit="handleLogin(event)">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Access PIN</label>
-                    <input type="password" id="adminPin" placeholder="Enter PIN code" 
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-center text-xl tracking-widest font-mono"
-                        required>
-                    <div class="text-right mt-2">
-                        <button type="button" onclick="handleForgotPin()" class="text-xs text-primary hover:text-purple-700 font-medium hover:underline">Forgot PIN?</button>
-                    </div>
-                </div>
-                <button type="submit" 
-                    class="w-full bg-primary hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
-                    <span>Unlock Dashboard</span>
-                    <span class="material-icons-outlined text-lg">arrow_forward</span>
-                </button>
-            </form>
-            <p id="loginError" class="mt-4 text-center text-red-500 text-sm hidden font-medium">Invalid PIN code. Please try again.</p>
-        </div>
-    </div>
-
-    <!-- SETUP PIN MODAL -->
-    <div id="setupPinModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-100 hidden p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-200 animate-fade-in">
-            <div class="text-center mb-8">
-                <div class="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                    <span class="material-icons-outlined text-3xl text-primary">lock_reset</span>
-                </div>
-                <h2 id="setupPinTitle" class="text-2xl font-bold text-gray-900">Set Admin PIN</h2>
-                <p class="text-gray-500 text-sm mt-2">Create a 4-digit PIN to secure your dashboard.</p>
-            </div>
-            
-            <form id="setupPinForm" class="space-y-6" onsubmit="handleSetupPin(event)">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">New PIN</label>
-                    <input type="password" id="newPin" maxlength="4" pattern="\d{4}" placeholder="0000" 
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-center text-2xl tracking-widest font-mono"
-                        required>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Confirm PIN</label>
-                    <input type="password" id="confirmPin" maxlength="4" pattern="\d{4}" placeholder="0000" 
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-center text-2xl tracking-widest font-mono"
-                        required>
-                </div>
-                <button type="submit" 
-                    class="w-full bg-primary hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
-                    <span class="material-icons-outlined text-lg">save</span>
-                    <span>Save PIN Code</span>
-                </button>
-            </form>
-            <div id="setupPinCancel" class="mt-4 text-center hidden">
-                <button onclick="closeSetupPinModal()" class="text-gray-500 hover:text-gray-700 text-sm font-medium">Cancel</button>
-            </div>
-        </div>
-    </div>
-
     <!-- DASHBOARD LAYOUT (Hidden by default) -->
     <div id="adminLayout" class="flex h-full hidden relative">
         
@@ -173,9 +108,9 @@
 
             <!-- Sidebar Footer -->
             <div class="p-4 border-t border-gray-700/50 bg-[#151521]">
-                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all text-sm font-bold duration-200 border border-red-500/20 hover:border-red-500">
-                    <span class="material-icons-outlined text-[18px]">logout</span>
-                    <span>Logout</span>
+                <button onclick="backToInventory()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700/50 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-all text-sm font-bold duration-200 border border-gray-600/30">
+                    <span class="material-icons-outlined text-[18px]">arrow_back</span>
+                    <span>Back to Inventory</span>
                 </button>
             </div>
         </aside>
@@ -428,25 +363,6 @@
                         </div>
                         
                         <div class="space-y-6">
-                            <!-- Security Card -->
-                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <span class="material-icons-outlined text-primary">security</span>
-                                    Security
-                                </h3>
-                                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-4">
-                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Current PIN Status</p>
-                                    <p class="text-sm font-medium text-green-600 flex items-center gap-1">
-                                        <span class="material-icons-outlined text-sm">check_circle</span>
-                                        PIN Set & Active
-                                    </p>
-                                </div>
-                                <button onclick="openChangePinModal()" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl hover:border-primary hover:text-primary transition-all text-gray-700 text-sm font-bold flex items-center justify-center gap-2">
-                                    <span class="material-icons-outlined">lock_reset</span>
-                                    <span>Reset / Change PIN</span>
-                                </button>
-                            </div>
-
                             <!-- Export Data Card -->
                             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                                 <h3 class="font-bold text-gray-800 mb-4">Export Full Data</h3>
