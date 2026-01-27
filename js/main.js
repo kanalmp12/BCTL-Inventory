@@ -969,8 +969,26 @@ function convertToBase64(file) {
 function renderSkeletons() {
     if (!elements.toolsGrid) return;
     elements.toolsGrid.innerHTML = '';
-    for(let i=0; i<6; i++) {
-        elements.toolsGrid.innerHTML += `<div class="skeleton-card"><div class="skeleton-header"><div class="skeleton skeleton-img"></div><div><div class="skeleton skeleton-text"></div></div></div></div>`;
+    
+    const skeletonHTML = `
+        <article class="skeleton-card">
+            <div class="skeleton-header">
+                <div class="skeleton skeleton-img"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton skeleton-text title"></div>
+                    <div class="skeleton skeleton-text short"></div>
+                    <div class="skeleton skeleton-badge" style="width: 80px; height: 20px; margin-top: 4px;"></div>
+                </div>
+            </div>
+            <div class="skeleton-details">
+                 <div class="skeleton skeleton-text" style="width: 50%;"></div>
+            </div>
+            <div class="skeleton skeleton-btn"></div>
+        </article>
+    `;
+
+    for(let i=0; i<8; i++) {
+        elements.toolsGrid.innerHTML += skeletonHTML;
     }
 }
 

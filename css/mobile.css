@@ -784,21 +784,24 @@ input:focus, select:focus, textarea:focus {
 }
 
 .skeleton-card {
-    height: 250px; /* Approximate height of a tool card */
+    height: auto; /* Allow auto height */
+    min-height: 280px;
     display: flex;
     flex-direction: column;
     padding: 1.25rem;
     background-color: var(--surface);
     border-radius: var(--radius-xl);
     border: 1px solid var(--border);
+    gap: 1rem;
 }
 
 .skeleton-header {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1rem;
+    align-items: center;
 }
 
+/* Simulate Tool Image */
 .skeleton-img {
     width: 5rem;
     height: 5rem;
@@ -806,17 +809,18 @@ input:focus, select:focus, textarea:focus {
     flex-shrink: 0;
 }
 
+/* Simulate Text Lines */
 .skeleton-info {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    justify-content: center;
 }
 
 .skeleton-text {
-    height: 1rem;
+    height: 0.875rem;
     width: 100%;
+    border-radius: 4px;
 }
 
 .skeleton-text.short {
@@ -824,16 +828,26 @@ input:focus, select:focus, textarea:focus {
 }
 
 .skeleton-text.title {
-    height: 1.5rem;
+    height: 1.25rem;
+    width: 80%;
     margin-bottom: 0.25rem;
 }
 
+/* Simulate Location & Badge */
 .skeleton-details {
-    height: 3rem;
-    width: 100%;
-    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
 }
 
+.skeleton-badge {
+    width: 100px;
+    height: 24px;
+    border-radius: 9999px;
+}
+
+/* Simulate Button */
 .skeleton-btn {
     height: 3rem;
     width: 100%;

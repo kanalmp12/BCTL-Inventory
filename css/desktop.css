@@ -71,6 +71,15 @@
         height: 1rem;
         vertical-align: middle;
     }
+
+    /* Cart Responsive Overrides */
+    .cart-btn-header {
+        display: flex !important;
+    }
+    
+    .cart-fab-mobile {
+        display: none !important;
+    }
 }
 
 @media (min-width: 1024px) {

@@ -1,0 +1,78 @@
+
+/* Cart UI Styles */
+
+/* Header Cart Button (Desktop only via desktop.css) */
+.cart-btn-header {
+    display: none; /* Hidden by default (Mobile) */
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    transition: background-color 0.2s;
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.cart-btn-header:hover {
+    background-color: var(--gray-light);
+}
+
+.cart-badge-header {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    background-color: var(--danger);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--surface);
+}
+
+/* Floating Action Button (Mobile only via mobile.css) */
+.cart-fab-mobile {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 50%;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.cart-fab-mobile:active {
+    transform: scale(0.95);
+}
+
+.cart-badge-fab {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: var(--danger);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}

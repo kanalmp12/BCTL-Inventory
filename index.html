@@ -7,6 +7,7 @@
     <link rel="icon" type="image/x-icon" href="img/favicon.ico">
     <link rel="stylesheet" href="css/mobile.css">
     <link rel="stylesheet" href="css/desktop.css">
+    <link rel="stylesheet" href="css/cart-fix.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -53,17 +54,10 @@
                 <h1 data-i18n="app_title">BUCA Talent Inventory (BETA)</h1>
             </div>
             <div class="header-actions" style="display: flex; align-items: center; gap: 10px;">
-                <!-- Language Switcher -->
-                <div class="flex items-center gap-1 mr-2 text-sm font-medium">
-                    <button class="lang-btn hover:text-[#67349d] transition-colors" data-lang="th" onclick="setLanguage('th')">TH</button>
-                    <span class="text-gray-300">|</span>
-                    <button class="lang-btn hover:text-[#67349d] transition-colors" data-lang="en" onclick="setLanguage('en')">EN</button>
-                </div>
-
                 <!-- Desktop Cart Button -->
-                <button id="cartBtnDesktop" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#3e3646] transition-colors relative">
+                <button id="cartBtnDesktop" class="cart-btn-header">
                     <span class="material-symbols-outlined text-primary">shopping_cart</span>
-                    <span id="cartBadgeDesktop" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-[#231f29] hidden">0</span>
+                    <span id="cartBadgeDesktop" class="cart-badge-header hidden">0</span>
                 </button>
 
                 <button id="loginTriggerBtn" class="btn-primary hidden" style="height: 2.5rem; padding: 0 1rem; border-radius: var(--radius-md);">
@@ -86,6 +80,16 @@
                     
                     <!-- Dropdown Menu -->
                     <div id="userDropdown" class="user-dropdown hidden">
+                        <!-- Language Switcher in Dropdown -->
+                        <div class="px-4 py-3 border-b border-[#e0dde3] dark:border-[#36323d] mb-1">
+                            <p class="text-xs font-bold text-[#756a81] uppercase mb-2">Language</p>
+                            <div class="flex items-center gap-2 text-sm font-medium">
+                                <button class="lang-btn hover:text-[#67349d] transition-colors" data-lang="th" onclick="setLanguage('th')">TH</button>
+                                <span class="text-gray-300">|</span>
+                                <button class="lang-btn hover:text-[#67349d] transition-colors" data-lang="en" onclick="setLanguage('en')">EN</button>
+                            </div>
+                        </div>
+                        
                         <button id="logoutBtn" class="dropdown-item dropdown-item-danger">
                             <span class="material-symbols-outlined">logout</span>
                             <span data-i18n="btn_logout">Logout</span>
@@ -365,9 +369,9 @@
     </div>
 
     <!-- Cart Floating Action Button (Mobile) -->
-    <button id="cartFab" class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-hover hover:scale-105 active:scale-95 transition-all z-40 hidden md:hidden group">
+    <button id="cartFab" class="cart-fab-mobile hidden">
         <span class="material-symbols-outlined text-2xl">shopping_cart</span>
-        <span id="cartBadge" class="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-[#19141e] animate-bounce">0</span>
+        <span id="cartBadge" class="cart-badge-fab animate-bounce">0</span>
     </button>
 
     <!-- Cart Modal (Batch Borrow) -->
