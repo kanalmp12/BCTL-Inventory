@@ -84,8 +84,11 @@ function getUserId() {
     }
 
     // 2. If LIFF is configured (Production) but we are NOT logged in:
-    // Return null. Do NOT return a stale ID from localStorage.
+    // We SHOULD check localStorage as a fallback to allow session persistence (e.g., if LIFF init failed or checking status)
     if (CONFIG.LIFF_ID && CONFIG.LIFF_ID !== 'YOUR_LIFF_ID_HERE') {
+        const storedId = localStorage.getItem(CONFIG.USER_ID_KEY);
+        if (storedId) return storedId;
+        // Only return null if we truly have no ID
         return null;
     }
 

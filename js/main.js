@@ -881,6 +881,13 @@ async function handleBorrowSubmit() {
         showMessage(t('msg_photo_required'), 'error');
         return;
     }
+
+    const userId = getUserId();
+    if (!userId) {
+        showMessage('User authentication error. Please login again.', 'error');
+        showRegistrationModal();
+        return;
+    }
     
     showLoading(true);
     
@@ -891,7 +898,7 @@ async function handleBorrowSubmit() {
 
         const borrowData = {
             toolId,
-            userId: getUserId(),
+            userId: userId,
             quantity,
             reason,
             expectedReturnDate: returnDate,
