@@ -26,6 +26,8 @@ const elements = {
     // Cart Elements
     cartFab: document.getElementById('cartFab'),
     cartBadge: document.getElementById('cartBadge'),
+    cartBtnDesktop: document.getElementById('cartBtnDesktop'),
+    cartBadgeDesktop: document.getElementById('cartBadgeDesktop'),
     cartItemsList: document.getElementById('cartItemsList'),
     cartTotalCount: document.getElementById('cartTotalCount'),
     
@@ -81,6 +83,7 @@ elements.filterBtns.forEach(btn => btn.addEventListener('click', handleFilterCli
 
 // Cart Events
 elements.cartFab?.addEventListener('click', openCartModal);
+elements.cartBtnDesktop?.addEventListener('click', openCartModal);
 document.getElementById('closeCartModal')?.addEventListener('click', closeCartModal);
 document.getElementById('closeCartBtn')?.addEventListener('click', closeCartModal);
 document.getElementById('clearCartBtn')?.addEventListener('click', clearCart);
@@ -385,6 +388,7 @@ function clearCart() {
 function updateCartUI() {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     
+    // Mobile UI (FAB)
     if (elements.cartBadge) {
         elements.cartBadge.textContent = totalItems;
         if (totalItems === 0) elements.cartBadge.classList.add('hidden');
@@ -393,12 +397,26 @@ function updateCartUI() {
 
     if (elements.cartFab) {
         if (totalItems > 0) {
+            // lg:hidden is already on the element, so we just toggle 'hidden' and 'flex'
             elements.cartFab.classList.remove('hidden');
             elements.cartFab.classList.add('flex');
         } else {
             elements.cartFab.classList.add('hidden');
             elements.cartFab.classList.remove('flex');
         }
+    }
+
+    // Desktop UI (Header)
+    if (elements.cartBadgeDesktop) {
+        elements.cartBadgeDesktop.textContent = totalItems;
+        if (totalItems === 0) elements.cartBadgeDesktop.classList.add('hidden');
+        else elements.cartBadgeDesktop.classList.remove('hidden');
+    }
+
+    if (elements.cartBtnDesktop) {
+        // Desktop button is always 'flex' on lg, but we might want to hide it if 0? 
+        // User asked to have it on header. Usually, cart icons stay but show 0.
+        // Let's keep it visible but the badge will handle the 0 state.
     }
     
     if (elements.cartTotalCount) elements.cartTotalCount.textContent = totalItems;
@@ -444,7 +462,8 @@ function renderCartItems() {
         const maxQty = tool.availableQty === 'จำนวนมาก' ? 99 : tool.availableQty;
         
         const itemEl = document.createElement('div');
-        itemEl.className = 'flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#231f29] p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm relative';
+        itemEl.id = `cart-item-${index}`;
+        itemEl.className = 'flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#231f29] p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm relative transition-colors';
         
         // Thumbnail
         let thumb = `<div class="w-16 h-16 bg-gray-200 rounded-lg shrink-0"></div>`;
@@ -527,6 +546,13 @@ window.handleCartImageUpload = async function(input, index) {
             cart[index].imageFile = file;
             cart[index].imageBase64 = base64;
             renderCartItems(); // Re-render to show preview
+            
+            // Remove Error Highlight if exists (though re-render resets it, but just in case logic changes)
+            const el = document.getElementById(`cart-item-${index}`);
+            if (el) {
+                el.classList.add('border-gray-200', 'dark:border-gray-700');
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+            }
         } catch (e) {
             console.error("Image error", e);
         }
@@ -542,10 +568,26 @@ async function handleCartSubmit() {
         return;
     }
     
-    // Validate Photos
-    const missingPhotos = cart.some(item => !item.imageBase64);
-    if (missingPhotos) {
-        showMessage("Please take a photo for EVERY item in the cart.", "error");
+    // Validate Photos & Highlight Errors
+    let hasError = false;
+    cart.forEach((item, index) => {
+        const el = document.getElementById(`cart-item-${index}`);
+        if (!item.imageBase64) {
+            if (el) {
+                el.classList.remove('border-gray-200', 'dark:border-gray-700');
+                el.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+            }
+            hasError = true;
+        } else {
+            if (el) {
+                el.classList.add('border-gray-200', 'dark:border-gray-700');
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+            }
+        }
+    });
+
+    if (hasError) {
+        showMessage("Please take a photo for highlighted items", "error");
         return;
     }
 
@@ -690,7 +732,8 @@ async function confirmReturnSelection() {
     itemsToReturn.forEach((item, index) => {
         const tool = item.tool;
         const itemEl = document.createElement('div');
-        itemEl.className = 'flex flex-col gap-3 bg-white dark:bg-[#231f29] p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm';
+        itemEl.id = `return-item-${index}`;
+        itemEl.className = 'flex flex-col gap-3 bg-white dark:bg-[#231f29] p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors';
         
         // Simplified view
         itemEl.innerHTML = `
@@ -752,14 +795,39 @@ window.handleReturnBatchImage = async function(input, index) {
             lbl.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
             lbl.innerHTML = `<span class="material-symbols-outlined">check</span> Photo Added`;
             
+            // Clear error highlight
+            const el = document.getElementById(`return-item-${index}`);
+            if(el) {
+                el.classList.add('border-gray-200', 'dark:border-gray-700');
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+            }
+            
         } catch (e) { console.error(e); }
     }
 }
 
 window.submitBatchReturn = async function() {
     const items = window.tempReturnItems;
-    if (items.some(i => !i.imageBase64)) {
-        showMessage("Photo required for ALL items", "error");
+    let hasError = false;
+    
+    items.forEach((item, index) => {
+        const el = document.getElementById(`return-item-${index}`);
+        if (!item.imageBase64) {
+            if (el) {
+                el.classList.remove('border-gray-200', 'dark:border-gray-700');
+                el.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+            }
+            hasError = true;
+        } else {
+             if (el) {
+                el.classList.add('border-gray-200', 'dark:border-gray-700');
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+            }
+        }
+    });
+    
+    if (hasError) {
+        showMessage("Please take a photo for highlighted items", "error");
         return;
     }
     
