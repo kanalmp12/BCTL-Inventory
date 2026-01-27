@@ -36,6 +36,41 @@
         white-space: normal; /* Allow wrapping on desktop cards */
         line-height: 1.4;
     }
+
+    /* Admin Styles for Desktop */
+    .profile-img.admin-gold-border {
+        border: 2px solid #FFD700 !important;
+        box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3); /* Slightly stronger shadow on desktop */
+    }
+
+    /* Fix for User Profile Truncation on Desktop */
+    .app-header .user-info {
+        max-width: none !important; /* Remove the restriction on desktop */
+        width: auto !important;
+        flex-shrink: 0 !important;
+    }
+
+    .app-header .user-name-wrapper {
+        max-width: none !important; /* Let the name expand fully */
+        overflow: visible !important;
+        width: auto !important;
+        flex-shrink: 0 !important;
+        display: block !important;
+    }
+    
+    .user-name-wrapper.is-long #userName {
+        animation: none;
+        display: block;
+        transform: none !important;
+    }
+
+    /* Skeleton Loading Fix for Desktop */
+    .skeleton-name {
+        display: inline-block !important;
+        width: 120px; /* Slightly wider on desktop */
+        height: 1rem;
+        vertical-align: middle;
+    }
 }
 
 @media (min-width: 1024px) {

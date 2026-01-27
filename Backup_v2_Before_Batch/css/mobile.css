@@ -123,10 +123,34 @@ h3 {
     padding: 0.25rem 0.5rem;
     border-radius: var(--radius-md);
     transition: background-color 0.2s;
+    max-width: 200px; /* Restrict max width of the whole user pill */
 }
 
 .user-info:hover {
     background-color: var(--gray-light);
+}
+
+/* Scrolling Text for User Name */
+.user-name-wrapper {
+    max-width: 100px; /* Fixed max width for mobile */
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.user-name-wrapper.is-long #userName {
+    display: inline-block;
+    animation: text-scroll 4s linear infinite alternate;
+    /* We use a delay so it stays readable for a moment before scrolling */
+    animation-delay: 1s; 
+}
+
+@keyframes text-scroll {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(0); } /* Pause at start */
+    100% { transform: translateX(var(--scroll-dist, -100%)); }
 }
 
 .profile-img {
@@ -135,10 +159,19 @@ h3 {
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid var(--border);
+    transition: border-color 0.2s;
+    flex-shrink: 0; /* Prevent squeezing */
+}
+
+/* Admin Gold Border */
+.profile-img.admin-gold-border {
+    border: 2px solid #FFD700 !important;
+    box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.3);
 }
 
 .dropdown-icon {
     font-size: 1.25rem;
+    flex-shrink: 0;
 }
 
 .user-dropdown {
@@ -178,6 +211,9 @@ h3 {
 
 .dropdown-item:hover {
     background-color: var(--gray-light);
+}
+
+.dropdown-item-danger:hover {
     color: var(--danger);
 }
 
@@ -733,6 +769,90 @@ input:focus, select:focus, textarea:focus {
     background-color: rgba(239, 68, 68, 0.1); /* Red-100 */
     color: #b91c1c; /* Red-700 */
 }
+
+/* Skeleton Loading */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-md);
+}
+
+.skeleton-card {
+    height: 250px; /* Approximate height of a tool card */
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    background-color: var(--surface);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border);
+}
+
+.skeleton-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.skeleton-img {
+    width: 5rem;
+    height: 5rem;
+    border-radius: var(--radius-lg);
+    flex-shrink: 0;
+}
+
+.skeleton-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.skeleton-text {
+    height: 1rem;
+    width: 100%;
+}
+
+.skeleton-text.short {
+    width: 60%;
+}
+
+.skeleton-text.title {
+    height: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.skeleton-details {
+    height: 3rem;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.skeleton-btn {
+    height: 3rem;
+    width: 100%;
+    margin-top: auto;
+    border-radius: var(--radius-lg);
+}
+
+.skeleton-avatar {
+    border-radius: 50%;
+}
+
+.skeleton-name {
+    width: 80px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+    border-radius: 4px;
+}
+
 
 /* Mobile Modal Optimizations (Sheet-like) */
 @media (max-width: 480px) {

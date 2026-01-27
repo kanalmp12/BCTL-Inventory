@@ -21,46 +21,77 @@ const elements = {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
-    showLoading(true);
+    // Show skeletons for user profile
+    if (typeof showUserSkeleton === 'function') {
+        showUserSkeleton();
+    }
     
+    // Show skeletons for tools grid immediately
+    renderSkeletons();
+
     try {
-        // Init LIFF and check status (silently)
+        // 1. Init LIFF
         await initLiff();
         
-        // Load user info (if any)
-        currentUser = getUserInfo();
-        
-        // Update UI (Login btn vs User info)
-        updateUserUI();
-        
-        // Always load tools
-        await loadTools();
+        // 2. Check Backend Status & Sync Data
+        const userId = getUserId();
+        let isRegistered = false;
 
-        // If user is logged in via LINE but not registered in our system (no local user info),
-        // check registration status with backend. If not registered, show registration modal.
-        if (liffInitialized && liff.isLoggedIn() && !currentUser) {
-             const isRegistered = await isUserRegistered();
-             if (!isRegistered) {
-                 showRegistrationModal();
-             } else {
-                 // Fetch user info from backend if registered but not in local storage
-                 // For now, we rely on local storage or just let them re-register/update profile
-                 // Ideally, we should have a getUserProfile(userId) API.
-                 // As a fallback, we let them browse.
-             }
+        if (userId) {
+            try {
+                // Attempt 1
+                isRegistered = await isUserRegistered();
+                
+                // If not registered but we expect them to be (or API flaked), try once more after a short delay
+                if (!isRegistered) {
+                     console.log("User not found or sync failed, retrying in 1.5s...");
+                     await new Promise(r => setTimeout(r, 1500));
+                     isRegistered = await isUserRegistered();
+                }
+            } catch (e) {
+                console.warn("First sync failed, retrying...", e);
+                // Attempt 2 (Retry on error)
+                await new Promise(r => setTimeout(r, 1500));
+                try {
+                    isRegistered = await isUserRegistered();
+                } catch (e2) {
+                    console.error("Second sync failed", e2);
+                }
+            }
         }
         
+        // 3. Always reload currentUser from LocalStorage (whether Sync worked or failed)
+        currentUser = getUserInfo();
+
+        // If logged in via LINE but not registered, show registration modal
+        if (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn() && !isRegistered && !currentUser) {
+            console.log("User logged in via LINE but not registered. Showing registration modal.");
+            showRegistrationModal();
+        }
+        
+        // 4. Update UI with the final data
+        updateUserUI();
+        
+        // 5. Load Tools
+        await loadTools();
+
     } catch (error) {
         console.error('Initialization error:', error);
         showMessage('Failed to initialize application. Please try again.', 'error');
-    } finally {
-        showLoading(false);
     }
 });
 
 // Event Listeners
 elements.searchInput?.addEventListener('input', handleSearch);
 elements.filterBtns.forEach(btn => btn.addEventListener('click', handleFilterClick));
+
+// Language Change Listener
+document.addEventListener('languageChanged', () => {
+    // Re-render tools with new language
+    renderTools(filteredTools);
+    // Update User UI (e.g. "User" vs "ผู้ใช้งาน")
+    updateUserUI();
+});
 
 // Header Login Button
 document.getElementById('loginTriggerBtn')?.addEventListener('click', showRegistrationModal);
@@ -88,6 +119,11 @@ if (userInfoContainer && userDropdown) {
     userInfoContainer.addEventListener('click', (e) => {
         e.stopPropagation();
         userDropdown.classList.toggle('hidden');
+    });
+
+    // Prevent dropdown from closing when clicking inside it
+    userDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
     });
 
     document.addEventListener('click', (e) => {
@@ -144,10 +180,46 @@ function formatDisplayDate(date) {
 }
 
 /**
+ * Render skeleton placeholders in the grid
+ */
+function renderSkeletons() {
+    // Fetch element directly to ensure we have it even if 'elements' const had issues
+    const grid = document.getElementById('toolsGrid') || elements.toolsGrid;
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    // Generate 8 skeleton cards
+    for (let i = 0; i < 8; i++) {
+        const card = document.createElement('article');
+        card.className = 'skeleton-card';
+        card.innerHTML = `
+            <div class="skeleton-header">
+                <div class="skeleton skeleton-img"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton skeleton-text title"></div>
+                    <div class="skeleton skeleton-text short"></div>
+                    <div class="skeleton skeleton-text short" style="width: 40%"></div>
+                </div>
+            </div>
+            <div class="skeleton skeleton-details"></div>
+            <div class="skeleton skeleton-btn"></div>
+        `;
+        grid.appendChild(card);
+    }
+}
+
+
+
+/**
  * Load tools from the API and render them
  */
 async function loadTools() {
     try {
+        // Show skeletons instead of overlay
+        renderSkeletons();
+        // showLoading(true); // Deprecated
+        
         // Ensure we have the user ID (from LIFF or Local Storage)
         const userId = getUserId();
         
@@ -182,6 +254,8 @@ async function loadTools() {
     } catch (error) {
         console.error('Error loading tools:', error);
         showMessage('Failed to load tools. Please try again.', 'error');
+    } finally {
+        // showLoading(false); // Deprecated
     }
 }
 
@@ -228,21 +302,21 @@ function createToolCard(tool) {
         actionButton = `
             <button class="btn-return" data-tool-id="${tool.toolId}">
                 <span class="material-symbols-outlined">keyboard_return</span>
-                Return
+                ${t('btn_card_return')}
             </button>
         `;
     } else if (tool.availableQty === 'จำนวนมาก' || tool.availableQty > 0) {
         actionButton = `
             <button class="btn-borrow" data-tool-id="${tool.toolId}">
                 <span class="material-symbols-outlined">add_circle</span>
-                Borrow
+                ${t('btn_card_borrow')}
             </button>
         `;
     } else {
         actionButton = `
              <button class="btn-borrow" disabled style="background-color: var(--gray-medium); cursor: not-allowed;">
                  <span class="material-symbols-outlined">block</span>
-                 Out of Stock
+                 ${t('btn_card_out_of_stock')}
              </button>
         `;
     }
@@ -251,6 +325,24 @@ function createToolCard(tool) {
     let imageContent = '';
     if (tool.imageUrl && tool.imageUrl.trim() !== '') {
         imageContent = `<img src="${tool.imageUrl}" alt="${tool.toolName}" style="width:100%; height:100%; object-fit:cover;">`;
+    }
+
+    // Status Translation
+    let statusText = tool.status;
+    if (tool.status === 'Available') statusText = t('status_available');
+    if (tool.status === 'Borrowed') statusText = t('status_borrowed');
+    if (tool.status === 'Overdue') statusText = t('status_overdue');
+
+    // Available Quantity Text
+    let availText = '';
+    if (tool.status === 'Available') {
+        if (tool.availableQty === 'จำนวนมาก') {
+            availText = `${t('status_available')}: ${t('unit_many')}`;
+        } else {
+            availText = `${t('status_available')}: ${tool.availableQty} ${tool.unit || t('unit_items')}`;
+        }
+    } else {
+        availText = statusText;
     }
 
     card.innerHTML = `
@@ -262,7 +354,7 @@ function createToolCard(tool) {
                     <p class="tool-id">ID: ${tool.toolId}</p>
                     <div class="availability-status">
                         <span class="status-badge ${getStatusClass(tool.status)}">
-                            ${tool.status === 'Available' ? (tool.availableQty === 'จำนวนมาก' ? 'Available: จำนวนมาก' : `Available: ${tool.availableQty} ${tool.unit || 'Units'}`) : tool.status}
+                            ${availText}
                         </span>
                     </div>
                 </div>
@@ -507,6 +599,7 @@ async function showRegistrationModal() {
 
         const lineLoginSection = document.getElementById('lineLoginSection');
         const registrationForm = document.getElementById('registrationForm');
+        const closeBtn = document.getElementById('closeRegistrationModal');
         
         // Ensure LIFF is ready
         if (!liffInitialized) {
@@ -526,6 +619,7 @@ async function showRegistrationModal() {
                 registrationForm.classList.add('hidden');
                 registrationForm.classList.remove('flex');
             }
+            if (closeBtn) closeBtn.classList.remove('hidden'); // Show close button for LINE Login
             const stepText = document.getElementById('registrationStepText');
             if (stepText) stepText.textContent = 'Step 1 of 2';
         } else {
@@ -555,6 +649,7 @@ async function showRegistrationModal() {
                     console.error('Error getting LINE profile:', e);
                 }
             }
+            if (closeBtn) closeBtn.classList.add('hidden'); // Hide close button for Form step
         }
     }
 }
@@ -578,7 +673,11 @@ function showBorrowModal(tool) {
     document.getElementById('borrowToolName').textContent = tool.toolName;
     document.getElementById('borrowToolId').textContent = tool.toolId;
     document.getElementById('borrowToolLocation').textContent = tool.location;
-    document.getElementById('borrowToolAvailable').textContent = `${tool.availableQty} ${tool.unit || 'Units'}`;
+    
+    let availText = `${tool.availableQty} ${tool.unit || t('unit_items')}`;
+    if (tool.availableQty === 'จำนวนมาก') availText = t('unit_many');
+    
+    document.getElementById('borrowToolAvailable').textContent = availText;
     
     // Set image
     const imagePlaceholder = document.querySelector('#borrowModal .tool-image-placeholder');
@@ -617,6 +716,11 @@ function showBorrowModal(tool) {
         reasonInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
     }
     
+    // Reset Image
+    if (window.clearBorrowImage) {
+        window.clearBorrowImage();
+    }
+
     if (elements.borrowModal) {
         elements.borrowModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
@@ -708,7 +812,7 @@ async function handleRegistrationSubmit(event) {
     const cohort = document.getElementById('cohort').value;
     
     if (!fullName || !department || !cohort) {
-        showMessage('Please fill in all fields', 'error');
+        showMessage(t('msg_fill_all'), 'error');
         return;
     }
     
@@ -734,10 +838,10 @@ async function handleRegistrationSubmit(event) {
         // Load tools after registration
         await loadTools();
         
-        showMessage('Registration successful!', 'success');
+        showMessage(t('msg_reg_success'), 'success');
     } catch (error) {
         console.error('Registration error:', error);
-        showMessage('Registration failed. Please try again.', 'error');
+        showMessage(t('msg_reg_failed'), 'error');
     } finally {
         showLoading(false);
     }
@@ -753,6 +857,13 @@ async function handleBorrowSubmit() {
     const reason = reasonInput ? reasonInput.value.trim() : "";
     const returnDate = document.getElementById('returnDate').value;
     
+    // Image Validation
+    const imageError = document.getElementById('borrowImageError');
+    const uploadInput = document.getElementById('borrowImageUpload');
+    const file = uploadInput && uploadInput.files ? uploadInput.files[0] : null;
+    let imageBase64 = null;
+    let imageName = null;
+
     if (!reason) {
         if (reasonInput) {
             reasonInput.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
@@ -760,19 +871,39 @@ async function handleBorrowSubmit() {
                 reasonInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
             }, { once: true });
         }
-        showMessage('Please specify a reason for borrowing', 'error');
+        showMessage(t('msg_fill_all'), 'error'); // Reusing msg_fill_all or add specific if needed, but reason is key
+        return;
+    }
+
+    // Require Photo
+    if (!file) {
+        if (imageError) imageError.classList.remove('hidden');
+        showMessage(t('msg_photo_required'), 'error');
+        return;
+    }
+
+    const userId = getUserId();
+    if (!userId) {
+        showMessage('User authentication error. Please login again.', 'error');
+        showRegistrationModal();
         return;
     }
     
     showLoading(true);
     
     try {
+        // Convert image to Base64
+        imageBase64 = await convertToBase64(file);
+        imageName = `borrow_${toolId}_${Date.now()}.jpg`;
+
         const borrowData = {
             toolId,
-            userId: getUserId(),
+            userId: userId,
             quantity,
             reason,
-            expectedReturnDate: returnDate
+            expectedReturnDate: returnDate,
+            imageBase64,
+            imageName
         };
         
         // Optimistic UI Update: Assume success immediately
@@ -792,7 +923,7 @@ async function handleBorrowSubmit() {
         hideBorrowModal();
         await loadTools();
         
-        showMessage('Tool borrowed successfully!', 'success');
+        showMessage(t('msg_borrow_success'), 'success');
     } catch (error) {
         console.error('Borrow error:', error);
         showMessage('Failed to borrow tool. Please try again.', 'error');
@@ -824,7 +955,7 @@ async function handleReturnSubmit() {
                 conditionSelect.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
             }, { once: true });
         }
-        showMessage('Please select the tool condition', 'error');
+        showMessage(t('msg_fill_all'), 'error');
         return;
     }
 
@@ -834,7 +965,7 @@ async function handleReturnSubmit() {
 
     if (!file) {
         if (imageError) imageError.classList.remove('hidden');
-        showMessage('Please upload a condition photo', 'error');
+        showMessage(t('msg_photo_required'), 'error');
         return;
     }
     
@@ -860,7 +991,7 @@ async function handleReturnSubmit() {
         hideReturnModal();
         await loadTools();
         
-        showMessage('Tool returned successfully!', 'success');
+        showMessage(t('msg_return_success'), 'success');
     } catch (error) {
         console.error('Return error:', error);
         showMessage('Failed to return tool. Please try again.', 'error');
@@ -940,11 +1071,26 @@ function formatDate(date) {
 /**
  * Handle Image Selection
  */
-window.handleImageSelection = function(input) {
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    const previewImage = document.getElementById('returnImagePreview');
-    const inputOptions = document.getElementById('imageInputOptions');
-    const errorMsg = document.getElementById('returnImageError');
+window.handleImageSelection = function(input, prefix) {
+    let containerId, imgId, optionsId, errorId;
+    
+    if (prefix === 'borrow') {
+        containerId = 'borrowImagePreviewContainer';
+        imgId = 'borrowImagePreview';
+        optionsId = 'borrowImageInputOptions';
+        errorId = 'borrowImageError';
+    } else {
+        // Default to return (legacy IDs)
+        containerId = 'imagePreviewContainer';
+        imgId = 'returnImagePreview';
+        optionsId = 'imageInputOptions';
+        errorId = 'returnImageError';
+    }
+
+    const previewContainer = document.getElementById(containerId);
+    const previewImage = document.getElementById(imgId);
+    const inputOptions = document.getElementById(optionsId);
+    const errorMsg = document.getElementById(errorId);
     
     if (input.files && input.files[0]) {
         const file = input.files[0];
@@ -978,6 +1124,21 @@ window.clearReturnImage = function() {
     document.getElementById('imageInputOptions').classList.remove('hidden');
     
     const errorMsg = document.getElementById('returnImageError');
+    if (errorMsg) errorMsg.classList.add('hidden');
+}
+
+/**
+ * Clear Borrow Image
+ */
+window.clearBorrowImage = function() {
+    const uploadInput = document.getElementById('borrowImageUpload');
+    if (uploadInput) uploadInput.value = "";
+    
+    document.getElementById('borrowImagePreviewContainer').classList.add('hidden');
+    document.getElementById('borrowImagePreview').src = "";
+    document.getElementById('borrowImageInputOptions').classList.remove('hidden');
+    
+    const errorMsg = document.getElementById('borrowImageError');
     if (errorMsg) errorMsg.classList.add('hidden');
 }
 

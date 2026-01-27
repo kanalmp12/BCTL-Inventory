@@ -81,40 +81,52 @@ async function callMockApi(action, payload) {
              }
              return { success: false, error: 'User not found' };
         case 'borrowTool':
-             const tIdx = mockTools.findIndex(t => t.toolId === payload.toolId);
-             if (tIdx === -1) throw new Error('Tool not found');
+        case 'borrowToolBatch':
+             // Handle both legacy and batch in mock
+             const borrowItems = payload.items || [{...payload}];
              
-             // Handle unlimited stock
-             if (mockTools[tIdx].availableQty !== 'จำนวนมาก') {
-                 if (mockTools[tIdx].availableQty < payload.quantity) throw new Error('Not enough stock');
-                 mockTools[tIdx].availableQty -= payload.quantity;
-                 // Only update status if not unlimited
-                 mockTools[tIdx].status = mockTools[tIdx].availableQty > 0 ? 'Available' : 'Borrowed';
+             for (const item of borrowItems) {
+                 const tIdx = mockTools.findIndex(t => t.toolId === item.toolId);
+                 if (tIdx === -1) throw new Error(`Tool not found: ${item.toolId}`);
+                 
+                 // Handle unlimited stock
+                 if (mockTools[tIdx].availableQty !== 'จำนวนมาก') {
+                     if (mockTools[tIdx].availableQty < item.quantity) throw new Error(`Not enough stock for ${item.toolId}`);
+                     mockTools[tIdx].availableQty -= item.quantity;
+                     // Only update status if not unlimited
+                     mockTools[tIdx].status = mockTools[tIdx].availableQty > 0 ? 'Available' : 'Borrowed';
+                 }
+                 
+                 mockTransactions.push({
+                    toolId: item.toolId,
+                    userId: payload.userId, // userId is top-level in batch
+                    quantity: item.quantity,
+                    status: 'Borrowed',
+                    timestamp: new Date()
+                 });
              }
-             
-             mockTransactions.push({
-                toolId: payload.toolId,
-                userId: payload.userId,
-                quantity: payload.quantity,
-                status: 'Borrowed',
-                timestamp: new Date()
-             });
              return { success: true };
+
         case 'returnTool':
-             const rIdx = mockTools.findIndex(t => t.toolId === payload.toolId);
-             if (rIdx === -1) throw new Error('Tool not found');
-             
-             // Handle unlimited stock (do not increment)
-             if (mockTools[rIdx].availableQty !== 'จำนวนมาก') {
-                 mockTools[rIdx].availableQty += 1; 
-                 mockTools[rIdx].status = 'Available';
-             }
-             
-             // Update transaction
-             const transIdx = mockTransactions.findIndex(t => t.toolId === payload.toolId && t.userId === payload.userId && t.status === 'Borrowed');
-             if (transIdx !== -1) {
-                 // In a real app we might mark it returned, here we just remove it or mark returned to clear "active" list
-                 mockTransactions.splice(transIdx, 1);
+        case 'returnToolBatch':
+             // Handle both legacy and batch in mock
+             const returnItems = payload.items || [{...payload}];
+
+             for (const item of returnItems) {
+                 const rIdx = mockTools.findIndex(t => t.toolId === item.toolId);
+                 if (rIdx === -1) throw new Error(`Tool not found: ${item.toolId}`);
+                 
+                 // Handle unlimited stock (do not increment)
+                 if (mockTools[rIdx].availableQty !== 'จำนวนมาก') {
+                     mockTools[rIdx].availableQty += 1; // Simplify mock return to +1 per call or need complex logic? Batch mock simplification: just +1 per item instance
+                     mockTools[rIdx].status = 'Available';
+                 }
+                 
+                 // Update transaction
+                 const transIdx = mockTransactions.findIndex(t => t.toolId === item.toolId && t.userId === payload.userId && t.status === 'Borrowed');
+                 if (transIdx !== -1) {
+                     mockTransactions.splice(transIdx, 1);
+                 }
              }
              return { success: true };
         case 'getUserActiveBorrows':
@@ -157,17 +169,56 @@ async function checkUserExists(userId) {
 }
 
 /**
- * Borrow a tool
+ * Borrow a tool (Legacy Wrapper)
  */
 async function borrowTool(borrowData) {
-    return await callGoogleScript('borrowTool', borrowData);
+    // Wrap single item as batch
+    const batchData = {
+        userId: borrowData.userId,
+        reason: borrowData.reason,
+        expectedReturnDate: borrowData.expectedReturnDate,
+        items: [{
+            toolId: borrowData.toolId,
+            quantity: borrowData.quantity,
+            imageBase64: borrowData.imageBase64,
+            imageName: borrowData.imageName
+        }]
+    };
+    return await callGoogleScript('borrowToolBatch', batchData);
 }
 
 /**
- * Return a tool
+ * Borrow multiple tools (Batch)
+ * @param {Object} batchData - { userId, reason, expectedReturnDate, items: [{toolId, quantity, imageBase64, imageName}] }
+ */
+async function borrowToolBatch(batchData) {
+    return await callGoogleScript('borrowToolBatch', batchData);
+}
+
+/**
+ * Return a tool (Legacy Wrapper)
  */
 async function returnTool(returnData) {
-    return await callGoogleScript('returnTool', returnData);
+    // Wrap single item as batch
+    const batchData = {
+        userId: returnData.userId,
+        items: [{
+            toolId: returnData.toolId,
+            condition: returnData.condition,
+            notes: returnData.notes,
+            imageBase64: returnData.imageBase64,
+            imageName: returnData.imageName
+        }]
+    };
+    return await callGoogleScript('returnToolBatch', batchData);
+}
+
+/**
+ * Return multiple tools (Batch)
+ * @param {Object} batchData - { userId, items: [{toolId, condition, notes, imageBase64, imageName}] }
+ */
+async function returnToolBatch(batchData) {
+    return await callGoogleScript('returnToolBatch', batchData);
 }
 
 /**
@@ -185,7 +236,9 @@ if (typeof module === 'undefined') {
         registerUser,
         checkUserExists,
         borrowTool,
+        borrowToolBatch,
         returnTool,
+        returnToolBatch,
         updateUserPin
     };
 }
@@ -198,7 +251,9 @@ if (typeof module !== 'undefined' && module.exports) {
         registerUser,
         checkUserExists,
         borrowTool,
+        borrowToolBatch,
         returnTool,
+        returnToolBatch,
         updateUserPin
     };
 }

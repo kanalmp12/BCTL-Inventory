@@ -9,7 +9,9 @@ let mockTools = [
     { toolId: "T005", toolName: "Welding Mask", availableQty: 0, location: "Safety Station", status: "Overdue", unit: "อัน" },
     { toolId: "T006", toolName: "Hammer Drill 20V", availableQty: 0, location: "Cabinet A-03", status: "Overdue", unit: "เครื่อง" }
 ];
-let mockUsers = [];
+let mockUsers = [
+    { userId: 'admin01', fullName: 'Super Admin', department: 'IT', cohort: 'Staff', role: 'admin', pictureUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDuyniwJBrmKrULjsWGIvIXwaqeDNoXO7Ocy3MOlwn4apu68QNbYqbKI4exb2cmw9WxtV7ck2tU4-0E8kzHhqJt-Shr-ls6Oeh8tL3mrxxu9cLOncEeiUVl1Q7yy0ZsdXSEn-BBBTEgn5LQsyrmPqhUyeb3IVX2-RGinTRvE_1FNEKm9CL8dDbFvgxNqwkoR0VjFX-LOlsEl1yBaG_GrMQXikkQ5Sm1dqQQ0g6DHK9Zaog1kwG0dFSP__0JOhqZ9f3Der2fc7AjAIWO' }
+];
 let mockTransactions = [];
 
 /**
@@ -63,13 +65,21 @@ async function callMockApi(action, payload) {
         case 'getTools':
             return { tools: [...mockTools] };
         case 'checkUser':
-            const user = mockUsers.find(u => u.userId === payload);
+            const user = mockUsers.find(u => u.userId === payload.userId);
+            if (user && !user.role) user.role = 'user';
             return { exists: !!user, user: user };
         case 'registerUser':
              const existingIdx = mockUsers.findIndex(u => u.userId === payload.userId);
              if (existingIdx !== -1) mockUsers[existingIdx] = { ...payload };
              else mockUsers.push({ ...payload });
              return { success: true };
+        case 'updateUserPin':
+             const uIdx = mockUsers.findIndex(u => u.userId === payload.userId);
+             if (uIdx !== -1) {
+                 mockUsers[uIdx].pin = payload.pin;
+                 return { success: true };
+             }
+             return { success: false, error: 'User not found' };
         case 'borrowTool':
              const tIdx = mockTools.findIndex(t => t.toolId === payload.toolId);
              if (tIdx === -1) throw new Error('Tool not found');
@@ -139,11 +149,11 @@ async function registerUser(userData) {
 }
 
 /**
- * Check if a user exists
+ * Check if a user exists and get their data
  */
 async function checkUserExists(userId) {
     const result = await callGoogleScript('checkUser', { userId });
-    return result.exists;
+    return result; // Return full result { exists: bool, user: {...} }
 }
 
 /**
@@ -160,6 +170,13 @@ async function returnTool(returnData) {
     return await callGoogleScript('returnTool', returnData);
 }
 
+/**
+ * Update user PIN
+ */
+async function updateUserPin(userId, pin) {
+    return await callGoogleScript('updateUserPin', { userId, pin });
+}
+
 // For non-module environments
 if (typeof module === 'undefined') {
     window.apiFunctions = {
@@ -168,7 +185,8 @@ if (typeof module === 'undefined') {
         registerUser,
         checkUserExists,
         borrowTool,
-        returnTool
+        returnTool,
+        updateUserPin
     };
 }
 
@@ -180,6 +198,7 @@ if (typeof module !== 'undefined' && module.exports) {
         registerUser,
         checkUserExists,
         borrowTool,
-        returnTool
+        returnTool,
+        updateUserPin
     };
 }

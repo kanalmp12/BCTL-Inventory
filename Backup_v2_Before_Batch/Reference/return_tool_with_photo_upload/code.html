@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Return Tool (Light Theme)</title>
+<script type="text/javascript" nonce="e10402eb9f654847a77b7b84784" src="//local.adguard.org?ts=1768553864998&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzE1YzliNDY1Y2I4MzQ5YmU5OGFlYTc4MDc2NzU3YTRiEgsSBxDBq5v3hwIYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDIwMzY2Mjk4MjQ4MDAxMDU2Ng%26filename%3D%26opi%3D89354086&amp;app=com.google.Chrome&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="e10402eb9f654847a77b7b84784" src="//local.adguard.org?ts=1768553864998&amp;name=AdGuard%20Extra&amp;type=user-script"></script><link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0F8276",
+                        "primary-hover": "#0c6b61",
+                        "surface": "#FFFFFF",
+                        "surface-alt": "#F9FAFB",
+                        "page-bg": "#F3F4F6",
+                        "success": "#15803d", // Adjusted for light theme (Deep Green)
+                        "danger": "#DC2626",
+                        "border-light": "#E5E7EB",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "body": ["Manrope", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "md": "0.5rem",
+                        "lg": "0.75rem",
+                    },
+                    boxShadow: {
+                        'industrial': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'inset-deep': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #F3F4F6; 
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #D1D5DB; 
+            border-radius: 4px;
+        }
+        .radio-checked-bg:has(input:checked) {
+            background-color: #0F8276;
+            color: white;
+            border-color: #0F8276;
+            box-shadow: 0 4px 6px -1px rgba(15, 130, 118, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-page-bg min-h-screen flex items-center justify-center p-4 text-gray-900">
+<div class="w-full max-w-[420px] bg-surface rounded-lg shadow-industrial overflow-hidden border border-border-light">
+<div class="p-6 pb-4 border-b border-border-light">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat bg-cover rounded-md size-16 shrink-0 border border-gray-200 bg-gray-100 shadow-sm" data-alt="Close up of a teal and black impact driver power tool" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAfGtgh8S2WHROgpYASyY9PUrX9_n5-fzQSj_Kuh5sN4eDNr6uIkq-0GTOA_4otpF_CXh-LTYsz5L-TTf62xpjsOVXOaEAHdTbdWaKrrEvJ-Gb01iUzhMv7Zrv18NuyqyRq-VfOAnyuSsVgEQLGMPWlM7YzOu-kp7s5Z-Ere5u7zFg4HrpnxGZojsblnQICPUV3S-Y58poj4y6L-fHv5p_1WpY8L2q0egXSQ4lR0UxX4PvliJZgBQI9aKekV7-qLTNvUuz2QcdgHXeJ");'>
+</div>
+<div class="flex flex-col justify-center">
+<h2 class="text-gray-900 text-lg font-bold leading-tight tracking-[0.02em]">Returning: Makita 18V Impact Driver</h2>
+<p class="text-gray-500 text-xs font-mono mt-1 tracking-wider uppercase">ID: TOOL-4921</p>
+</div>
+</div>
+</div>
+<div class="p-6 space-y-6">
+<div class="flex flex-col gap-2">
+<label class="text-gray-700 text-sm font-bold tracking-wide">Document Condition</label>
+<div class="group relative flex flex-col items-center justify-center w-full h-40 rounded-md border-2 border-dashed border-primary bg-gray-50 hover:bg-primary/5 transition-colors cursor-pointer">
+<input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" type="file"/>
+<div class="flex flex-col items-center gap-3 text-primary group-hover:scale-105 transition-transform duration-200">
+<div class="p-2 bg-white rounded-full shadow-sm ring-1 ring-gray-100">
+<span class="material-symbols-outlined text-3xl">add_a_photo</span>
+</div>
+<div class="text-center">
+<p class="text-sm font-bold text-gray-900">Tap to capture</p>
+<p class="text-xs text-gray-500 mt-1">or upload photo</p>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-gray-700 text-sm font-bold tracking-wide">Tool Condition</label>
+<div class="flex w-full bg-surface-alt p-1 rounded-md shadow-inset-deep border border-gray-200">
+<label class="radio-checked-bg flex-1 cursor-pointer flex items-center justify-center py-2.5 rounded text-gray-500 transition-all duration-200 border border-transparent hover:text-gray-900 hover:bg-white/60">
+<input checked="" class="hidden" name="condition" type="radio" value="good"/>
+<span class="material-symbols-outlined text-sm mr-2">check_circle</span>
+<span class="text-sm font-semibold">Good</span>
+</label>
+<label class="radio-checked-bg flex-1 cursor-pointer flex items-center justify-center py-2.5 rounded text-gray-500 transition-all duration-200 border border-transparent hover:text-gray-900 hover:bg-white/60">
+<input class="hidden" name="condition" type="radio" value="damaged"/>
+<span class="material-symbols-outlined text-sm mr-2">warning</span>
+<span class="text-sm font-semibold">Damaged</span>
+</label>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-gray-700 text-sm font-bold tracking-wide" for="notes">Notes</label>
+<textarea class="w-full bg-surface-alt text-gray-900 text-sm rounded-md border border-gray-200 p-3 h-24 shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder-gray-400 resize-none outline-none transition-all" id="notes" placeholder="Report any issues, missing parts, or operational notes..."></textarea>
+</div>
+</div>
+<div class="p-6 pt-2 flex flex-col gap-3 bg-surface border-t border-transparent">
+<button class="flex w-full items-center justify-center gap-2 rounded-md bg-success hover:bg-green-800 text-white py-3.5 font-bold text-sm tracking-wide shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-success/50 hover:shadow-lg active:scale-[0.99]">
+<span class="material-symbols-outlined text-lg">done</span>
+                Confirm Return
+            </button>
+<button class="flex w-full items-center justify-center rounded-md bg-transparent border border-transparent text-gray-500 hover:text-danger hover:bg-red-50 py-2.5 font-bold text-sm tracking-wide transition-colors">
+                Cancel
+            </button>
+</div>
+</div>
+
+</body></html>

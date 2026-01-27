@@ -55,10 +55,10 @@ function loginWithLine() {
 function logoutFromLine() {
     if (liffInitialized && liff.isLoggedIn()) {
         liff.logout();
-        localStorage.removeItem(CONFIG.USER_ID_KEY);
-        localStorage.removeItem(CONFIG.USER_INFO_KEY);
-        window.location.reload();
     }
+    localStorage.removeItem(CONFIG.USER_ID_KEY);
+    localStorage.removeItem(CONFIG.USER_INFO_KEY);
+    window.location.reload();
 }
 
 /**
@@ -84,8 +84,11 @@ function getUserId() {
     }
 
     // 2. If LIFF is configured (Production) but we are NOT logged in:
-    // Return null. Do NOT return a stale ID from localStorage.
+    // We SHOULD check localStorage as a fallback to allow session persistence (e.g., if LIFF init failed or checking status)
     if (CONFIG.LIFF_ID && CONFIG.LIFF_ID !== 'YOUR_LIFF_ID_HERE') {
+        const storedId = localStorage.getItem(CONFIG.USER_ID_KEY);
+        if (storedId) return storedId;
+        // Only return null if we truly have no ID
         return null;
     }
 
@@ -131,9 +134,18 @@ async function isUserRegistered() {
     await initLiff();
 
     const userId = getUserId();
+    if (!userId) return false;
+
     try {
-        const exists = await checkUserExists(userId);
-        return exists;
+        const result = await checkUserExists(userId);
+        
+        if (result.exists && result.user) {
+            // Save user info found in backend to local storage
+            saveUserInfo(result.user);
+            return true;
+        }
+        
+        return false;
     } catch (error) {
         console.error('Error checking user registration:', error);
         // If API fails, check if we have local info
@@ -164,15 +176,41 @@ async function registerNewUser(userData) {
 }
 
 /**
+ * Show skeleton loading for user profile
+ */
+function showUserSkeleton() {
+    const userInfoContainer = document.getElementById('userInfoContainer');
+    const loginTriggerBtn = document.getElementById('loginTriggerBtn');
+    const userProfileImgs = document.querySelectorAll('.profile-img');
+    const userNameElement = document.getElementById('userName');
+
+    if (loginTriggerBtn) loginTriggerBtn.classList.add('hidden');
+    if (userInfoContainer) userInfoContainer.classList.remove('hidden');
+
+    userProfileImgs.forEach(img => {
+        img.classList.add('skeleton', 'skeleton-avatar');
+    });
+    
+    if (userNameElement) {
+        userNameElement.textContent = ''; // Clear text
+        userNameElement.classList.add('skeleton', 'skeleton-name');
+    }
+}
+
+/**
  * Update the UI with user information
  */
 async function updateUserUI() {
     const userInfo = getUserInfo();
     const userNameElement = document.getElementById('userName');
-    const userProfileImg = document.getElementById('userProfileImg');
+    const userProfileImgs = document.querySelectorAll('.profile-img');
     const userInfoContainer = document.getElementById('userInfoContainer');
     const loginTriggerBtn = document.getElementById('loginTriggerBtn');
     
+    // Remove skeleton classes
+    userProfileImgs.forEach(img => img.classList.remove('skeleton', 'skeleton-avatar'));
+    if (userNameElement) userNameElement.classList.remove('skeleton', 'skeleton-name');
+
     // Check if user is logged in (either via local storage or LIFF)
     const isLoggedIn = (liffInitialized && liff.isLoggedIn()) || !!userInfo;
 
@@ -182,29 +220,92 @@ async function updateUserUI() {
 
         if (userInfo && userNameElement) {
             userNameElement.textContent = userInfo.fullName || 'User';
+            
+            // Handle Admin Button & Visuals
+            const userDropdown = document.getElementById('userDropdown');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const existingAdminBtn = document.getElementById('adminPortalBtn');
+            const adminCrown = document.getElementById('adminCrown');
+
+            if (userInfo.role === 'admin') {
+                // 1. Add Admin Button
+                if (!existingAdminBtn && logoutBtn) {
+                    const adminBtn = document.createElement('a');
+                    adminBtn.id = 'adminPortalBtn';
+                    adminBtn.href = './admin/index.html';
+                    adminBtn.className = 'dropdown-item flex items-center gap-2';
+                    adminBtn.innerHTML = `
+                        <span class="material-symbols-outlined">admin_panel_settings</span>
+                        ${t('menu_admin')}
+                    `;
+                    logoutBtn.parentNode.insertBefore(adminBtn, logoutBtn);
+                }
+
+                // 2. Add Gold Border & Crown
+                userProfileImgs.forEach(img => img.classList.add('admin-gold-border'));
+                if (adminCrown) adminCrown.classList.remove('hidden');
+
+            } else {
+                // Not admin
+                if (existingAdminBtn) existingAdminBtn.remove();
+                userProfileImgs.forEach(img => img.classList.remove('admin-gold-border'));
+                if (adminCrown) adminCrown.classList.add('hidden');
+            }
         } else if (liffInitialized && liff.isLoggedIn()) {
             // If registered but no local info
             try {
                 const profile = await liff.getProfile();
                 if (userNameElement) userNameElement.textContent = profile.displayName;
+                
+                // Cleanup Admin UI if falling back to basic LINE profile
+                const existingAdminBtn = document.getElementById('adminPortalBtn');
+                const adminCrown = document.getElementById('adminCrown');
+                
+                if (existingAdminBtn) existingAdminBtn.remove();
+                userProfileImgs.forEach(img => img.classList.remove('admin-gold-border'));
+                if (adminCrown) adminCrown.classList.add('hidden');
+                
             } catch (e) {
-                 if (userNameElement) userNameElement.textContent = 'User';
+                 if (userNameElement) userNameElement.textContent = t('status_available') === 'Available' ? 'User' : 'ผู้ใช้งาน';
             }
         } else {
-            if (userNameElement) userNameElement.textContent = 'User';
+            if (userNameElement) userNameElement.textContent = t('status_available') === 'Available' ? 'User' : 'ผู้ใช้งาน';
         }
 
         // Update Profile Image if logged in via LIFF
         if (liffInitialized && liff.isLoggedIn()) {
             try {
                 const profile = await liff.getProfile();
-                if (userProfileImg && profile.pictureUrl) {
-                    userProfileImg.src = profile.pictureUrl;
+                if (profile.pictureUrl) {
+                    userProfileImgs.forEach(img => img.src = profile.pictureUrl);
                 }
             } catch (e) {
                 console.error('Error getting profile image:', e);
             }
         }
+
+        // Handle Long Name Animation (Check overflow)
+        setTimeout(() => {
+            const wrapper = document.getElementById('userNameWrapper');
+            const nameSpan = document.getElementById('userName');
+            
+            if (wrapper && nameSpan) {
+                // Reset first to get natural width
+                wrapper.classList.remove('is-long');
+                nameSpan.style.removeProperty('--scroll-dist');
+                
+                // Check if content overflows container
+                if (nameSpan.scrollWidth > wrapper.clientWidth) {
+                    const overflowAmount = nameSpan.scrollWidth - wrapper.clientWidth;
+                    // Add a small buffer (e.g., 5px) to ensure it doesn't feel tight
+                    const scrollDist = overflowAmount + 5; 
+                    
+                    nameSpan.style.setProperty('--scroll-dist', `-${scrollDist}px`);
+                    wrapper.classList.add('is-long');
+                }
+            }
+        }, 100);
+
     } else {
         // Not logged in
         if (userInfoContainer) userInfoContainer.classList.add('hidden');
@@ -223,6 +324,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getUserInfo,
         isUserRegistered,
         registerNewUser,
-        updateUserUI
+        updateUserUI,
+        showUserSkeleton
     };
 }

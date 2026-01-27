@@ -104,6 +104,10 @@
             <button class="filter-btn" data-filter="available" data-i18n="filter_available">Available</button>
             <button class="filter-btn" data-filter="borrowed" data-i18n="filter_borrowed">Borrowed</button>
             <button class="filter-btn" data-filter="overdue" data-i18n="filter_overdue">Overdue</button>
+            <button class="filter-btn" id="returnModeBtn" data-filter="return-mode" style="display:none;">
+                <span class="material-symbols-outlined text-[18px] mr-1">check_box</span>
+                Return Selection
+            </button>
             <button class="filter-btn" id="locationFilterBtn" data-filter="location">
                 <span data-i18n="filter_location">Location</span>
                 <span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>
@@ -349,6 +353,61 @@
                 <div class="modal-actions">
                     <button id="cancelReturn" class="btn-secondary" data-i18n="btn_cancel">Cancel</button>
                     <button id="confirmReturn" class="btn-primary" data-i18n="btn_confirm_return">Confirm Return</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Floating Action Button -->
+    <button id="cartFab" class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-hover hover:scale-105 active:scale-95 transition-all z-40 hidden group">
+        <span class="material-symbols-outlined text-2xl">shopping_cart</span>
+        <span id="cartBadge" class="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-[#19141e] animate-bounce">0</span>
+    </button>
+
+    <!-- Cart Modal (Batch Borrow) -->
+    <div id="cartModal" class="modal hidden">
+        <div class="modal-content !max-w-[800px]"> <!-- Wider for list view -->
+            <div class="modal-header">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">shopping_cart</span>
+                    <h2 data-i18n="cart_title">My Cart</h2>
+                </div>
+                <button id="closeCartModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body flex flex-col gap-6">
+                
+                <!-- Cart Items List -->
+                <div id="cartItemsList" class="flex flex-col gap-4 max-h-[50vh] overflow-y-auto pr-2">
+                    <!-- Dynamic Items will be injected here -->
+                    <div class="text-center py-8 text-gray-500">
+                        <span class="material-symbols-outlined text-4xl mb-2">remove_shopping_cart</span>
+                        <p>Your cart is empty</p>
+                    </div>
+                </div>
+
+                <!-- Common Details Section -->
+                <div class="bg-background-light dark:bg-surface-dark p-4 rounded-xl border border-border-light dark:border-border-dark flex flex-col gap-4">
+                    <h3 class="font-bold text-sm text-gray-500 uppercase">Borrow Details</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div class="form-group">
+                            <label data-i18n="borrow_label_date_return">Return Date</label>
+                            <input type="date" id="cartReturnDate" class="w-full rounded-xl text-[#141216] bg-white dark:bg-[#19141e] dark:text-white border border-[#e0dde3] dark:border-[#36323d] h-12 px-4 font-medium" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="borrow_label_reason">Reason</label>
+                            <input type="text" id="cartReason" class="w-full rounded-xl text-[#141216] bg-white dark:bg-[#19141e] dark:text-white border border-[#e0dde3] dark:border-[#36323d] h-12 px-4 font-medium" placeholder="Project name / Purpose..." required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions border-t border-border-light dark:border-border-dark pt-4 mt-0">
+                    <div class="flex-1 text-sm font-medium text-gray-500">
+                        Total Items: <span id="cartTotalCount" class="text-primary font-bold text-lg">0</span>
+                    </div>
+                    <button id="clearCartBtn" class="px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm font-bold mr-auto">Clear All</button>
+                    <button id="closeCartBtn" class="btn-secondary" data-i18n="btn_cancel">Keep Shopping</button>
+                    <button id="confirmCartBorrow" class="btn-primary" data-i18n="btn_confirm_borrow">Confirm Borrow</button>
                 </div>
             </div>
         </div>
