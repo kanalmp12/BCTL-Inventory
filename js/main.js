@@ -214,12 +214,17 @@ function createToolCard(tool) {
             </button>
         `;
     } else if (inCart) {
-        // In Cart
+        // In Cart: Show Quantity Control
         actionButton = `
-            <button class="w-full h-10 rounded-lg bg-green-100 text-green-700 font-bold flex items-center justify-center gap-1 cursor-default">
-                <span class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span>
-                In Cart (${inCart.quantity})
-            </button>
+            <div class="flex items-center justify-between w-full h-10 bg-green-50 border border-green-200 rounded-lg overflow-hidden">
+                <button class="w-10 h-full flex items-center justify-center text-green-700 hover:bg-green-100 transition-colors" onclick="updateCartQtyFromCard('${tool.toolId}', -1)">
+                    <span class="material-symbols-outlined text-[18px]">remove</span>
+                </button>
+                <span class="font-bold text-green-800 text-sm">${inCart.quantity}</span>
+                <button class="w-10 h-full flex items-center justify-center text-green-700 hover:bg-green-100 transition-colors" onclick="updateCartQtyFromCard('${tool.toolId}', 1)">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                </button>
+            </div>
         `;
     } else if (tool.availableQty === 'จำนวนมาก' || tool.availableQty > 0) {
         // Available -> Add to Cart
@@ -290,6 +295,27 @@ window.addToCartWrapper = function(toolId) {
     if (tool) addToCart(tool);
 }
 
+window.updateCartQtyFromCard = function(toolId, change) {
+    const index = cart.findIndex(item => item.tool.toolId === toolId);
+    if (index === -1) return;
+
+    const item = cart[index];
+    const max = item.tool.availableQty === 'จำนวนมาก' ? 99 : item.tool.availableQty;
+    const newQty = item.quantity + change;
+
+    if (newQty <= 0) {
+        removeFromCart(index); // This handles re-render
+        // Optionally show message
+        // showMessage("Removed from cart", "success");
+    } else if (newQty <= max) {
+        item.quantity = newQty;
+        updateCartUI();
+        renderTools(filteredTools); // Update card UI to show new qty
+    } else {
+        showMessage(`Max quantity is ${max}`, "error");
+    }
+}
+
 window.showReturnModalWrapper = function(toolId) {
     const tool = tools.find(t => t.toolId === toolId);
     // Legacy return modal for single item return (or repurpose)
@@ -352,7 +378,7 @@ function removeFromCart(index) {
 function clearCart() {
     cart = [];
     updateCartUI();
-    if (elements.cartModal) elements.cartModal.classList.add('hidden');
+    closeCartModal();
     renderTools(filteredTools);
 }
 
@@ -452,10 +478,10 @@ function renderCartItems() {
                 
                 <div class="flex flex-wrap items-center gap-4">
                     <!-- Qty Control -->
-                    <div class="flex items-center border border-gray-300 rounded-lg h-8">
-                        <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700" onclick="updateCartQty(${index}, -1)">-</button>
+                    <div class="flex items-center border border-gray-300 rounded-lg h-8 overflow-hidden">
+                        <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onclick="updateCartQty(${index}, -1)">-</button>
                         <span class="px-2 text-sm font-bold min-w-[20px] text-center">${item.quantity}</span>
-                        <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700" onclick="updateCartQty(${index}, 1)">+</button>
+                        <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onclick="updateCartQty(${index}, 1)">+</button>
                     </div>
 
                     <!-- Photo Upload -->
