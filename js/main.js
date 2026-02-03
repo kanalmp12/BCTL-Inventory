@@ -1053,5 +1053,44 @@ async function handleRegistrationSubmit(e) {
     finally { showLoading(false); }
 }
 
-function showRegistrationModal() { elements.registrationModal?.classList.remove('hidden'); }
+function showRegistrationModal() { 
+    elements.registrationModal?.classList.remove('hidden'); 
+    
+    const loginSection = document.getElementById('lineLoginSection');
+    const form = document.getElementById('registrationForm');
+    
+    let isLiffLoggedIn = false;
+    try {
+        // Safe check for LIFF login status
+        if (typeof liff !== 'undefined' && liff.isLoggedIn) {
+            isLiffLoggedIn = liff.isLoggedIn();
+        }
+    } catch (e) {
+        // LIFF likely not initialized yet or other error. Default to not logged in.
+        console.warn("LIFF status check failed:", e);
+        isLiffLoggedIn = false;
+    }
+    
+    if (isLiffLoggedIn) {
+        // User is logged in with LINE -> Show Form
+        if (loginSection) {
+            loginSection.classList.add('hidden');
+            loginSection.classList.remove('flex');
+        }
+        if (form) {
+            form.classList.remove('hidden');
+            form.classList.add('flex');
+        }
+    } else {
+        // User NOT logged in -> Show Login Button
+        if (loginSection) {
+            loginSection.classList.remove('hidden');
+            loginSection.classList.add('flex');
+        }
+        if (form) {
+            form.classList.add('hidden');
+            form.classList.remove('flex');
+        }
+    }
+}
 function hideRegistrationModal() { elements.registrationModal?.classList.add('hidden'); }
