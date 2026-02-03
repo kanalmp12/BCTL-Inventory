@@ -39,13 +39,28 @@ async function initLiff() {
 /**
  * Login with LINE
  */
-function loginWithLine() {
+async function loginWithLine() {
     if (!liffInitialized) {
-        console.error('LIFF not initialized');
-        return;
+        console.warn('LIFF not initialized, attempting to initialize...');
+        try {
+            await initLiff();
+        } catch (e) {
+            console.error('LIFF Init failed during login attempt', e);
+            alert('Failed to initialize LINE Login. Please reload and try again.');
+            return;
+        }
     }
-    if (!liff.isLoggedIn()) {
-        liff.login({ redirectUri: window.location.href });
+    
+    if (liffInitialized && !liff.isLoggedIn()) {
+        try {
+            liff.login({ redirectUri: window.location.href });
+        } catch(e) {
+            console.error('LIFF Login failed', e);
+            alert('Login failed. Please check your connection.');
+        }
+    } else if (liffInitialized && liff.isLoggedIn()) {
+        console.log("Already logged in");
+        window.location.reload();
     }
 }
 

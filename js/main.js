@@ -1086,10 +1086,11 @@ function showRegistrationModal() {
         }
     } else {
         // User NOT logged in -> Show Login Button
+        // Ensure we force display:flex if not logged in, overriding any hidden classes
         if (loginSection) {
-            loginSection.style.display = 'flex'; // Force flex display
             loginSection.classList.remove('hidden');
             loginSection.classList.add('flex');
+            loginSection.style.display = 'flex'; 
         }
         if (form) {
             form.style.display = 'none';
