@@ -236,7 +236,7 @@ h3 {
     height: 3.5rem; /* 56px */
     padding: 0 1rem 0 3rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-full);
     font-size: 1rem;
     background-color: var(--surface);
     transition: all 0.2s ease;
@@ -262,10 +262,11 @@ h3 {
     display: flex;
     gap: 0.5rem;
     overflow-x: auto;
-    padding-bottom: 0.5rem;
-    margin-bottom: var(--spacing-lg);
+    padding: 1rem; /* Increased padding to prevent glow clipping */
+    margin: -1rem -1rem var(--spacing-lg) -1rem; /* Negative margins to expand hit area */
     -ms-overflow-style: none;
     scrollbar-width: none;
+    width: calc(100% + 2rem); /* Compensate for negative margins */
 }
 
 .filter-chips::-webkit-scrollbar {
@@ -274,11 +275,11 @@ h3 {
 
 .filter-btn {
     height: 2.5rem; /* 40px */
-    padding: 0 1rem;
+    padding: 0 1.25rem;
     border: 1px solid var(--border);
     background-color: var(--surface);
     color: var(--text-secondary);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-full);
     font-size: 0.875rem;
     font-weight: 700;
     cursor: pointer;
@@ -297,6 +298,22 @@ h3 {
     background-color: var(--text-primary);
     color: white;
     border-color: var(--text-primary);
+}
+
+#locationFilterBtn.active {
+    background-color: var(--warning);
+    color: white;
+    border-color: var(--warning);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+    animation: pulse-glow 2s infinite;
+    position: relative;
+    z-index: 5;
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 4px rgba(245, 158, 11, 0.3); }
+    50% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+    100% { box-shadow: 0 0 4px rgba(245, 158, 11, 0.3); }
 }
 
 /* Modals & Overlays */
@@ -449,7 +466,7 @@ h3 {
 .btn-primary, .btn-secondary, .btn-borrow, .btn-return {
     height: 3rem; /* 48px */
     padding: 0 1.5rem;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-full);
     font-weight: 700;
     cursor: pointer;
     border: none;
@@ -582,7 +599,7 @@ input:focus, select:focus, textarea:focus {
     gap: 1rem;
     padding: 0.5rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-full);
     background-color: var(--surface);
     width: 100%;
 }
