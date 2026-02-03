@@ -1054,7 +1054,10 @@ async function handleRegistrationSubmit(e) {
 }
 
 function showRegistrationModal() { 
-    elements.registrationModal?.classList.remove('hidden'); 
+    if (elements.registrationModal) {
+        elements.registrationModal.classList.remove('hidden');
+        elements.registrationModal.style.display = 'flex'; // Force display flex for modal container
+    }
     
     const loginSection = document.getElementById('lineLoginSection');
     const form = document.getElementById('registrationForm');
@@ -1066,7 +1069,6 @@ function showRegistrationModal() {
             isLiffLoggedIn = liff.isLoggedIn();
         }
     } catch (e) {
-        // LIFF likely not initialized yet or other error. Default to not logged in.
         console.warn("LIFF status check failed:", e);
         isLiffLoggedIn = false;
     }
@@ -1074,23 +1076,30 @@ function showRegistrationModal() {
     if (isLiffLoggedIn) {
         // User is logged in with LINE -> Show Form
         if (loginSection) {
+            loginSection.style.display = 'none';
             loginSection.classList.add('hidden');
-            loginSection.classList.remove('flex');
         }
         if (form) {
+            form.style.display = 'flex'; // Force flex display
             form.classList.remove('hidden');
             form.classList.add('flex');
         }
     } else {
         // User NOT logged in -> Show Login Button
         if (loginSection) {
+            loginSection.style.display = 'flex'; // Force flex display
             loginSection.classList.remove('hidden');
             loginSection.classList.add('flex');
         }
         if (form) {
+            form.style.display = 'none';
             form.classList.add('hidden');
-            form.classList.remove('flex');
         }
     }
 }
-function hideRegistrationModal() { elements.registrationModal?.classList.add('hidden'); }
+function hideRegistrationModal() { 
+    if (elements.registrationModal) {
+        elements.registrationModal.classList.add('hidden'); 
+        elements.registrationModal.style.display = ''; // Reset inline style
+    }
+}
