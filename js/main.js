@@ -5,7 +5,8 @@ let currentUser = null;
 let tools = [];
 let filteredTools = [];
 let cart = []; // Array of { tool, quantity, imageFile, imageBase64 }
-let returnSelection = new Set(); // Set of toolIds selected for return
+let returnCart = []; // Array of { tool, condition, notes, imageBase64 }
+let returnSelection = new Set(); // Set of toolIds selected for return (Deprecated but kept for legacy compat if needed)
 let isReturnMode = false;
 
 // DOM Elements
@@ -38,6 +39,12 @@ const elements = {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
+    // Start fetching tools immediately to reduce wait time (Parallel with LIFF init)
+    const toolsPromise = getTools().catch(e => {
+        console.error("Early fetch error:", e);
+        return []; // Fail gracefully, loadTools will handle or retry if needed, or we handle it there
+    });
+
     // Skeletons
     if (typeof showUserSkeleton === 'function') showUserSkeleton();
     renderSkeletons();
@@ -66,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         updateUserUI();
-        await loadTools();
+        await loadTools(toolsPromise);
 
         // Setup Cart UI
         updateCartUI();
@@ -130,20 +137,32 @@ if (logoutBtn) {
 // CORE FUNCTIONS
 // ==========================================
 
-async function loadTools() {
+async function loadTools(preFetchedToolsPromise = null) {
     try {
-        renderSkeletons();
+        // Only render skeletons if grid is empty (avoid flickering if already rendering)
+        if (!elements.toolsGrid.hasChildNodes()) renderSkeletons();
+        
         const userId = getUserId();
         const isLoggedIn = (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn()) || !!getUserInfo();
 
+        // Use pre-fetched promise if available, otherwise call API
+        const toolsRequest = preFetchedToolsPromise || getTools();
+        const borrowsRequest = (isLoggedIn && userId) ? getUserActiveBorrows(userId) : { borrows: [] };
+
         const [fetchedTools, userBorrows] = await Promise.all([
-            getTools(),
-            (isLoggedIn && userId) ? getUserActiveBorrows(userId) : { borrows: [] }
+            toolsRequest,
+            borrowsRequest
         ]);
+        
+        // If fetchedTools came from the catch block of preFetch, it might be array or empty. 
+        // getTools() usually returns { tools: [...] } or array depending on api.js adapter.
+        // api.js getTools returns array directly: `return result.tools || result;`
+        
+        const actualTools = Array.isArray(fetchedTools) ? fetchedTools : (fetchedTools.tools || []);
         
         const myBorrows = userBorrows.borrows || [];
         
-        tools = fetchedTools.map(tool => {
+        tools = actualTools.map(tool => {
             const borrow = myBorrows.find(b => b.toolId === tool.toolId);
             return {
                 ...tool,
@@ -198,24 +217,24 @@ function createToolCard(tool) {
     const isLoggedIn = !!currentUser || (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn());
     const inCart = cart.find(item => item.tool.toolId === tool.toolId);
     
-    if (isReturnMode && tool.myBorrowedQty > 0) {
-        // Return Selection Mode
-        const isSelected = returnSelection.has(tool.toolId);
-        actionButton = `
-            <button class="w-full py-2 rounded-lg font-bold border-2 transition-colors flex items-center justify-center gap-2 ${isSelected ? 'bg-red-100 text-red-600 border-red-500' : 'bg-white text-gray-500 border-gray-300'}"
-                onclick="toggleReturnSelection('${tool.toolId}')">
-                <span class="material-symbols-outlined">${isSelected ? 'check_box' : 'check_box_outline_blank'}</span>
-                ${isSelected ? 'Selected' : 'Select Return'}
-            </button>
-        `;
-    } else if (isLoggedIn && tool.myBorrowedQty > 0) {
-        // Already borrowed -> Show Return (Individual)
-        actionButton = `
-            <button class="btn-return" onclick="showReturnModalWrapper('${tool.toolId}')">
-                <span class="material-symbols-outlined">keyboard_return</span>
-                ${t('btn_card_return')}
-            </button>
-        `;
+    if (isLoggedIn && tool.myBorrowedQty > 0) {
+        // Check if in Return Cart
+        const inReturnCart = returnCart.find(i => i.tool.toolId === tool.toolId);
+        if (inReturnCart) {
+             actionButton = `
+                <button class="w-full py-2 rounded-lg font-bold border-2 transition-colors flex items-center justify-center gap-2 bg-red-50 text-red-600 border-red-200" onclick="removeFromReturnCartWrapper('${tool.toolId}')">
+                    <span class="material-symbols-outlined text-[18px]">remove_shopping_cart</span>
+                    Unselect Return
+                </button>
+            `;
+        } else {
+             actionButton = `
+                <button class="btn-return" onclick="addToReturnCartWrapper('${tool.toolId}')">
+                    <span class="material-symbols-outlined">keyboard_return</span>
+                    ${t('btn_card_return')}
+                </button>
+            `;
+        }
     } else if (inCart) {
         // In Cart: Show Quantity Control
         actionButton = `
@@ -292,10 +311,20 @@ function createToolCard(tool) {
     return card;
 }
 
-// Wrappers for inline onclick (since tool object isn't serializable easily in HTML attribute)
+// Wrappers for inline onclick
 window.addToCartWrapper = function(toolId) {
     const tool = tools.find(t => t.toolId === toolId);
     if (tool) addToCart(tool);
+}
+
+window.addToReturnCartWrapper = function(toolId) {
+    const tool = tools.find(t => t.toolId === toolId);
+    if (tool) addToReturnCart(tool);
+}
+
+window.removeFromReturnCartWrapper = function(toolId) {
+    const index = returnCart.findIndex(item => item.tool.toolId === toolId);
+    if (index !== -1) removeFromReturnCart(index);
 }
 
 window.updateCartQtyFromCard = function(toolId, change) {
@@ -307,13 +336,11 @@ window.updateCartQtyFromCard = function(toolId, change) {
     const newQty = item.quantity + change;
 
     if (newQty <= 0) {
-        removeFromCart(index); // This handles re-render
-        // Optionally show message
-        // showMessage("Removed from cart", "success");
+        removeFromCart(index); 
     } else if (newQty <= max) {
         item.quantity = newQty;
         updateCartUI();
-        renderTools(filteredTools); // Update card UI to show new qty
+        renderTools(filteredTools); 
     } else {
         showMessage(`Max quantity is ${max}`, "error");
     }
@@ -321,19 +348,12 @@ window.updateCartQtyFromCard = function(toolId, change) {
 
 window.showReturnModalWrapper = function(toolId) {
     const tool = tools.find(t => t.toolId === toolId);
-    // Legacy return modal for single item return (or repurpose)
-    if (tool) showReturnModal(tool); 
+    if (tool) addToReturnCart(tool); 
 }
 
 window.toggleReturnSelection = function(toolId) {
-    if (returnSelection.has(toolId)) returnSelection.delete(toolId);
-    else returnSelection.add(toolId);
-    renderTools(filteredTools); // Re-render to update checkbox state
-    
-    // If we want a batch return button to appear?
-    // Maybe replace the 'Return Mode' button text with "Confirm Return (N)"?
-    // For now, let's keep it simple. We need a "Confirm Return Selected" button somewhere.
-    updateReturnModeUI();
+    const tool = tools.find(t => t.toolId === toolId);
+    if(tool) addToReturnCart(tool);
 }
 
 // ==========================================
@@ -346,10 +366,14 @@ function addToCart(tool) {
         return;
     }
 
+    if (returnCart.length > 0) {
+        showMessage("Please clear your return cart first", "error");
+        return;
+    }
+
     const existingItem = cart.find(item => item.tool.toolId === tool.toolId);
     
     if (existingItem) {
-        // Check max qty
         if (tool.availableQty !== 'จำนวนมาก' && existingItem.quantity >= tool.availableQty) {
             showMessage("Max quantity reached for this item", "error");
             return;
@@ -366,29 +390,60 @@ function addToCart(tool) {
     
     showMessage(`Added ${tool.toolName} to cart`, "success");
     updateCartUI();
-    renderTools(filteredTools); // Re-render to show "In Cart" button
+    renderTools(filteredTools); 
+}
+
+function addToReturnCart(tool) {
+    if (cart.length > 0) {
+        showMessage("Please clear your borrow cart first", "error");
+        return;
+    }
+    
+    const existing = returnCart.find(item => item.tool.toolId === tool.toolId);
+    if (existing) return; 
+
+    returnCart.push({
+        tool: tool,
+        condition: 'สภาพดี',
+        notes: '',
+        imageBase64: null,
+        imageFile: null
+    });
+
+    showMessage(`Added ${tool.toolName} to return list`, "success");
+    updateCartUI();
+    renderTools(filteredTools);
 }
 
 function removeFromCart(index) {
     cart.splice(index, 1);
     updateCartUI();
     if (elements.cartModal && !elements.cartModal.classList.contains('hidden')) {
-        renderCartItems(); // Re-render modal list
+        renderCartItems(); 
     }
-    renderTools(filteredTools); // Re-render grid
+    renderTools(filteredTools); 
+}
+
+function removeFromReturnCart(index) {
+    returnCart.splice(index, 1);
+    updateCartUI();
+    if (elements.cartModal && !elements.cartModal.classList.contains('hidden')) {
+        renderReturnCartItems(); 
+    }
+    renderTools(filteredTools);
 }
 
 function clearCart() {
     cart = [];
+    returnCart = [];
     updateCartUI();
     closeCartModal();
     renderTools(filteredTools);
 }
 
 function updateCartUI() {
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0) + returnCart.length;
     
-    // Mobile UI (FAB)
     if (elements.cartBadge) {
         elements.cartBadge.textContent = totalItems;
         if (totalItems === 0) elements.cartBadge.classList.add('hidden');
@@ -397,7 +452,6 @@ function updateCartUI() {
 
     if (elements.cartFab) {
         if (totalItems > 0) {
-            // lg:hidden is already on the element, so we just toggle 'hidden' and 'flex'
             elements.cartFab.classList.remove('hidden');
             elements.cartFab.classList.add('flex');
         } else {
@@ -406,41 +460,37 @@ function updateCartUI() {
         }
     }
 
-    // Desktop UI (Header)
     if (elements.cartBadgeDesktop) {
         elements.cartBadgeDesktop.textContent = totalItems;
         if (totalItems === 0) elements.cartBadgeDesktop.classList.add('hidden');
         else elements.cartBadgeDesktop.classList.remove('hidden');
-    }
-
-    if (elements.cartBtnDesktop) {
-        // Desktop button is always 'flex' on lg, but we might want to hide it if 0? 
-        // User asked to have it on header. Usually, cart icons stay but show 0.
-        // Let's keep it visible but the badge will handle the 0 state.
     }
     
     if (elements.cartTotalCount) elements.cartTotalCount.textContent = totalItems;
 }
 
 function openCartModal() {
-    if (cart.length === 0) {
+    if (cart.length === 0 && returnCart.length === 0) {
         showMessage("Cart is empty", "error");
         return;
     }
     
-    renderCartItems();
-    
-    // Set default dates
-    const returnDateInput = document.getElementById('cartReturnDate');
-    if (returnDateInput && !returnDateInput.value) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        returnDateInput.value = formatDate(tomorrow);
-    }
-    
-    if (elements.cartModal) {
-        elements.cartModal.classList.remove('hidden');
+    const modal = elements.cartModal;
+    if (modal) {
+        modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+    }
+
+    if (returnCart.length > 0) {
+        renderReturnCartItems();
+    } else {
+        renderCartItems();
+        const returnDateInput = document.getElementById('cartReturnDate');
+        if (returnDateInput && !returnDateInput.value) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            returnDateInput.value = formatDate(tomorrow);
+        }
     }
 }
 
@@ -451,11 +501,126 @@ function closeCartModal() {
     }
 }
 
+function renderReturnCartItems() {
+    const listContainer = elements.cartItemsList;
+    const modal = elements.cartModal;
+    if (!listContainer || !modal) return;
+    
+    const titleEl = modal.querySelector('h2');
+    if (titleEl) titleEl.textContent = "Return Items";
+    
+    const commonDetails = document.getElementById('cartCommonDetails');
+    const actions = document.getElementById('cartModalActions');
+    
+    if (commonDetails) commonDetails.classList.add('hidden');
+    if (actions) actions.classList.remove('hidden');
+
+    listContainer.innerHTML = '';
+    
+    returnCart.forEach((item, index) => {
+        const tool = item.tool;
+        const itemEl = document.createElement('div');
+        itemEl.id = `return-item-${index}`;
+        itemEl.className = 'flex flex-col gap-3 bg-white dark:bg-[#231f29] p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors';
+        
+        let imgPreviewHTML = '';
+        if (item.imageBase64) {
+            imgPreviewHTML = `
+                <div class="relative w-full h-32 rounded-lg overflow-hidden mt-2 border border-gray-200">
+                    <img src="${item.imageBase64}" class="w-full h-full object-cover">
+                </div>
+            `;
+        }
+
+        const uploadLabelClass = item.imageBase64 
+            ? 'bg-green-50 text-green-700 border-green-200' 
+            : 'bg-white text-primary border-primary/30';
+
+        const uploadLabelText = item.imageBase64
+            ? '<span class="material-symbols-outlined">check</span> Photo Added'
+            : '<span class="material-symbols-outlined text-[18px]">camera_alt</span> Take Condition Photo *';
+
+        itemEl.innerHTML = `
+             <div class="flex items-start gap-4">
+                <div class="w-16 h-16 bg-gray-200 rounded-lg shrink-0 overflow-hidden">
+                    ${tool.imageUrl ? `<img src="${tool.imageUrl}" class="w-full h-full object-cover">` : ''}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-[#141216] dark:text-white truncate">${tool.toolName}</h4>
+                    <p class="text-xs text-gray-500">ID: ${tool.toolId}</p>
+                </div>
+                <button onclick="removeFromReturnCart(${index})" class="text-gray-400 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                <select id="ret-cond-${index}" class="h-10 rounded-lg border-gray-300 text-sm bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-600" onchange="returnCart[${index}].condition = this.value">
+                    <option value="สภาพดี" ${item.condition === 'สภาพดี' ? 'selected' : ''}>สภาพดี (Good)</option>
+                    <option value="ได้รับความเสียหาย" ${item.condition === 'ได้รับความเสียหาย' ? 'selected' : ''}>เสียหาย (Damaged)</option>
+                    <option value="ใช้แล้วหมดไป" ${item.condition === 'ใช้แล้วหมดไป' ? 'selected' : ''}>สูญหาย/หมด (Lost/Consumed)</option>
+                </select>
+                <input type="text" placeholder="Notes..." class="h-10 rounded-lg border-gray-300 text-sm bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-600 px-2" value="${item.notes}" onchange="returnCart[${index}].notes = this.value">
+            </div>
+            
+            <div class="mt-2">
+                <input type="file" id="ret-img-${index}" accept="image/*" class="hidden" onchange="handleReturnBatchImage(this, ${index})">
+                <label for="ret-img-${index}" class="cursor-pointer flex items-center justify-center gap-2 text-sm font-bold border px-3 py-2 rounded-lg w-full transition-colors ${uploadLabelClass}" id="ret-lbl-${index}">
+                    ${uploadLabelText}
+                </label>
+                ${imgPreviewHTML}
+            </div>
+        `;
+        listContainer.appendChild(itemEl);
+    });
+    
+    const confirmBtn = document.getElementById('confirmCartBorrow');
+    const clearBtn = document.getElementById('clearCartBtn');
+    
+    if (confirmBtn) {
+        confirmBtn.textContent = "Confirm Return";
+        confirmBtn.onclick = submitBatchReturn; 
+    }
+    if (clearBtn) {
+        clearBtn.onclick = clearCart;
+    }
+}
+
 function renderCartItems() {
     const listContainer = elements.cartItemsList;
     if (!listContainer) return;
     
+    const commonDetails = document.getElementById('cartCommonDetails');
+    const actions = document.getElementById('cartModalActions');
+    const modal = elements.cartModal;
+
+    if (modal) {
+        const titleEl = modal.querySelector('h2');
+        if (titleEl) titleEl.textContent = "My Cart";
+    }
+
+    const confirmBtn = document.getElementById('confirmCartBorrow');
+    if (confirmBtn) {
+        confirmBtn.textContent = "Confirm Borrow";
+        confirmBtn.onclick = handleCartSubmit;
+    }
+
     listContainer.innerHTML = '';
+
+    if (cart.length === 0) {
+        listContainer.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-10 text-gray-400">
+                <span class="material-symbols-outlined text-6xl mb-2">remove_shopping_cart</span>
+                <p class="text-lg font-bold">${t('msg_cart_empty')}</p>
+            </div>
+        `;
+        if (commonDetails) commonDetails.classList.add('hidden');
+        if (actions) actions.classList.add('hidden');
+        return;
+    }
+    
+    if (commonDetails) commonDetails.classList.remove('hidden');
+    if (actions) actions.classList.remove('hidden');
     
     cart.forEach((item, index) => {
         const tool = item.tool;
@@ -465,13 +630,11 @@ function renderCartItems() {
         itemEl.id = `cart-item-${index}`;
         itemEl.className = 'flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#231f29] p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm relative transition-colors';
         
-        // Thumbnail
         let thumb = `<div class="w-16 h-16 bg-gray-200 rounded-lg shrink-0"></div>`;
         if (tool.imageUrl) {
             thumb = `<div class="w-16 h-16 bg-gray-200 rounded-lg shrink-0 overflow-hidden"><img src="${tool.imageUrl}" class="w-full h-full object-cover"></div>`;
         }
         
-        // Pre-filled Image Preview if exists
         let imgPreviewHTML = '';
         let uploadLabelHTML = `
             <label for="cart-img-${index}" class="cursor-pointer flex items-center gap-2 text-primary hover:text-primary-hover transition-colors text-sm font-bold border border-primary/30 px-3 py-1.5 rounded-lg hover:bg-primary/5">
@@ -486,7 +649,6 @@ function renderCartItems() {
                     <img src="${item.imageBase64}" class="w-full h-full object-cover">
                 </div>
             `;
-            // Modify label to look different if uploaded? Keep it simple.
         }
 
         itemEl.innerHTML = `
@@ -496,14 +658,12 @@ function renderCartItems() {
                 <p class="text-xs text-gray-500 mb-2">ID: ${tool.toolId}</p>
                 
                 <div class="flex flex-wrap items-center gap-4">
-                    <!-- Qty Control -->
                     <div class="flex items-center border border-gray-300 rounded-lg h-8 overflow-hidden">
                         <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onclick="updateCartQty(${index}, -1)">-</button>
                         <span class="px-2 text-sm font-bold min-w-[20px] text-center">${item.quantity}</span>
                         <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onclick="updateCartQty(${index}, 1)">+</button>
                     </div>
 
-                    <!-- Photo Upload -->
                     <div class="flex items-center gap-2">
                         <input type="file" id="cart-img-${index}" accept="image/*" class="hidden" onchange="handleCartImageUpload(this, ${index})">
                         ${uploadLabelHTML}
@@ -545,9 +705,8 @@ window.handleCartImageUpload = async function(input, index) {
             const base64 = await convertToBase64(file);
             cart[index].imageFile = file;
             cart[index].imageBase64 = base64;
-            renderCartItems(); // Re-render to show preview
+            renderCartItems(); 
             
-            // Remove Error Highlight if exists (though re-render resets it, but just in case logic changes)
             const el = document.getElementById(`cart-item-${index}`);
             if (el) {
                 el.classList.add('border-gray-200', 'dark:border-gray-700');
@@ -568,7 +727,6 @@ async function handleCartSubmit() {
         return;
     }
     
-    // Validate Photos & Highlight Errors
     let hasError = false;
     cart.forEach((item, index) => {
         const el = document.getElementById(`cart-item-${index}`);
@@ -605,7 +763,6 @@ async function handleCartSubmit() {
             }))
         };
 
-        // Optimistic UI Update
         cart.forEach(item => {
              const tIndex = tools.findIndex(t => t.toolId === item.tool.toolId);
              if (tIndex !== -1) {
@@ -620,7 +777,7 @@ async function handleCartSubmit() {
         
         clearCart();
         closeCartModal();
-        await loadTools(); // Refresh
+        await loadTools(); 
         showMessage("Batch borrow successful!", "success");
 
     } catch (e) {
@@ -637,23 +794,20 @@ async function handleCartSubmit() {
 
 function toggleReturnMode() {
     isReturnMode = !isReturnMode;
-    returnSelection.clear(); // Reset selection
+    returnSelection.clear(); 
     
     const btn = elements.returnModeBtn;
     if (isReturnMode) {
         btn.classList.add('bg-red-100', 'text-red-600', 'border-red-200');
         btn.innerHTML = `<span class="material-symbols-outlined text-[18px] mr-1">close</span> Cancel Return`;
         
-        // Filter view to only show borrowed items?
-        // Or just re-render current view with checkboxes?
-        // Let's filter to "Borrowed" automatically for convenience
         const borrowedBtn = document.querySelector('.filter-btn[data-filter="borrowed"]');
         if (borrowedBtn) borrowedBtn.click();
         
     } else {
         btn.classList.remove('bg-red-100', 'text-red-600', 'border-red-200');
         btn.innerHTML = `<span class="material-symbols-outlined text-[18px] mr-1">check_box</span> Return Selection`;
-        // Go back to All? Or stay?
+        
         const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
         if (allBtn) allBtn.click();
     }
@@ -663,9 +817,7 @@ function toggleReturnMode() {
 }
 
 function updateReturnModeUI() {
-    // If in return mode and items selected, show a FAB or button to confirm
-    // Re-use the Cart FAB? Or create a new one dynamically?
-    // Let's create a "Confirm Return" floating button if not exists
+    // Legacy support logic maintained for safety, but primary interaction is via Return Cart
     let returnFab = document.getElementById('returnFab');
     
     if (!returnFab) {
@@ -694,123 +846,32 @@ function updateReturnModeUI() {
 }
 
 async function confirmReturnSelection() {
-    // This function needs to show a modal similar to Cart Modal but for Returns
-    // Requirement: "Photo for EACH item"
-    // So we need to list selected items and ask for photo + condition for each.
-    
-    // We can reuse the Cart Modal structure but inject different content?
-    // Or simpler: Reuse the logic of `renderCartItems` but for returns.
-    // Let's create a temporary array mimicking cart but for returns
-    
-    const itemsToReturn = [];
+    // This connects legacy "Return Mode" selection to the new Return Cart system
     returnSelection.forEach(id => {
         const tool = tools.find(t => t.toolId === id);
-        if (tool) itemsToReturn.push({ tool: tool, condition: 'สภาพดี', notes: '', imageBase64: null });
+        if (tool) addToReturnCart(tool);
     });
-    
-    if (itemsToReturn.length === 0) return;
-    
-    // We need a Batch Return Modal. 
-    // I'll reuse the Cart Modal DOM but change Title and Content.
-    // Hacky but saves creating another huge modal in HTML.
-    
-    const modal = elements.cartModal;
-    const list = elements.cartItemsList;
-    
-    // Change Header
-    modal.querySelector('h2').textContent = "Confirm Return";
-    
-    // Hide Common Details (Return Date/Reason not needed for Return)
-    // Actually we might want notes?
-    // Hide the Common Details block
-    const commonDetails = modal.querySelector('.bg-background-light'); // The block with Date/Reason
-    if (commonDetails) commonDetails.classList.add('hidden');
-    
-    // Clear list
-    list.innerHTML = '';
-    
-    itemsToReturn.forEach((item, index) => {
-        const tool = item.tool;
-        const itemEl = document.createElement('div');
-        itemEl.id = `return-item-${index}`;
-        itemEl.className = 'flex flex-col gap-3 bg-white dark:bg-[#231f29] p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors';
-        
-        // Simplified view
-        itemEl.innerHTML = `
-             <div class="flex items-start gap-4">
-                <div class="w-16 h-16 bg-gray-200 rounded-lg shrink-0 overflow-hidden">
-                    ${tool.imageUrl ? `<img src="${tool.imageUrl}" class="w-full h-full object-cover">` : ''}
-                </div>
-                <div>
-                    <h4 class="font-bold text-[#141216] dark:text-white">${tool.toolName}</h4>
-                    <p class="text-xs text-gray-500">ID: ${tool.toolId}</p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                <select id="ret-cond-${index}" class="h-10 rounded-lg border-gray-300 text-sm" onchange="window.tempReturnItems[${index}].condition = this.value">
-                    <option value="สภาพดี" selected>สภาพดี (Good)</option>
-                    <option value="ได้รับความเสียหาย">เสียหาย (Damaged)</option>
-                    <option value="ใช้แล้วหมดไป">สูญหาย/หมด (Lost/Consumed)</option>
-                </select>
-                <input type="text" placeholder="Notes..." class="h-10 rounded-lg border-gray-300 text-sm" onchange="window.tempReturnItems[${index}].notes = this.value">
-            </div>
-            
-            <div class="flex items-center gap-2 mt-2">
-                <input type="file" id="ret-img-${index}" accept="image/*" class="hidden" onchange="handleReturnBatchImage(this, ${index})">
-                <label for="ret-img-${index}" class="cursor-pointer flex items-center gap-2 text-primary text-sm font-bold border border-primary/30 px-3 py-1.5 rounded-lg w-full justify-center" id="ret-lbl-${index}">
-                    <span class="material-symbols-outlined text-[18px]">camera_alt</span>
-                    Take Condition Photo *
-                </label>
-            </div>
-            <div id="ret-preview-${index}" class="hidden w-full h-32 rounded-lg overflow-hidden mt-2 border border-gray-200"></div>
-        `;
-        list.appendChild(itemEl);
-    });
-    
-    // Store temp items globally to access in handlers
-    window.tempReturnItems = itemsToReturn;
-    
-    // Update Actions
-    const actionContainer = modal.querySelector('.modal-actions');
-    actionContainer.innerHTML = `
-        <button class="btn-secondary" onclick="closeCartModal()">Cancel</button>
-        <button class="btn-primary" onclick="submitBatchReturn()">Confirm Return All</button>
-    `;
-    
-    modal.classList.remove('hidden');
+    returnSelection.clear();
+    if(isReturnMode) toggleReturnMode(); // Exit return mode
+    openCartModal(); // Open modal with items added
 }
 
 window.handleReturnBatchImage = async function(input, index) {
     if (input.files && input.files[0]) {
         try {
             const base64 = await convertToBase64(input.files[0]);
-            window.tempReturnItems[index].imageBase64 = base64;
+            returnCart[index].imageBase64 = base64;
             
-            const preview = document.getElementById(`ret-preview-${index}`);
-            preview.innerHTML = `<img src="${base64}" class="w-full h-full object-cover">`;
-            preview.classList.remove('hidden');
-            
-            const lbl = document.getElementById(`ret-lbl-${index}`);
-            lbl.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
-            lbl.innerHTML = `<span class="material-symbols-outlined">check</span> Photo Added`;
-            
-            // Clear error highlight
-            const el = document.getElementById(`return-item-${index}`);
-            if(el) {
-                el.classList.add('border-gray-200', 'dark:border-gray-700');
-                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
-            }
+            renderReturnCartItems();
             
         } catch (e) { console.error(e); }
     }
 }
 
 window.submitBatchReturn = async function() {
-    const items = window.tempReturnItems;
     let hasError = false;
     
-    items.forEach((item, index) => {
+    returnCart.forEach((item, index) => {
         const el = document.getElementById(`return-item-${index}`);
         if (!item.imageBase64) {
             if (el) {
@@ -835,7 +896,7 @@ window.submitBatchReturn = async function() {
     try {
         const batchData = {
             userId: getUserId(),
-            items: items.map(i => ({
+            items: returnCart.map(i => ({
                 toolId: i.tool.toolId,
                 condition: i.condition,
                 notes: i.notes,
@@ -846,9 +907,8 @@ window.submitBatchReturn = async function() {
         
         await apiFunctions.returnToolBatch(batchData);
         
-        // Success
+        clearCart(); 
         closeCartModal();
-        toggleReturnMode(); // Exit return mode
         await loadTools();
         showMessage("Items returned successfully", "success");
         
@@ -878,12 +938,10 @@ function handleSearch() {
 
 function handleFilterClick(event) {
     const btn = event.target.closest('.filter-btn');
-    if (!btn || btn.id === 'locationFilterBtn' || btn.id === 'returnModeBtn') return; // Handled separately
+    if (!btn || btn.id === 'locationFilterBtn' || btn.id === 'returnModeBtn') return; 
     
-    // If Return Mode is active, disable it if clicking other filters?
-    // Ideally yes, to avoid confusion.
     if (isReturnMode && btn.dataset.filter !== 'borrowed') {
-         toggleReturnMode(); // Turn off
+         toggleReturnMode(); 
     }
 
     elements.filterBtns.forEach(b => {
@@ -897,7 +955,6 @@ function handleFilterClick(event) {
     renderTools(filteredTools);
 }
 
-// Location Handler
 function populateLocationDropdown() {
     const locations = [...new Set(tools.map(tool => tool.location))].filter(Boolean).sort();
     const content = document.getElementById('locationDropdownContent');
@@ -914,32 +971,20 @@ function populateLocationDropdown() {
 
 function handleLocationSelect(loc) {
     document.getElementById('locationDropdown').classList.add('hidden');
-    // Logic similar to prev main.js
     if (loc === 'all') filteredTools = [...tools];
     else filteredTools = tools.filter(t => t.location === loc);
     renderTools(filteredTools);
 }
 
-// Location Btn Toggle
 elements.locationFilterBtn?.addEventListener('click', () => {
     elements.locationDropdown.classList.toggle('hidden');
 });
 
-// Legacy Modal Handlers (Wrappers)
 function showReturnModal(tool) {
-    // We can keep the legacy modal for single item return if user clicks "Return" button on card (when not in select mode)
-    // Just ensure it uses the new API wrapper.
-    // The previous main.js logic for showReturnModal is still valid visually.
-    // But we removed the function definition in this overwrite? Yes.
-    // I need to add it back or implement a simple version.
-    
-    // For now, let's redirect to the Batch Return modal with 1 item.
-    returnSelection.clear();
-    returnSelection.add(tool.toolId);
-    confirmReturnSelection(); // Reuse batch modal for single item
+    // Legacy wrapper - redirect to Return Cart
+    addToReturnCart(tool);
 }
 
-// Basic Utils
 function showMessage(msg, type) {
     const toast = elements.messageToast;
     if(!toast) return;
@@ -965,7 +1010,6 @@ function convertToBase64(file) {
     });
 }
 
-// Skeleton
 function renderSkeletons() {
     if (!elements.toolsGrid) return;
     elements.toolsGrid.innerHTML = '';
@@ -992,12 +1036,8 @@ function renderSkeletons() {
     }
 }
 
-// Registration Handlers (kept minimal as logic is same)
 async function handleRegistrationSubmit(e) {
     e.preventDefault();
-    // ... existing registration logic ...
-    // Since I overwrote the file, I should have kept the full logic.
-    // I will quickly re-implement the core registration logic here to ensure it works.
     const fullName = document.getElementById('fullName').value;
     const department = document.getElementById('department').value;
     const cohort = document.getElementById('cohort').value;

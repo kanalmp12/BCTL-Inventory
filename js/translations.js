@@ -74,6 +74,7 @@ const translations = {
         "msg_reg_failed": "Registration failed. Please try again.",
         "msg_borrow_success": "Tool borrowed successfully!",
         "msg_return_success": "Tool returned successfully!",
+        "msg_cart_empty": "Empty Cart",
         "msg_photo_required": "Photo is required",
 
         // Admin Portal
@@ -180,6 +181,7 @@ const translations = {
         "msg_reg_failed": "ลงทะเบียนไม่สำเร็จ กรุณาลองใหม่",
         "msg_borrow_success": "ทำรายการยืมสำเร็จ!",
         "msg_return_success": "ทำรายการคืนสำเร็จ!",
+        "msg_cart_empty": "ตะกร้าว่างเปล่า",
         "msg_photo_required": "กรุณาถ่าย/อัปโหลดรูปภาพ",
 
         // Admin Portal

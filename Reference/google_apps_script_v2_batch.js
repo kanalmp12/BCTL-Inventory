@@ -92,6 +92,17 @@ function setupSheet() {
 // ==========================================
 
 function getTools() {
+  // Try to get from Cache first
+  try {
+    const cache = CacheService.getScriptCache();
+    const cached = cache.get("tools_inventory_v1");
+    if (cached) {
+      return { tools: JSON.parse(cached) };
+    }
+  } catch (e) {
+    // Ignore cache errors
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_INVENTORY);
   const data = sheet.getDataRange().getValues();
@@ -105,7 +116,20 @@ function getTools() {
       status: (row[3] === "จำนวนมาก" || row[3] > 0) ? "Available" : "Borrowed" 
     });
   }
+  
+  // Save to Cache (5 minutes)
+  try {
+    const cache = CacheService.getScriptCache();
+    cache.put("tools_inventory_v1", JSON.stringify(tools), 300);
+  } catch(e) {}
+
   return { tools: tools };
+}
+
+function clearToolsCache() {
+  try {
+    CacheService.getScriptCache().remove("tools_inventory_v1");
+  } catch(e) {}
 }
 
 function checkUser(userId) {
@@ -240,6 +264,7 @@ function borrowToolBatch(data) {
        ]);
     }
     
+    clearToolsCache(); // Invalidate Cache
     return { success: true };
     
   } catch (e) {
@@ -323,6 +348,7 @@ function returnToolBatch(data) {
         transSheet.getRange(transRow, 14).setValue(returnImageUrl); // Return Image
     }
     
+    clearToolsCache(); // Invalidate Cache
     return { success: true };
     
   } catch (e) {
@@ -445,6 +471,7 @@ function addTool(data) {
   const invData = sheet.getDataRange().getValues();
   for (let i = 1; i < invData.length; i++) if (invData[i][0] == data.toolId) return { error: "Tool ID already exists" };
   sheet.appendRow([data.toolId, data.toolName, data.totalQty, data.totalQty, data.unit, data.location, data.imageUrl || ""]);
+  clearToolsCache();
   return { success: true };
 }
 
@@ -456,6 +483,7 @@ function updateTool(data) {
   for (let i = 1; i < invData.length; i++) if (invData[i][0] == data.toolId) { r = i + 1; break; }
   if (r == -1) return { error: "Tool not found" };
   sheet.getRange(r, 2, 1, 6).setValues([[data.toolName, data.totalQty, data.availableQty, data.unit, data.location, data.imageUrl]]);
+  clearToolsCache();
   return { success: true };
 }
 
@@ -463,7 +491,7 @@ function deleteTool(id) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_INVENTORY);
   const invData = sheet.getDataRange().getValues();
-  for (let i = 1; i < invData.length; i++) if (invData[i][0] == id) { sheet.deleteRow(i + 1); return { success: true }; }
+  for (let i = 1; i < invData.length; i++) if (invData[i][0] == id) { sheet.deleteRow(i + 1); clearToolsCache(); return { success: true }; }
   return { error: "Tool not found" };
 }
 
