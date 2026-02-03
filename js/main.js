@@ -111,6 +111,21 @@ document.getElementById('loginTriggerBtn')?.addEventListener('click', showRegist
 document.getElementById('closeRegistrationModal')?.addEventListener('click', hideRegistrationModal);
 document.getElementById('registrationForm')?.addEventListener('submit', handleRegistrationSubmit);
 
+const lineLoginBtn = document.getElementById('lineLoginBtn');
+if (lineLoginBtn) {
+    lineLoginBtn.addEventListener('click', () => {
+        console.log("Login button clicked via Event Listener");
+        if (window.loginWithLine) {
+            window.loginWithLine();
+        } else {
+            console.error("window.loginWithLine is not defined");
+            alert("System Error: Login function missing.");
+        }
+    });
+} else {
+    console.error("lineLoginBtn element not found in DOM");
+}
+
 // Dropdown & Logout
 const userInfoContainer = document.getElementById('userInfoContainer');
 const userDropdown = document.getElementById('userDropdown');

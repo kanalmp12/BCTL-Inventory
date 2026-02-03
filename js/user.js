@@ -1,6 +1,7 @@
 // user.js - Functions for managing user ID and registration via LINE LIFF
 
 let liffInitialized = false;
+let liffInitPromise = null;
 
 /**
  * Initialize LINE LIFF
@@ -8,61 +9,75 @@ let liffInitialized = false;
  */
 async function initLiff() {
     if (liffInitialized) return liff.isLoggedIn();
+    
+    // Return existing promise if initialization is already in progress
+    if (liffInitPromise) return liffInitPromise;
 
-    try {
-        if (!CONFIG.LIFF_ID || CONFIG.LIFF_ID === 'YOUR_LIFF_ID_HERE') {
-            console.warn('LIFF_ID is not configured. Using fallback ID generation.');
-            return false;
-        }
-
-        await liff.init({ liffId: CONFIG.LIFF_ID });
-        liffInitialized = true;
-
-        if (liff.isLoggedIn()) {
-            const profile = await liff.getProfile();
-            localStorage.setItem(CONFIG.USER_ID_KEY, profile.userId);
-            // Optionally update user info with display name if not set
-            const currentInfo = getUserInfo();
-            if (!currentInfo) {
-                // If we don't have local info, we might want to temporarily save display name
-                // but we wait for registration to finalize details.
+    liffInitPromise = (async () => {
+        try {
+            if (!CONFIG.LIFF_ID || CONFIG.LIFF_ID === 'YOUR_LIFF_ID_HERE') {
+                console.warn('LIFF_ID is not configured. Using fallback ID generation.');
+                return false;
             }
-            return true;
+
+            console.log("Initializing LIFF...");
+            await liff.init({ liffId: CONFIG.LIFF_ID });
+            liffInitialized = true;
+            console.log("LIFF Initialized. Logged in:", liff.isLoggedIn());
+
+            if (liff.isLoggedIn()) {
+                const profile = await liff.getProfile();
+                localStorage.setItem(CONFIG.USER_ID_KEY, profile.userId);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('LIFF Initialization failed:', error);
+            liffInitialized = false; // Reset to allow retry
+            throw error;
+        } finally {
+            liffInitPromise = null; // Clear promise so we can retry if needed (or it's done)
         }
-        return false;
-    } catch (error) {
-        console.error('LIFF Initialization failed:', error);
-        return false;
-    }
+    })();
+
+    return liffInitPromise;
 }
 
 /**
  * Login with LINE
  */
 async function loginWithLine() {
-    if (!liffInitialized) {
-        console.warn('LIFF not initialized, attempting to initialize...');
-        try {
+    console.log("loginWithLine clicked");
+    try {
+        if (!liffInitialized) {
+            console.warn('LIFF not initialized, attempting to initialize...');
             await initLiff();
-        } catch (e) {
-            console.error('LIFF Init failed during login attempt', e);
-            alert('Failed to initialize LINE Login. Please reload and try again.');
-            return;
         }
-    }
-    
-    if (liffInitialized && !liff.isLoggedIn()) {
-        try {
+        
+        if (!liff.isLoggedIn()) {
+            console.log("Calling liff.login...");
             liff.login({ redirectUri: window.location.href });
-        } catch(e) {
-            console.error('LIFF Login failed', e);
-            alert('Login failed. Please check your connection.');
+        } else {
+            console.log("Already logged in, reloading...");
+            window.location.reload();
         }
-    } else if (liffInitialized && liff.isLoggedIn()) {
-        console.log("Already logged in");
-        window.location.reload();
+    } catch (e) {
+        console.error('Login failed:', e);
+        alert('Failed to initialize LINE Login. Please check your connection and try again.\nError: ' + (e.message || e));
     }
 }
+
+// Explicitly expose to window
+window.initLiff = initLiff;
+window.loginWithLine = loginWithLine;
+window.logoutFromLine = logoutFromLine;
+window.getUserId = getUserId;
+window.getUserInfo = getUserInfo;
+window.isUserRegistered = isUserRegistered;
+window.registerNewUser = registerNewUser;
+window.updateUserUI = updateUserUI;
+window.showUserSkeleton = showUserSkeleton;
+window.saveUserInfo = saveUserInfo;
 
 /**
  * Logout from LINE
