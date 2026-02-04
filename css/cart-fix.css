@@ -1,9 +1,9 @@
-
 /* Cart UI Styles */
 
 /* Header Cart Button (Desktop only via desktop.css) */
 .cart-btn-header {
-    display: none; /* Hidden by default (Mobile) */
+    display: none;
+    /* Hidden by default (Mobile) */
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
@@ -37,23 +37,31 @@
 }
 
 /* Floating Action Button (Mobile only via mobile.css) */
+/* MD3 FAB: Rounded Square (16px radius for Standard) or Large (28px). 56px size = Standard FAB. */
 .cart-fab-mobile {
     position: fixed;
     bottom: 1.5rem;
     right: 1.5rem;
     width: 3.5rem;
+    /* 56px */
     height: 3.5rem;
-    background-color: var(--primary);
-    color: white;
-    border-radius: 50%;
-    box-shadow: var(--shadow-lg);
+    background-color: var(--md-sys-color-primary-container);
+    /* Tonal FAB */
+    color: var(--md-sys-color-on-primary-container);
+    border-radius: 16px;
+    /* MD3 Standard FAB radius */
+    box-shadow: var(--elevation-3);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 40;
     border: none;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s;
+}
+
+.cart-fab-mobile:hover {
+    box-shadow: var(--elevation-4);
 }
 
 .cart-fab-mobile:active {
