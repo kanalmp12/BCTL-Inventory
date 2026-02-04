@@ -62,7 +62,7 @@
 
                 <button id="loginTriggerBtn" class="btn-primary hidden" style="height: 2.5rem; padding: 0 1rem; border-radius: var(--radius-full);">
                     <span class="material-symbols-outlined" style="font-size: 1.25rem;">login</span>
-                    <span data-i18n="btn_login">Login</span>
+                    <span data-i18n="btn_login" class="whitespace-nowrap">Login</span>
                 </button>
 
                 <div class="user-info hidden" id="userInfoContainer">
@@ -103,9 +103,12 @@
     <!-- Main Content -->
     <main class="main-content">
         <!-- Search Bar -->
-        <div class="search-container">
-            <input type="text" id="searchInput" data-i18n="search_placeholder" placeholder="Search tools by name or ID...">
+        <div class="search-container" id="searchContainer">
             <span class="material-symbols-outlined search-icon">search</span>
+            <input type="text" id="searchInput" data-i18n="search_placeholder" placeholder="Search tools by name or ID...">
+            <button id="searchClearBtn" class="search-clear-btn hidden">
+                <span class="material-symbols-outlined">close</span>
+            </button>
         </div>
 
         <!-- Filter Chips -->

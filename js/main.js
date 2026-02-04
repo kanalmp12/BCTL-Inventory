@@ -947,9 +947,30 @@ function getStatusClass(status) {
 
 function handleSearch() {
     const term = elements.searchInput.value.toLowerCase();
+    const clearBtn = document.getElementById('searchClearBtn');
+    
+    if (clearBtn) {
+        if (term.length > 0) {
+            clearBtn.classList.remove('hidden');
+            // Small delay to allow 'hidden' removal to render before adding 'show' for transition
+            requestAnimationFrame(() => clearBtn.classList.add('show'));
+        } else {
+            clearBtn.classList.remove('show');
+            setTimeout(() => clearBtn.classList.add('hidden'), 200); // Wait for transition
+        }
+    }
+
     filteredTools = tools.filter(t => t.toolName.toLowerCase().includes(term) || t.toolId.toLowerCase().includes(term));
     renderTools(filteredTools);
 }
+
+document.getElementById('searchClearBtn')?.addEventListener('click', () => {
+    if (elements.searchInput) {
+        elements.searchInput.value = '';
+        elements.searchInput.focus();
+        handleSearch();
+    }
+});
 
 function handleFilterClick(event) {
     const btn = event.target.closest('.filter-btn');
