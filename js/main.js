@@ -1013,7 +1013,7 @@ function renderCartItems() {
 
         let imgPreviewHTML = '';
         let uploadLabelHTML = `
-            <label for="cart-img-${index}" class="cursor-pointer flex items-center gap-2 text-primary hover:text-primary-hover transition-colors text-sm font-bold border border-primary/30 px-3 py-1.5 rounded-lg hover:bg-primary/5">
+            <label for="cart-img-${index}" class="cursor-pointer flex items-center gap-2 text-primary hover:text-primary-hover transition-colors text-sm font-bold border border-primary px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2d2a35]">
                 <span class="material-symbols-outlined text-[18px]">add_a_photo</span>
                 ${item.imageBase64 ? 'Change Photo' : 'Take Photo (Required)'}
             </label>
@@ -1034,10 +1034,10 @@ function renderCartItems() {
                 <p class="text-xs text-gray-500 mb-2">ID: ${tool.toolId}</p>
                 
                 <div class="flex flex-wrap items-center gap-4">
-                    <div class="flex items-center border border-gray-300 rounded-lg h-8 overflow-hidden">
-                        <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onclick="updateCartQty(${index}, -1)">-</button>
-                        <span class="px-2 text-sm font-bold min-w-[20px] text-center">${item.quantity}</span>
-                        <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onclick="updateCartQty(${index}, 1)">+</button>
+                    <div class="flex items-center border border-gray-300 dark:border-primary rounded-lg h-8 overflow-hidden">
+                        <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:text-primary dark:hover:bg-primary dark:hover:text-white transition-colors" onclick="updateCartQty(${index}, -1)">-</button>
+                        <span class="px-2 text-sm font-bold min-w-[20px] text-center dark:text-white">${item.quantity}</span>
+                        <button class="w-8 h-full flex items-center justify-center hover:bg-gray-100 dark:text-primary dark:hover:bg-primary dark:hover:text-white transition-colors" onclick="updateCartQty(${index}, 1)">+</button>
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -1046,10 +1046,10 @@ function renderCartItems() {
                         ${imgPreviewHTML}
                     </div>
                 </div>
-                ${!item.imageBase64 ? '<p class="text-red-500 text-[10px] mt-1">* Photo required</p>' : ''}
+                ${!item.imageBase64 ? '<p class="text-error text-[10px] mt-1">* Photo required</p>' : ''}
             </div>
             
-            <button onclick="removeFromCart(${index})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors">
+            <button onclick="removeFromCart(${index})" class="absolute top-2 right-2 text-gray-400 hover:text-error transition-colors">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
         `;
