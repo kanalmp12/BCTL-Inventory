@@ -17,13 +17,13 @@ const elements = {
     locationFilterBtn: document.getElementById('locationFilterBtn'),
     locationDropdown: document.getElementById('locationDropdown'),
     returnModeBtn: document.getElementById('returnModeBtn'),
-    
+
     // Modals
     registrationModal: document.getElementById('registrationModal'),
     borrowModal: document.getElementById('borrowModal'), // Legacy (single item details maybe?)
     returnModal: document.getElementById('returnModal'), // Legacy
     cartModal: document.getElementById('cartModal'),
-    
+
     // Cart Elements
     cartFab: document.getElementById('cartFab'),
     cartBadge: document.getElementById('cartBadge'),
@@ -31,10 +31,24 @@ const elements = {
     cartBadgeDesktop: document.getElementById('cartBadgeDesktop'),
     cartItemsList: document.getElementById('cartItemsList'),
     cartTotalCount: document.getElementById('cartTotalCount'),
-    
+
     // Toast & Loading
     messageToast: document.getElementById('messageToast'),
-    loadingOverlay: document.getElementById('loadingOverlay')
+    loadingOverlay: document.getElementById('loadingOverlay'),
+
+    // Mobile Nav & Sheet
+    mobileMenuBtn: document.getElementById('mobileMenuBtn'),
+    mobileSearchBtn: document.getElementById('mobileSearchBtn'),
+    mobileFilterBtn: document.getElementById('mobileFilterBtn'),
+    filterSheetOverlay: document.getElementById('filterSheetOverlay'),
+    closeFilterSheetBtn: document.getElementById('closeFilterSheet'),
+    sheetFilterChips: document.getElementById('sheetFilterChips'),
+    sheetLocationList: document.getElementById('sheetLocationList'),
+
+    // Floating Search Bar Elements (Google Go Style)
+    floatingSearchBar: document.getElementById('floatingSearchBar'),
+    floatingSearchInput: document.getElementById('floatingSearchInput'),
+    floatingSearchClear: document.getElementById('floatingSearchClear')
 };
 
 // Initialize the application
@@ -51,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         await initLiff();
-        
+
         // Auth & Sync
         const userId = getUserId();
         let isRegistered = false;
@@ -60,18 +74,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 isRegistered = await isUserRegistered();
                 if (!isRegistered) {
-                     await new Promise(r => setTimeout(r, 1500));
-                     isRegistered = await isUserRegistered();
+                    await new Promise(r => setTimeout(r, 1500));
+                    isRegistered = await isUserRegistered();
                 }
             } catch (e) { console.warn("Sync retry...", e); }
         }
-        
+
         currentUser = getUserInfo();
 
         if (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn() && !isRegistered && !currentUser) {
             showRegistrationModal();
         }
-        
+
         updateUserUI();
         await loadTools(toolsPromise);
 
@@ -107,9 +121,25 @@ document.addEventListener('languageChanged', () => {
 });
 
 // General UI
-document.getElementById('loginTriggerBtn')?.addEventListener('click', showRegistrationModal);
+// Guest Dropdown & Login
+document.getElementById('dropdownLoginBtn')?.addEventListener('click', showRegistrationModal);
 document.getElementById('closeRegistrationModal')?.addEventListener('click', hideRegistrationModal);
 document.getElementById('registrationForm')?.addEventListener('submit', handleRegistrationSubmit);
+
+const guestUserContainer = document.getElementById('guestUserContainer');
+const guestDropdown = document.getElementById('guestDropdown');
+const getStartedBtn = document.getElementById('getStartedBtn');
+
+if (guestUserContainer && guestDropdown && getStartedBtn) {
+    getStartedBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        guestDropdown.classList.toggle('hidden');
+    });
+    guestDropdown.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', (e) => {
+        if (!guestUserContainer.contains(e.target)) guestDropdown.classList.add('hidden');
+    });
+}
 
 const lineLoginBtn = document.getElementById('lineLoginBtn');
 if (lineLoginBtn) {
@@ -123,7 +153,7 @@ if (lineLoginBtn) {
         }
     });
 } else {
-    console.error("lineLoginBtn element not found in DOM");
+    // lineLoginBtn might be missing if not invalid context, ignore or log info
 }
 
 // Dropdown & Logout
@@ -148,6 +178,233 @@ if (logoutBtn) {
     });
 }
 
+// Mobile Bottom Bar Logic
+elements.mobileSearchBtn?.addEventListener('click', toggleFloatingSearch);
+
+function toggleFloatingSearch() {
+    const bar = elements.floatingSearchBar;
+    if (!bar) return;
+
+    if (bar.classList.contains('hidden')) {
+        // Show
+        bar.classList.remove('hidden');
+        // Small delay for transition
+        requestAnimationFrame(() => {
+            bar.classList.remove('scale-95', 'opacity-0');
+            bar.classList.add('scale-100', 'opacity-100');
+        });
+        setTimeout(() => elements.floatingSearchInput?.focus(), 100);
+    } else {
+        // Hide
+        bar.classList.remove('scale-100', 'opacity-100');
+        bar.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            bar.classList.add('hidden');
+        }, 300); // Wait for transition
+    }
+}
+
+// Close floating search if clicking outside
+document.addEventListener('click', (e) => {
+    const bar = elements.floatingSearchBar;
+    const btn = elements.mobileSearchBtn;
+    if (!bar || bar.classList.contains('hidden')) return;
+
+    if (!bar.contains(e.target) && !btn.contains(e.target)) {
+        // Only hide if input is empty
+        const val = elements.floatingSearchInput?.value.trim();
+        if (!val) {
+            toggleFloatingSearch();
+        }
+    }
+});
+
+// Floating Search Input Logic
+elements.floatingSearchInput?.addEventListener('input', (e) => {
+    const val = e.target.value;
+    // Sync to main search input for handleSearch to work
+    if (elements.searchInput) {
+        elements.searchInput.value = val;
+        handleSearch();
+    }
+    toggleFloatingClear(val);
+});
+
+elements.floatingSearchClear?.addEventListener('click', () => {
+    if (elements.floatingSearchInput) {
+        elements.floatingSearchInput.value = '';
+        elements.floatingSearchInput.focus();
+        // Sync
+        if (elements.searchInput) {
+            elements.searchInput.value = '';
+            handleSearch();
+        }
+        toggleFloatingClear('');
+    }
+});
+
+function toggleFloatingClear(val) {
+    if (elements.floatingSearchClear) {
+        if (val && val.length > 0) elements.floatingSearchClear.classList.remove('hidden');
+        else elements.floatingSearchClear.classList.add('hidden');
+    }
+}
+
+
+// Floating Search Input Logic
+elements.floatingSearchInput?.addEventListener('input', (e) => {
+    const val = e.target.value;
+    // Sync to main search input for handleSearch to work
+    if (elements.searchInput) {
+        elements.searchInput.value = val;
+        handleSearch();
+    }
+    toggleFloatingClear(val);
+});
+
+elements.floatingSearchClear?.addEventListener('click', () => {
+    if (elements.floatingSearchInput) {
+        elements.floatingSearchInput.value = '';
+        elements.floatingSearchInput.focus();
+        // Sync
+        if (elements.searchInput) {
+            elements.searchInput.value = '';
+            handleSearch();
+        }
+        toggleFloatingClear('');
+    }
+});
+
+function toggleFloatingClear(val) {
+    if (elements.floatingSearchClear) {
+        if (val && val.length > 0) elements.floatingSearchClear.classList.remove('hidden');
+        else elements.floatingSearchClear.classList.add('hidden');
+    }
+}
+
+elements.mobileMenuBtn?.addEventListener('click', () => {
+    // Scroll to top to see header menu or toggle it
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Optional: Toggle dropdown if user is logged in
+    setTimeout(() => {
+        if (userInfoContainer && !userInfoContainer.classList.contains('hidden')) {
+            userDropdown.classList.toggle('hidden');
+        }
+    }, 300);
+});
+
+elements.mobileFilterBtn?.addEventListener('click', openFilterSheet);
+elements.closeFilterSheetBtn?.addEventListener('click', closeFilterSheet);
+elements.filterSheetOverlay?.addEventListener('click', (e) => {
+    if (e.target === elements.filterSheetOverlay) closeFilterSheet();
+});
+
+function openFilterSheet() {
+    renderBottomSheetFilters();
+    elements.filterSheetOverlay?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFilterSheet() {
+    elements.filterSheetOverlay?.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function renderBottomSheetFilters() {
+    if (!elements.sheetFilterChips || !elements.sheetLocationList) return;
+
+    // 1. Status Chips
+    // Clone logic from handleFilterClick roughly but for sheet
+    const statuses = [
+        { id: 'all', label: t('filter_all') },
+        { id: 'available', label: t('filter_available') },
+        { id: 'borrowed', label: t('filter_borrowed') },
+        { id: 'overdue', label: t('filter_overdue') }
+    ];
+
+    elements.sheetFilterChips.innerHTML = '';
+
+    // Check current active filter
+    const activeBtn = document.querySelector('.filter-btn.active:not(#locationFilterBtn)');
+    const currentFilter = activeBtn ? activeBtn.dataset.filter : 'all';
+
+    statuses.forEach(status => {
+        const chip = document.createElement('button');
+        const isActive = currentFilter === status.id;
+        // MD3 Chip Styles with Semantic Colors
+        let activeClass = 'bg-secondary-container text-on-secondary-container border-secondary-container';
+
+        if (isActive) {
+            const statusColors = {
+                'available': 'bg-green-100 text-green-800 border-green-200',
+                'borrowed': 'bg-amber-100 text-amber-800 border-amber-200',
+                'overdue': 'bg-red-100 text-red-800 border-red-200'
+            };
+            if (statusColors[status.id]) {
+                activeClass = statusColors[status.id];
+            }
+        }
+
+        chip.className = `px-4 py-2 rounded-lg border text-sm font-bold transition-colors ${isActive
+            ? activeClass
+            : 'bg-surface border-outline-variant text-on-surface-variant hover:bg-surface-variant'
+            }`;
+        // Note: Using CSS classes from Tailwind config (if available) or standard utility
+        // Since we don't have full Tailwind MD3 classes in JS, we use inline classes or matches 
+        // We can reuse the same logic as desktop chips but styled for sheet grid
+
+        chip.textContent = status.label;
+        chip.onclick = () => {
+            // Trigger the actual filter click on main UI (hidden or not)
+            const desktopBtn = document.querySelector(`.filter-btn[data-filter="${status.id}"]`);
+            if (desktopBtn) desktopBtn.click();
+            closeFilterSheet();
+        };
+        elements.sheetFilterChips.appendChild(chip);
+    });
+
+    // 2. Locations
+    // Get locations from tools
+    const locations = [...new Set(tools.map(tool => tool.location))].filter(Boolean).sort();
+    elements.sheetLocationList.innerHTML = '';
+
+    // Get current active location for checking mark
+    const btnSpan = elements.locationFilterBtn?.querySelector('span[data-i18n="filter_location"]');
+    const currentLoc = (elements.locationFilterBtn?.classList.contains('active') && btnSpan) ? btnSpan.textContent : 'all';
+
+    // Add "All Locations"
+    const allLocBtn = document.createElement('button');
+    const isAllActive = currentLoc === 'all' || currentLoc === t('filter_location');
+    allLocBtn.className = `w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center justify-between font-bold ${isAllActive ? 'bg-indigo-50 text-indigo-800' : 'text-on-surface hover:bg-surface-variant'}`;
+    allLocBtn.innerHTML = `
+        <span class="flex items-center gap-3">
+            <span class="material-symbols-outlined">inventory_2</span>
+            ${t('filter_location_all')}
+        </span>
+        ${isAllActive ? '<span class="material-symbols-outlined text-sm font-bold">check</span>' : ''}
+    `;
+    allLocBtn.onclick = () => {
+        handleLocationSelect('all');
+        closeFilterSheet();
+    };
+    elements.sheetLocationList.appendChild(allLocBtn);
+
+    locations.forEach(loc => {
+        const btn = document.createElement('button');
+        const isActive = currentLoc === loc;
+        btn.className = `w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center justify-between ${isActive ? 'bg-indigo-50 text-indigo-800 font-bold' : 'text-on-surface hover:bg-surface-variant'}`;
+        btn.innerHTML = `
+            <span>${loc}</span>
+            ${isActive ? '<span class="material-symbols-outlined text-sm font-bold">check</span>' : ''}
+        `;
+        btn.onclick = () => {
+            handleLocationSelect(loc);
+            closeFilterSheet();
+        };
+        elements.sheetLocationList.appendChild(btn);
+    });
+}
+
 // ==========================================
 // CORE FUNCTIONS
 // ==========================================
@@ -156,7 +413,7 @@ async function loadTools(preFetchedToolsPromise = null) {
     try {
         // Only render skeletons if grid is empty (avoid flickering if already rendering)
         if (!elements.toolsGrid.hasChildNodes()) renderSkeletons();
-        
+
         const userId = getUserId();
         const isLoggedIn = (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn()) || !!getUserInfo();
 
@@ -168,15 +425,15 @@ async function loadTools(preFetchedToolsPromise = null) {
             toolsRequest,
             borrowsRequest
         ]);
-        
+
         // If fetchedTools came from the catch block of preFetch, it might be array or empty. 
         // getTools() usually returns { tools: [...] } or array depending on api.js adapter.
         // api.js getTools returns array directly: `return result.tools || result;`
-        
+
         const actualTools = Array.isArray(fetchedTools) ? fetchedTools : (fetchedTools.tools || []);
-        
+
         const myBorrows = userBorrows.borrows || [];
-        
+
         tools = actualTools.map(tool => {
             const borrow = myBorrows.find(b => b.toolId === tool.toolId);
             return {
@@ -189,13 +446,15 @@ async function loadTools(preFetchedToolsPromise = null) {
         tools.sort((a, b) => {
             if (a.myBorrowedQty > 0 && b.myBorrowedQty <= 0) return -1;
             if (a.myBorrowedQty <= 0 && b.myBorrowedQty > 0) return 1;
-            return 0; 
+            return 0;
         });
 
         populateLocationDropdown();
         filteredTools = [...tools];
         renderTools(filteredTools);
-        
+        updateFilterButtonStyles();
+        syncMobileFilterBadge();
+
         // Show/Hide Return Mode Button based on if user has borrows
         const hasBorrows = tools.some(t => t.myBorrowedQty > 0);
         if (elements.returnModeBtn) {
@@ -211,74 +470,129 @@ async function loadTools(preFetchedToolsPromise = null) {
 function renderTools(toolsToRender) {
     if (!elements.toolsGrid) return;
     elements.toolsGrid.innerHTML = '';
-    
+
     if (toolsToRender.length === 0) {
         elements.toolsGrid.innerHTML = '<p class="no-tools-message">No tools found</p>';
         return;
     }
-    
+
     toolsToRender.forEach(tool => {
         const toolCard = createToolCard(tool);
         elements.toolsGrid.appendChild(toolCard);
     });
 }
 
+// Re-render on resize to switch between mobile/desktop layouts
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        // Only re-render if we cross the 768px breakpoint
+        // (For simplicity in this MVP, we just re-render to be safe)
+        renderTools(filteredTools);
+    }, 200);
+});
+
 function createToolCard(tool) {
     const card = document.createElement('article');
     card.className = `tool-card ${getStatusClass(tool.status)}`;
-    
+    const isDesktop = window.innerWidth >= 768;
+
     // Determine Button State
     let actionButton = '';
     const isLoggedIn = !!currentUser || (typeof liff !== 'undefined' && liff.isLoggedIn && liff.isLoggedIn());
     const inCart = cart.find(item => item.tool.toolId === tool.toolId);
-    
+
+    // Helper for Desktop Button Styles (Full buttons)
+    const desktopBtnClasses = "w-full py-2 rounded-lg font-bold border-2 transition-colors flex items-center justify-center gap-2";
+
+    // Helper for Mobile Button Styles (Icon only)
+    const mobileBtnClasses = "w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm";
+
     if (isLoggedIn && tool.myBorrowedQty > 0) {
-        // Check if in Return Cart
+        // Return Mode
         const inReturnCart = returnCart.find(i => i.tool.toolId === tool.toolId);
         if (inReturnCart) {
-             actionButton = `
-                <button class="w-full py-2 rounded-lg font-bold border-2 transition-colors flex items-center justify-center gap-2 bg-red-50 text-red-600 border-red-200" onclick="removeFromReturnCartWrapper('${tool.toolId}')">
-                    <span class="material-symbols-outlined text-[18px]">remove_shopping_cart</span>
-                    Unselect Return
-                </button>
-            `;
+            if (isDesktop) {
+                actionButton = `
+                    <button class="${desktopBtnClasses} bg-red-50 text-red-600 border-red-200 hover:bg-red-100" onclick="removeFromReturnCartWrapper('${tool.toolId}')">
+                        <span class="material-symbols-outlined">remove_shopping_cart</span>
+                        Unselect Return
+                    </button>`;
+            } else {
+                actionButton = `
+                    <button class="${mobileBtnClasses} bg-red-100 text-red-600 hover:bg-red-200" onclick="removeFromReturnCartWrapper('${tool.toolId}')">
+                        <span class="material-symbols-outlined text-[20px]">remove_shopping_cart</span>
+                    </button>`;
+            }
         } else {
-             actionButton = `
-                <button class="btn-return" onclick="addToReturnCartWrapper('${tool.toolId}')">
-                    <span class="material-symbols-outlined">keyboard_return</span>
-                    ${t('btn_card_return')}
-                </button>
-            `;
+            if (isDesktop) {
+                actionButton = `
+                    <button class="${desktopBtnClasses} btn-return" onclick="addToReturnCartWrapper('${tool.toolId}')">
+                        <span class="material-symbols-outlined">keyboard_return</span>
+                        ${t('btn_card_return')}
+                    </button>`;
+            } else {
+                actionButton = `
+                    <button class="${mobileBtnClasses} bg-blue-100 text-blue-600 hover:bg-blue-200" onclick="addToReturnCartWrapper('${tool.toolId}')">
+                        <span class="material-symbols-outlined text-[20px]">keyboard_return</span>
+                    </button>`;
+            }
         }
     } else if (inCart) {
-        // In Cart: Show Quantity Control
-        actionButton = `
-            <div class="flex items-center justify-between w-full h-10 bg-green-50 border border-green-200 rounded-lg overflow-hidden">
-                <button class="w-10 h-full flex items-center justify-center text-green-700 hover:bg-green-100 transition-colors" onclick="updateCartQtyFromCard('${tool.toolId}', -1)">
-                    <span class="material-symbols-outlined text-[18px]">remove</span>
-                </button>
-                <span class="font-bold text-green-800 text-sm">${inCart.quantity}</span>
-                <button class="w-10 h-full flex items-center justify-center text-green-700 hover:bg-green-100 transition-colors" onclick="updateCartQtyFromCard('${tool.toolId}', 1)">
-                    <span class="material-symbols-outlined text-[18px]">add</span>
-                </button>
-            </div>
-        `;
+        // In Cart: Quantity Control
+        if (isDesktop) {
+            actionButton = `
+                <div class="flex items-center justify-between w-full h-10 bg-green-50 border border-green-200 rounded-lg overflow-hidden">
+                    <button class="w-10 h-full flex items-center justify-center text-green-700 hover:bg-green-100 transition-colors" onclick="updateCartQtyFromCard('${tool.toolId}', -1)">
+                        <span class="material-symbols-outlined">remove</span>
+                    </button>
+                    <span class="font-bold text-green-800 text-sm">${inCart.quantity}</span>
+                    <button class="w-10 h-full flex items-center justify-center text-green-700 hover:bg-green-100 transition-colors" onclick="updateCartQtyFromCard('${tool.toolId}', 1)">
+                        <span class="material-symbols-outlined">add</span>
+                    </button>
+                </div>`;
+        } else {
+            // Mobile Compact Quantity
+            actionButton = `
+                <div class="flex items-center gap-1 bg-green-50 border border-green-200 rounded-lg p-1 shadow-sm">
+                    <button class="w-6 h-6 flex items-center justify-center text-green-700 bg-white rounded hover:bg-green-100" onclick="updateCartQtyFromCard('${tool.toolId}', -1)">
+                        <span class="material-symbols-outlined text-[14px]">remove</span>
+                    </button>
+                    <span class="font-bold text-green-800 text-xs min-w-[12px] text-center">${inCart.quantity}</span>
+                    <button class="w-6 h-6 flex items-center justify-center text-green-700 bg-white rounded hover:bg-green-100" onclick="updateCartQtyFromCard('${tool.toolId}', 1)">
+                        <span class="material-symbols-outlined text-[14px]">add</span>
+                    </button>
+                </div>`;
+        }
     } else if (tool.availableQty === 'จำนวนมาก' || tool.availableQty > 0) {
         // Available -> Add to Cart
-        actionButton = `
-            <button class="btn-borrow" onclick="addToCartWrapper('${tool.toolId}')">
-                <span class="material-symbols-outlined">add_shopping_cart</span>
-                Add to Cart
-            </button>
-        `;
+        if (isDesktop) {
+            actionButton = `
+                <button class="${desktopBtnClasses} btn-borrow" onclick="addToCartWrapper('${tool.toolId}')">
+                    <span class="material-symbols-outlined">add_shopping_cart</span>
+                    Add to Cart
+                </button>`;
+        } else {
+            actionButton = `
+                <button class="${mobileBtnClasses} bg-primary text-white hover:brightness-110" onclick="addToCartWrapper('${tool.toolId}')">
+                    <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+                </button>`;
+        }
     } else {
         // Out of Stock
-        actionButton = `
-             <button class="btn-borrow" disabled style="background-color: var(--gray-medium); cursor: not-allowed;">
-                 <span class="material-symbols-outlined">block</span>
-                 ${t('btn_card_out_of_stock')}
-             </button>
-        `;
+        if (isDesktop) {
+            actionButton = `
+                 <button class="${desktopBtnClasses}" disabled style="background-color: var(--gray-medium); cursor: not-allowed; color: var(--text-secondary);">
+                     <span class="material-symbols-outlined">block</span>
+                     ${t('btn_card_out_of_stock')}
+                 </button>`;
+        } else {
+            actionButton = `
+                 <button class="${mobileBtnClasses} bg-gray-200 text-gray-400 cursor-not-allowed" disabled>
+                     <span class="material-symbols-outlined text-[18px]">block</span>
+                 </button>`;
+        }
     }
 
     // Image
@@ -290,59 +604,106 @@ function createToolCard(tool) {
     // Status Text
     let availText = '';
     if (tool.status === 'Available') {
-        availText = (tool.availableQty === 'จำนวนมาก') ? 
-            `${t('status_available')}: ${t('unit_many')}` : 
-            `${t('status_available')}: ${tool.availableQty} ${tool.unit || t('unit_items')}`;
+        availText = (tool.availableQty === 'จำนวนมาก') ?
+            `${t('unit_many')}` :
+            `${tool.availableQty} ${tool.unit || t('unit_items')}`;
+
+        // Used fuller text for desktop if needed, but keeping it concise is fine too
+        if (isDesktop && tool.availableQty !== 'จำนวนมาก') {
+            availText = `${t('status_available')}: ${tool.availableQty} ${tool.unit || t('unit_items')}`;
+        }
     } else {
         availText = tool.status;
     }
 
-    card.innerHTML = `
-        <div class="tool-card-content">
-            <div class="tool-header">
-                <div class="tool-image-placeholder" style="overflow:hidden;">${imageContent}</div>
-                <div class="tool-info">
-                    <h3 class="tool-name">${tool.toolName}</h3>
-                    <p class="tool-id">ID: ${tool.toolId}</p>
-                    <div class="availability-status">
-                        <span class="status-badge ${getStatusClass(tool.status)}">
-                            ${availText}
-                        </span>
+    // Status Badge Class logic
+    const statusClass = getStatusClass(tool.status);
+    let statusColorClass = 'text-green-800 bg-green-100 border-green-200';
+    if (statusClass === 'borrowed') statusColorClass = 'text-amber-800 bg-amber-100 border-amber-200';
+    if (statusClass === 'overdue') statusColorClass = 'text-red-800 bg-red-100 border-red-200';
+
+
+    if (isDesktop) {
+        // ==========================================
+        // DESKTOP LAYOUT (Original)
+        // ==========================================
+        card.innerHTML = `
+            <div class="tool-card-content">
+                <div class="tool-header">
+                    <div class="tool-image-placeholder" style="overflow:hidden;">${imageContent}</div>
+                    <div class="tool-info">
+                        <h3 class="tool-name">${tool.toolName}</h3>
+                        <p class="tool-id">ID: ${tool.toolId}</p>
+                        <div class="availability-status flex flex-wrap gap-2 mt-2">
+                            <span class="px-3 py-1 rounded-full border ${statusColorClass} text-sm font-bold flex items-center gap-2 w-fit">
+                                ${availText}
+                            </span>
+                            <span class="px-3 py-1 rounded-full border text-indigo-800 bg-indigo-100 border-indigo-200 text-sm font-bold flex items-center gap-2 w-fit">
+                                <span class="material-symbols-outlined text-[16px]">warehouse</span>
+                                ${tool.location}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-actions mt-auto pt-4">
+                    ${actionButton}
+                </div>
+            </div>
+        `;
+    } else {
+        // ==========================================
+        // MOBILE LAYOUT (Compact Row)
+        // ==========================================
+        card.innerHTML = `
+            <div class="tool-card-content relative pr-10"> <!-- Right padding for button -->
+                <!-- Top Right Action Button -->
+                <div class="absolute -top-1 -right-1 z-10">
+                    ${actionButton}
+                </div>
+
+                <div class="tool-header">
+                    <div class="tool-image-placeholder">${imageContent}</div>
+                    <div class="tool-info">
+                        <h3 class="tool-name">${tool.toolName}</h3>
+                        <p class="tool-id">ID: ${tool.toolId}</p>
+                        
+                        <!-- Compact Metadata Row -->
+                        <div class="flex items-center gap-2 mt-1 text-xs flex-wrap">
+                            <span class="px-1.5 py-0.5 rounded border ${statusColorClass} font-bold text-[10px]">
+                                ${availText}
+                            </span>
+                            <span class="px-1.5 py-0.5 rounded border text-indigo-800 bg-indigo-100 border-indigo-200 font-bold text-[10px] flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[12px]">warehouse</span>
+                                ${tool.location}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="tool-location">
-                <span class="material-symbols-outlined">warehouse</span>
-                <span>${tool.location}</span>
-            </div>
-            
-            <div class="tool-actions">
-                ${actionButton}
-            </div>
-        </div>
-    `;
-    
+        `;
+    }
+
     return card;
 }
 
 // Wrappers for inline onclick
-window.addToCartWrapper = function(toolId) {
+window.addToCartWrapper = function (toolId) {
     const tool = tools.find(t => t.toolId === toolId);
     if (tool) addToCart(tool);
 }
 
-window.addToReturnCartWrapper = function(toolId) {
+window.addToReturnCartWrapper = function (toolId) {
     const tool = tools.find(t => t.toolId === toolId);
     if (tool) addToReturnCart(tool);
 }
 
-window.removeFromReturnCartWrapper = function(toolId) {
+window.removeFromReturnCartWrapper = function (toolId) {
     const index = returnCart.findIndex(item => item.tool.toolId === toolId);
     if (index !== -1) removeFromReturnCart(index);
 }
 
-window.updateCartQtyFromCard = function(toolId, change) {
+window.updateCartQtyFromCard = function (toolId, change) {
     const index = cart.findIndex(item => item.tool.toolId === toolId);
     if (index === -1) return;
 
@@ -351,24 +712,24 @@ window.updateCartQtyFromCard = function(toolId, change) {
     const newQty = item.quantity + change;
 
     if (newQty <= 0) {
-        removeFromCart(index); 
+        removeFromCart(index);
     } else if (newQty <= max) {
         item.quantity = newQty;
         updateCartUI();
-        renderTools(filteredTools); 
+        renderTools(filteredTools);
     } else {
         showMessage(`Max quantity is ${max}`, "error");
     }
 }
 
-window.showReturnModalWrapper = function(toolId) {
+window.showReturnModalWrapper = function (toolId) {
     const tool = tools.find(t => t.toolId === toolId);
-    if (tool) addToReturnCart(tool); 
+    if (tool) addToReturnCart(tool);
 }
 
-window.toggleReturnSelection = function(toolId) {
+window.toggleReturnSelection = function (toolId) {
     const tool = tools.find(t => t.toolId === toolId);
-    if(tool) addToReturnCart(tool);
+    if (tool) addToReturnCart(tool);
 }
 
 // ==========================================
@@ -387,7 +748,7 @@ function addToCart(tool) {
     }
 
     const existingItem = cart.find(item => item.tool.toolId === tool.toolId);
-    
+
     if (existingItem) {
         if (tool.availableQty !== 'จำนวนมาก' && existingItem.quantity >= tool.availableQty) {
             showMessage("Max quantity reached for this item", "error");
@@ -402,10 +763,10 @@ function addToCart(tool) {
             imageBase64: null
         });
     }
-    
+
     showMessage(`Added ${tool.toolName} to cart`, "success");
     updateCartUI();
-    renderTools(filteredTools); 
+    renderTools(filteredTools);
 }
 
 function addToReturnCart(tool) {
@@ -413,9 +774,9 @@ function addToReturnCart(tool) {
         showMessage("Please clear your borrow cart first", "error");
         return;
     }
-    
+
     const existing = returnCart.find(item => item.tool.toolId === tool.toolId);
-    if (existing) return; 
+    if (existing) return;
 
     returnCart.push({
         tool: tool,
@@ -434,16 +795,16 @@ function removeFromCart(index) {
     cart.splice(index, 1);
     updateCartUI();
     if (elements.cartModal && !elements.cartModal.classList.contains('hidden')) {
-        renderCartItems(); 
+        renderCartItems();
     }
-    renderTools(filteredTools); 
+    renderTools(filteredTools);
 }
 
 function removeFromReturnCart(index) {
     returnCart.splice(index, 1);
     updateCartUI();
     if (elements.cartModal && !elements.cartModal.classList.contains('hidden')) {
-        renderReturnCartItems(); 
+        renderReturnCartItems();
     }
     renderTools(filteredTools);
 }
@@ -458,7 +819,7 @@ function clearCart() {
 
 function updateCartUI() {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0) + returnCart.length;
-    
+
     if (elements.cartBadge) {
         elements.cartBadge.textContent = totalItems;
         if (totalItems === 0) elements.cartBadge.classList.add('hidden');
@@ -480,7 +841,7 @@ function updateCartUI() {
         if (totalItems === 0) elements.cartBadgeDesktop.classList.add('hidden');
         else elements.cartBadgeDesktop.classList.remove('hidden');
     }
-    
+
     if (elements.cartTotalCount) elements.cartTotalCount.textContent = totalItems;
 }
 
@@ -489,7 +850,7 @@ function openCartModal() {
         showMessage("Cart is empty", "error");
         return;
     }
-    
+
     const modal = elements.cartModal;
     if (modal) {
         modal.classList.remove('hidden');
@@ -520,24 +881,24 @@ function renderReturnCartItems() {
     const listContainer = elements.cartItemsList;
     const modal = elements.cartModal;
     if (!listContainer || !modal) return;
-    
+
     const titleEl = modal.querySelector('h2');
     if (titleEl) titleEl.textContent = "Return Items";
-    
+
     const commonDetails = document.getElementById('cartCommonDetails');
     const actions = document.getElementById('cartModalActions');
-    
+
     if (commonDetails) commonDetails.classList.add('hidden');
     if (actions) actions.classList.remove('hidden');
 
     listContainer.innerHTML = '';
-    
+
     returnCart.forEach((item, index) => {
         const tool = item.tool;
         const itemEl = document.createElement('div');
         itemEl.id = `return-item-${index}`;
         itemEl.className = 'flex flex-col gap-3 bg-white dark:bg-[#231f29] p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors';
-        
+
         let imgPreviewHTML = '';
         if (item.imageBase64) {
             imgPreviewHTML = `
@@ -547,8 +908,8 @@ function renderReturnCartItems() {
             `;
         }
 
-        const uploadLabelClass = item.imageBase64 
-            ? 'bg-green-50 text-green-700 border-green-200' 
+        const uploadLabelClass = item.imageBase64
+            ? 'bg-green-50 text-green-700 border-green-200'
             : 'bg-white text-primary border-primary/30';
 
         const uploadLabelText = item.imageBase64
@@ -588,13 +949,13 @@ function renderReturnCartItems() {
         `;
         listContainer.appendChild(itemEl);
     });
-    
+
     const confirmBtn = document.getElementById('confirmCartBorrow');
     const clearBtn = document.getElementById('clearCartBtn');
-    
+
     if (confirmBtn) {
         confirmBtn.textContent = "Confirm Return";
-        confirmBtn.onclick = submitBatchReturn; 
+        confirmBtn.onclick = submitBatchReturn;
     }
     if (clearBtn) {
         clearBtn.onclick = clearCart;
@@ -604,7 +965,7 @@ function renderReturnCartItems() {
 function renderCartItems() {
     const listContainer = elements.cartItemsList;
     if (!listContainer) return;
-    
+
     const commonDetails = document.getElementById('cartCommonDetails');
     const actions = document.getElementById('cartModalActions');
     const modal = elements.cartModal;
@@ -633,23 +994,23 @@ function renderCartItems() {
         if (actions) actions.classList.add('hidden');
         return;
     }
-    
+
     if (commonDetails) commonDetails.classList.remove('hidden');
     if (actions) actions.classList.remove('hidden');
-    
+
     cart.forEach((item, index) => {
         const tool = item.tool;
         const maxQty = tool.availableQty === 'จำนวนมาก' ? 99 : tool.availableQty;
-        
+
         const itemEl = document.createElement('div');
         itemEl.id = `cart-item-${index}`;
         itemEl.className = 'flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#231f29] p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm relative transition-colors';
-        
+
         let thumb = `<div class="w-16 h-16 bg-gray-200 rounded-lg shrink-0"></div>`;
         if (tool.imageUrl) {
             thumb = `<div class="w-16 h-16 bg-gray-200 rounded-lg shrink-0 overflow-hidden"><img src="${tool.imageUrl}" class="w-full h-full object-cover"></div>`;
         }
-        
+
         let imgPreviewHTML = '';
         let uploadLabelHTML = `
             <label for="cart-img-${index}" class="cursor-pointer flex items-center gap-2 text-primary hover:text-primary-hover transition-colors text-sm font-bold border border-primary/30 px-3 py-1.5 rounded-lg hover:bg-primary/5">
@@ -657,7 +1018,7 @@ function renderCartItems() {
                 ${item.imageBase64 ? 'Change Photo' : 'Take Photo (Required)'}
             </label>
         `;
-        
+
         if (item.imageBase64) {
             imgPreviewHTML = `
                 <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 mt-2 sm:mt-0">
@@ -692,16 +1053,16 @@ function renderCartItems() {
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
         `;
-        
+
         listContainer.appendChild(itemEl);
     });
 }
 
-window.updateCartQty = function(index, change) {
+window.updateCartQty = function (index, change) {
     const item = cart[index];
     const max = item.tool.availableQty === 'จำนวนมาก' ? 99 : item.tool.availableQty;
     const newQty = item.quantity + change;
-    
+
     if (newQty >= 1 && newQty <= max) {
         item.quantity = newQty;
         renderCartItems();
@@ -709,7 +1070,7 @@ window.updateCartQty = function(index, change) {
     }
 }
 
-window.handleCartImageUpload = async function(input, index) {
+window.handleCartImageUpload = async function (input, index) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
         if (file.size > 3 * 1024 * 1024) {
@@ -720,8 +1081,8 @@ window.handleCartImageUpload = async function(input, index) {
             const base64 = await convertToBase64(file);
             cart[index].imageFile = file;
             cart[index].imageBase64 = base64;
-            renderCartItems(); 
-            
+            renderCartItems();
+
             const el = document.getElementById(`cart-item-${index}`);
             if (el) {
                 el.classList.add('border-gray-200', 'dark:border-gray-700');
@@ -736,12 +1097,12 @@ window.handleCartImageUpload = async function(input, index) {
 async function handleCartSubmit() {
     const reason = document.getElementById('cartReason').value.trim();
     const returnDate = document.getElementById('cartReturnDate').value;
-    
+
     if (!reason || !returnDate) {
         showMessage("Please fill in Return Date and Reason", "error");
         return;
     }
-    
+
     let hasError = false;
     cart.forEach((item, index) => {
         const el = document.getElementById(`cart-item-${index}`);
@@ -779,20 +1140,20 @@ async function handleCartSubmit() {
         };
 
         cart.forEach(item => {
-             const tIndex = tools.findIndex(t => t.toolId === item.tool.toolId);
-             if (tIndex !== -1) {
-                 tools[tIndex].myBorrowedQty = (tools[tIndex].myBorrowedQty || 0) + item.quantity;
-                 if (tools[tIndex].availableQty !== 'จำนวนมาก') {
-                     tools[tIndex].availableQty -= item.quantity;
-                 }
-             }
+            const tIndex = tools.findIndex(t => t.toolId === item.tool.toolId);
+            if (tIndex !== -1) {
+                tools[tIndex].myBorrowedQty = (tools[tIndex].myBorrowedQty || 0) + item.quantity;
+                if (tools[tIndex].availableQty !== 'จำนวนมาก') {
+                    tools[tIndex].availableQty -= item.quantity;
+                }
+            }
         });
 
         await apiFunctions.borrowToolBatch(batchData);
-        
+
         clearCart();
         closeCartModal();
-        await loadTools(); 
+        await loadTools();
         showMessage("Batch borrow successful!", "success");
 
     } catch (e) {
@@ -809,24 +1170,24 @@ async function handleCartSubmit() {
 
 function toggleReturnMode() {
     isReturnMode = !isReturnMode;
-    returnSelection.clear(); 
-    
+    returnSelection.clear();
+
     const btn = elements.returnModeBtn;
     if (isReturnMode) {
         btn.classList.add('bg-red-100', 'text-red-600', 'border-red-200');
         btn.innerHTML = `<span class="material-symbols-outlined text-[18px] mr-1">close</span> Cancel Return`;
-        
+
         const borrowedBtn = document.querySelector('.filter-btn[data-filter="borrowed"]');
         if (borrowedBtn) borrowedBtn.click();
-        
+
     } else {
         btn.classList.remove('bg-red-100', 'text-red-600', 'border-red-200');
         btn.innerHTML = `<span class="material-symbols-outlined text-[18px] mr-1">check_box</span> Return Selection`;
-        
+
         const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
         if (allBtn) allBtn.click();
     }
-    
+
     renderTools(filteredTools);
     updateReturnModeUI();
 }
@@ -834,7 +1195,7 @@ function toggleReturnMode() {
 function updateReturnModeUI() {
     // Legacy support logic maintained for safety, but primary interaction is via Return Cart
     let returnFab = document.getElementById('returnFab');
-    
+
     if (!returnFab) {
         returnFab = document.createElement('button');
         returnFab.id = 'returnFab';
@@ -846,11 +1207,11 @@ function updateReturnModeUI() {
         returnFab.addEventListener('click', confirmReturnSelection);
         document.body.appendChild(returnFab);
     }
-    
+
     const count = returnSelection.size;
     const countSpan = document.getElementById('returnCount');
     if (countSpan) countSpan.textContent = count;
-    
+
     if (isReturnMode && count > 0) {
         returnFab.classList.remove('hidden');
         returnFab.classList.add('flex');
@@ -867,25 +1228,25 @@ async function confirmReturnSelection() {
         if (tool) addToReturnCart(tool);
     });
     returnSelection.clear();
-    if(isReturnMode) toggleReturnMode(); // Exit return mode
+    if (isReturnMode) toggleReturnMode(); // Exit return mode
     openCartModal(); // Open modal with items added
 }
 
-window.handleReturnBatchImage = async function(input, index) {
+window.handleReturnBatchImage = async function (input, index) {
     if (input.files && input.files[0]) {
         try {
             const base64 = await convertToBase64(input.files[0]);
             returnCart[index].imageBase64 = base64;
-            
+
             renderReturnCartItems();
-            
+
         } catch (e) { console.error(e); }
     }
 }
 
-window.submitBatchReturn = async function() {
+window.submitBatchReturn = async function () {
     let hasError = false;
-    
+
     returnCart.forEach((item, index) => {
         const el = document.getElementById(`return-item-${index}`);
         if (!item.imageBase64) {
@@ -895,18 +1256,18 @@ window.submitBatchReturn = async function() {
             }
             hasError = true;
         } else {
-             if (el) {
+            if (el) {
                 el.classList.add('border-gray-200', 'dark:border-gray-700');
                 el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
             }
         }
     });
-    
+
     if (hasError) {
         showMessage("Please take a photo for highlighted items", "error");
         return;
     }
-    
+
     showLoading(true);
     try {
         const batchData = {
@@ -919,14 +1280,14 @@ window.submitBatchReturn = async function() {
                 imageName: `return_${i.tool.toolId}_${Date.now()}.jpg`
             }))
         };
-        
+
         await apiFunctions.returnToolBatch(batchData);
-        
-        clearCart(); 
+
+        clearCart();
         closeCartModal();
         await loadTools();
         showMessage("Items returned successfully", "success");
-        
+
     } catch (e) {
         console.error(e);
         showMessage("Return failed: " + e.message, "error");
@@ -948,7 +1309,7 @@ function getStatusClass(status) {
 function handleSearch() {
     const term = elements.searchInput.value.toLowerCase();
     const clearBtn = document.getElementById('searchClearBtn');
-    
+
     if (clearBtn) {
         if (term.length > 0) {
             clearBtn.classList.remove('hidden');
@@ -961,6 +1322,12 @@ function handleSearch() {
     }
 
     filteredTools = tools.filter(t => t.toolName.toLowerCase().includes(term) || t.toolId.toLowerCase().includes(term));
+    // Sync to mobile input if updated via desktop (keeping inline just incase, but we use floating now)
+    if (elements.floatingSearchInput && elements.floatingSearchInput.value !== term) {
+        elements.floatingSearchInput.value = term;
+        toggleFloatingClear(term);
+    }
+
     renderTools(filteredTools);
 }
 
@@ -974,32 +1341,108 @@ document.getElementById('searchClearBtn')?.addEventListener('click', () => {
 
 function handleFilterClick(event) {
     const btn = event.target.closest('.filter-btn');
-    if (!btn || btn.id === 'locationFilterBtn' || btn.id === 'returnModeBtn') return; 
-    
+    if (!btn || btn.id === 'locationFilterBtn' || btn.id === 'returnModeBtn') return;
+
     if (isReturnMode && btn.dataset.filter !== 'borrowed') {
-         toggleReturnMode(); 
+        toggleReturnMode();
     }
 
     elements.filterBtns.forEach(b => {
         if (!['locationFilterBtn', 'returnModeBtn'].includes(b.id)) b.classList.toggle('active', b === btn);
     });
-    
+
     const filterValue = btn.dataset.filter;
     if (filterValue === 'all') filteredTools = [...tools];
     else filteredTools = tools.filter(t => t.status.toLowerCase() === filterValue);
-    
+
     renderTools(filteredTools);
+    updateFilterButtonStyles();
+    syncMobileFilterBadge();
+}
+
+function updateFilterButtonStyles() {
+    elements.filterBtns.forEach(btn => {
+        if (['locationFilterBtn', 'returnModeBtn'].includes(btn.id)) return;
+
+        const isActive = btn.classList.contains('active');
+        const filterType = btn.dataset.filter;
+
+        // Base active classes to remove (to reset)
+        const allColorClasses = [
+            'bg-secondary-container', 'text-on-secondary-container', 'border-secondary-container',
+            'bg-green-100', 'text-green-800', 'border-green-200',
+            'bg-amber-100', 'text-amber-800', 'border-amber-200',
+            'bg-red-100', 'text-red-800', 'border-red-200',
+            // Include ! versions to ensure cleanup
+            '!bg-secondary-container', '!text-on-secondary-container', '!border-secondary-container',
+            '!bg-green-100', '!text-green-800', '!border-green-200',
+            '!bg-amber-100', '!text-amber-800', '!border-amber-200',
+            '!bg-red-100', '!text-red-800', '!border-red-200'
+        ];
+        btn.classList.remove(...allColorClasses);
+
+        if (isActive) {
+            const statusColors = {
+                'all': '!bg-secondary-container !text-on-secondary-container !border-secondary-container',
+                'available': '!bg-green-100 !text-green-800 !border-green-200',
+                'borrowed': '!bg-amber-100 !text-amber-800 !border-amber-200',
+                'overdue': '!bg-red-100 !text-red-800 !border-red-200'
+            };
+            const colorClass = statusColors[filterType] || statusColors['all'];
+            colorClass.split(' ').forEach(c => btn.classList.add(c));
+        }
+    });
+}
+
+function syncMobileFilterBadge() {
+    // Check if status is filtered
+    const statusActive = document.querySelector('.filter-btn.active:not(#locationFilterBtn)');
+    const statusVal = statusActive ? statusActive.dataset.filter : 'all';
+
+    // Check if location is filtered
+    const locationActive = elements.locationFilterBtn?.classList.contains('active');
+
+    const isAnyFilterActive = (statusVal !== 'all') || locationActive;
+
+    if (elements.mobileFilterBtn) {
+        elements.mobileFilterBtn.classList.toggle('filter-active', isAnyFilterActive);
+    }
 }
 
 function populateLocationDropdown() {
     const locations = [...new Set(tools.map(tool => tool.location))].filter(Boolean).sort();
     const content = document.getElementById('locationDropdownContent');
     if (!content) return;
-    content.innerHTML = `<button class="w-full text-left px-5 py-3 text-sm hover:bg-gray-100 font-bold" onclick="handleLocationSelect('all')">All Locations</button>`;
+
+    // Get current active location from the button text
+    const btnSpan = elements.locationFilterBtn?.querySelector('span[data-i18n="filter_location"]');
+    const currentLoc = (elements.locationFilterBtn?.classList.contains('active') && btnSpan) ? btnSpan.textContent : 'all';
+
+    content.innerHTML = '';
+
+    // "All Locations" Button
+    const allBtn = document.createElement('button');
+    const isAllActive = currentLoc === 'all' || currentLoc === t('filter_location');
+    allBtn.className = `w-full text-left px-5 py-3 text-sm transition-colors font-bold flex items-center justify-between ${isAllActive ? 'bg-indigo-50 text-indigo-800' : 'text-primary hover:bg-surface-container-high dark:hover:bg-surface-variant'}`;
+    allBtn.onclick = () => handleLocationSelect('all');
+    allBtn.innerHTML = `
+        <span class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+            ${t('filter_location_all')}
+        </span>
+        ${isAllActive ? '<span class="material-symbols-outlined text-sm font-bold">check</span>' : ''}
+    `;
+    content.appendChild(allBtn);
+
+    // Location Buttons
     locations.forEach(loc => {
         const btn = document.createElement('button');
-        btn.className = 'w-full text-left px-5 py-3 text-sm hover:bg-gray-100';
-        btn.textContent = loc;
+        const isActive = currentLoc === loc;
+        btn.className = `w-full text-left px-5 py-3 text-sm transition-colors flex items-center justify-between ${isActive ? 'bg-indigo-50 text-indigo-800 font-bold' : 'hover:bg-surface-container-high dark:hover:bg-surface-variant dark:text-white'}`;
+        btn.innerHTML = `
+            <span>${loc}</span>
+            ${isActive ? '<span class="material-symbols-outlined text-sm font-bold">check</span>' : ''}
+        `;
         btn.onclick = () => handleLocationSelect(loc);
         content.appendChild(btn);
     });
@@ -1007,7 +1450,7 @@ function populateLocationDropdown() {
 
 function handleLocationSelect(loc) {
     document.getElementById('locationDropdown').classList.add('hidden');
-    
+
     // Update Button Text
     const btnSpan = elements.locationFilterBtn?.querySelector('span[data-i18n="filter_location"]');
     if (btnSpan) {
@@ -1022,15 +1465,33 @@ function handleLocationSelect(loc) {
 
     if (loc === 'all') filteredTools = [...tools];
     else filteredTools = tools.filter(t => t.location === loc);
+
+    // Reset status filter buttons
+    // - If location is specific (!= 'all'), REMOVE active from all status buttons (including 'All')
+    // - If location is 'all', reset to 'All' status active
+    elements.filterBtns.forEach(btn => {
+        if (!['locationFilterBtn', 'returnModeBtn'].includes(btn.id)) {
+            if (loc === 'all') {
+                btn.classList.toggle('active', btn.dataset.filter === 'all');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+    });
+    updateFilterButtonStyles();
+
     renderTools(filteredTools);
+    syncMobileFilterBadge();
 }
 
 // Location Btn Toggle
 elements.locationFilterBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
+    // Re-populate to update active state just in case
+    populateLocationDropdown();
     const dropdown = elements.locationDropdown;
     const btn = elements.locationFilterBtn;
-    
+
     if (dropdown.classList.contains('hidden')) {
         // Show logic
         const rect = btn.getBoundingClientRect();
@@ -1058,7 +1519,7 @@ function showReturnModal(tool) {
 
 function showMessage(msg, type) {
     const toast = elements.messageToast;
-    if(!toast) return;
+    if (!toast) return;
     document.getElementById('messageText').textContent = msg;
     toast.className = `toast show ${type}`;
     setTimeout(() => toast.className = 'toast hidden', 3000);
@@ -1084,7 +1545,7 @@ function convertToBase64(file) {
 function renderSkeletons() {
     if (!elements.toolsGrid) return;
     elements.toolsGrid.innerHTML = '';
-    
+
     const skeletonHTML = `
         <article class="skeleton-card">
             <div class="skeleton-header">
@@ -1102,7 +1563,7 @@ function renderSkeletons() {
         </article>
     `;
 
-    for(let i=0; i<8; i++) {
+    for (let i = 0; i < 10; i++) {
         elements.toolsGrid.innerHTML += skeletonHTML;
     }
 }
@@ -1114,25 +1575,25 @@ async function handleRegistrationSubmit(e) {
     const cohort = document.getElementById('cohort').value;
     showLoading(true);
     try {
-        await apiFunctions.registerUser({fullName, department, cohort, userId: getUserId()});
+        await apiFunctions.registerUser({ fullName, department, cohort, userId: getUserId() });
         currentUser = getUserInfo();
         hideRegistrationModal();
         updateUserUI();
         await loadTools();
         showMessage("Registered!", "success");
-    } catch(e) { showMessage("Registration failed", "error"); }
+    } catch (e) { showMessage("Registration failed", "error"); }
     finally { showLoading(false); }
 }
 
-function showRegistrationModal() { 
+function showRegistrationModal() {
     if (elements.registrationModal) {
         elements.registrationModal.classList.remove('hidden');
         elements.registrationModal.style.display = 'flex'; // Force display flex for modal container
     }
-    
+
     const loginSection = document.getElementById('lineLoginSection');
     const form = document.getElementById('registrationForm');
-    
+
     let isLiffLoggedIn = false;
     try {
         // Safe check for LIFF login status
@@ -1143,7 +1604,7 @@ function showRegistrationModal() {
         console.warn("LIFF status check failed:", e);
         isLiffLoggedIn = false;
     }
-    
+
     if (isLiffLoggedIn) {
         // User is logged in with LINE -> Show Form
         if (loginSection) {
@@ -1161,7 +1622,7 @@ function showRegistrationModal() {
         if (loginSection) {
             loginSection.classList.remove('hidden');
             loginSection.classList.add('flex');
-            loginSection.style.display = 'flex'; 
+            loginSection.style.display = 'flex';
         }
         if (form) {
             form.style.display = 'none';
@@ -1169,9 +1630,9 @@ function showRegistrationModal() {
         }
     }
 }
-function hideRegistrationModal() { 
+function hideRegistrationModal() {
     if (elements.registrationModal) {
-        elements.registrationModal.classList.add('hidden'); 
+        elements.registrationModal.classList.add('hidden');
         elements.registrationModal.style.display = ''; // Reset inline style
     }
 }

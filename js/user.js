@@ -9,7 +9,7 @@ let liffInitPromise = null;
  */
 async function initLiff() {
     if (liffInitialized) return liff.isLoggedIn();
-    
+
     // Return existing promise if initialization is already in progress
     if (liffInitPromise) return liffInitPromise;
 
@@ -53,7 +53,7 @@ async function loginWithLine() {
             console.warn('LIFF not initialized, attempting to initialize...');
             await initLiff();
         }
-        
+
         if (!liff.isLoggedIn()) {
             console.log("Calling liff.login...");
             liff.login({ redirectUri: window.location.href });
@@ -124,12 +124,12 @@ function getUserId() {
 
     // 3. Fallback (Only for Dev/Local mode where LIFF_ID is missing)
     let userId = localStorage.getItem(CONFIG.USER_ID_KEY);
-    
+
     if (!userId) {
         userId = generateUserId();
         localStorage.setItem(CONFIG.USER_ID_KEY, userId);
     }
-    
+
     return userId;
 }
 
@@ -168,13 +168,13 @@ async function isUserRegistered() {
 
     try {
         const result = await checkUserExists(userId);
-        
+
         if (result.exists && result.user) {
             // Save user info found in backend to local storage
             saveUserInfo(result.user);
             return true;
         }
-        
+
         return false;
     } catch (error) {
         console.error('Error checking user registration:', error);
@@ -194,7 +194,7 @@ async function registerNewUser(userData) {
         ...userData,
         userId: userId
     };
-    
+
     try {
         const response = await registerUser(userDataWithId);
         saveUserInfo(userData);
@@ -210,20 +210,18 @@ async function registerNewUser(userData) {
  */
 function showUserSkeleton() {
     const userInfoContainer = document.getElementById('userInfoContainer');
-    const loginTriggerBtn = document.getElementById('loginTriggerBtn');
-    const userProfileImgs = document.querySelectorAll('.profile-img');
-    const userNameElement = document.getElementById('userName');
+    const guestUserContainer = document.getElementById('guestUserContainer');
+    const getStartedBtn = document.getElementById('getStartedBtn');
 
-    if (loginTriggerBtn) loginTriggerBtn.classList.add('hidden');
-    if (userInfoContainer) userInfoContainer.classList.remove('hidden');
+    // Hide user info, Show guest container as skeleton
+    if (userInfoContainer) userInfoContainer.classList.add('hidden');
 
-    userProfileImgs.forEach(img => {
-        img.classList.add('skeleton', 'skeleton-avatar');
-    });
-    
-    if (userNameElement) {
-        userNameElement.textContent = ''; // Clear text
-        userNameElement.classList.add('skeleton', 'skeleton-name');
+    if (guestUserContainer) {
+        guestUserContainer.classList.remove('hidden');
+        if (getStartedBtn) {
+            getStartedBtn.classList.add('skeleton', 'text-transparent', 'pointer-events-none');
+            Array.from(getStartedBtn.children).forEach(child => child.classList.add('opacity-0'));
+        }
     }
 }
 
@@ -235,22 +233,29 @@ async function updateUserUI() {
     const userNameElement = document.getElementById('userName');
     const userProfileImgs = document.querySelectorAll('.profile-img');
     const userInfoContainer = document.getElementById('userInfoContainer');
-    const loginTriggerBtn = document.getElementById('loginTriggerBtn');
-    
+    const guestUserContainer = document.getElementById('guestUserContainer');
+    const getStartedBtn = document.getElementById('getStartedBtn');
+
     // Remove skeleton classes
     userProfileImgs.forEach(img => img.classList.remove('skeleton', 'skeleton-avatar'));
     if (userNameElement) userNameElement.classList.remove('skeleton', 'skeleton-name');
+
+    // Clear Get Started Skeleton
+    if (getStartedBtn) {
+        getStartedBtn.classList.remove('skeleton', 'text-transparent', 'pointer-events-none');
+        Array.from(getStartedBtn.children).forEach(child => child.classList.remove('opacity-0'));
+    }
 
     // Check if user is logged in (either via local storage or LIFF)
     const isLoggedIn = (liffInitialized && liff.isLoggedIn()) || !!userInfo;
 
     if (isLoggedIn) {
         if (userInfoContainer) userInfoContainer.classList.remove('hidden');
-        if (loginTriggerBtn) loginTriggerBtn.classList.add('hidden');
+        if (guestUserContainer) guestUserContainer.classList.add('hidden');
 
         if (userInfo && userNameElement) {
             userNameElement.textContent = userInfo.fullName || 'User';
-            
+
             // Handle Admin Button & Visuals
             const userDropdown = document.getElementById('userDropdown');
             const logoutBtn = document.getElementById('logoutBtn');
@@ -286,17 +291,17 @@ async function updateUserUI() {
             try {
                 const profile = await liff.getProfile();
                 if (userNameElement) userNameElement.textContent = profile.displayName;
-                
+
                 // Cleanup Admin UI if falling back to basic LINE profile
                 const existingAdminBtn = document.getElementById('adminPortalBtn');
                 const adminCrown = document.getElementById('adminCrown');
-                
+
                 if (existingAdminBtn) existingAdminBtn.remove();
                 userProfileImgs.forEach(img => img.classList.remove('admin-gold-border'));
                 if (adminCrown) adminCrown.classList.add('hidden');
-                
+
             } catch (e) {
-                 if (userNameElement) userNameElement.textContent = t('status_available') === 'Available' ? 'User' : 'ผู้ใช้งาน';
+                if (userNameElement) userNameElement.textContent = t('status_available') === 'Available' ? 'User' : 'ผู้ใช้งาน';
             }
         } else {
             if (userNameElement) userNameElement.textContent = t('status_available') === 'Available' ? 'User' : 'ผู้ใช้งาน';
@@ -318,18 +323,18 @@ async function updateUserUI() {
         setTimeout(() => {
             const wrapper = document.getElementById('userNameWrapper');
             const nameSpan = document.getElementById('userName');
-            
+
             if (wrapper && nameSpan) {
                 // Reset first to get natural width
                 wrapper.classList.remove('is-long');
                 nameSpan.style.removeProperty('--scroll-dist');
-                
+
                 // Check if content overflows container
                 if (nameSpan.scrollWidth > wrapper.clientWidth) {
                     const overflowAmount = nameSpan.scrollWidth - wrapper.clientWidth;
                     // Add a small buffer (e.g., 5px) to ensure it doesn't feel tight
-                    const scrollDist = overflowAmount + 5; 
-                    
+                    const scrollDist = overflowAmount + 5;
+
                     nameSpan.style.setProperty('--scroll-dist', `-${scrollDist}px`);
                     wrapper.classList.add('is-long');
                 }
@@ -339,7 +344,8 @@ async function updateUserUI() {
     } else {
         // Not logged in
         if (userInfoContainer) userInfoContainer.classList.add('hidden');
-        if (loginTriggerBtn) loginTriggerBtn.classList.remove('hidden');
+        if (userInfoContainer) userInfoContainer.classList.add('hidden');
+        if (guestUserContainer) guestUserContainer.classList.remove('hidden');
     }
 }
 

@@ -179,8 +179,150 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+    /* Add space for Bottom App Bar */
     -webkit-font-smoothing: antialiased;
+}
+
+/* MD3 Bottom App Bar */
+.bottom-app-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    /* MD3 Standard Height */
+    background-color: var(--md-sys-color-surface-container);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Center items */
+    gap: 3rem;
+    /* Add gap between items */
+    padding: 0 1rem;
+    padding-bottom: env(safe-area-inset-bottom);
+    /* Account for home indicator */
+    box-shadow: var(--elevation-2);
+    z-index: 50;
+    /* Below modals (1000) but above content */
+}
+
+.bottom-app-bar .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--md-sys-color-on-surface-variant);
+    width: 64px;
+    /* Touch target */
+    height: 64px;
+    border-radius: 16px;
+    /* Active indicator shape usually pill or wide rect, let's keep 16px for click feel */
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.bottom-app-bar .nav-item.active {
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.bottom-app-bar .nav-item.active span.material-symbols-outlined {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    padding: 4px 20px;
+    border-radius: 16px;
+    /* Active indicator pill */
+    display: block;
+}
+
+.bottom-app-bar .nav-item:active {
+    background-color: var(--md-sys-color-surface-container-high);
+}
+
+/* Filter Bottom Sheet */
+.sheet-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.32);
+    /* Scrim opacity */
+    z-index: 999;
+    align-items: flex-end;
+    /* Bottom align */
+    justify-content: center;
+    display: flex;
+    transition: opacity 0.3s;
+    opacity: 1;
+}
+
+.sheet-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none !important;
+}
+
+.bottom-sheet {
+    background-color: var(--md-sys-color-surface);
+    width: 100%;
+    max-width: 640px;
+    /* Tablet constraint */
+    border-top-left-radius: 28px;
+    border-top-right-radius: 28px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--elevation-1);
+    animation: slideUp 0.3s cubic-bezier(0.05, 0.7, 0.1, 1.0);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.sheet-handle {
+    width: 32px;
+    height: 4px;
+    background-color: var(--md-sys-color-outline-variant);
+    border-radius: 2px;
+    margin: 16px auto;
+    /* Center handle */
+    flex-shrink: 0;
+}
+
+.sheet-header {
+    padding: 0 24px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.sheet-content {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+/* Adjust FAB to float above Bottom App Bar on Mobile */
+@media (max-width: 768px) {
+    .cart-fab-mobile {
+        bottom: calc(80px + 16px + env(safe-area-inset-bottom)) !important;
+        /* Above bar */
+        right: 16px !important;
+        z-index: 60;
+        /* Above bar */
+    }
 }
 
 /* Typography */
@@ -529,19 +671,26 @@ h3 {
 }
 
 .filter-btn.active {
-    background-color: var(--text-primary);
-    color: white;
-    border-color: var(--text-primary);
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    border-color: var(--md-sys-color-primary-container);
 }
 
-#locationFilterBtn.active {
-    background-color: var(--warning);
-    color: white;
-    border-color: var(--warning);
+#locationFilterBtn.active,
+.nav-item.filter-active span.material-symbols-outlined {
+    background-color: var(--warning) !important;
+    color: white !important;
+    border-color: var(--warning) !important;
     box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
     animation: pulse-glow 2s infinite;
     position: relative;
-    z-index: 5;
+}
+
+/* Ensure the pill shape is maintained on mobile nav item icon when active */
+.nav-item.filter-active span.material-symbols-outlined {
+    padding: 4px 20px;
+    border-radius: 16px;
+    display: block;
 }
 
 @keyframes pulse-glow {
@@ -936,15 +1085,17 @@ textarea::placeholder {
 
 /* Tools Grid & Cards */
 .tools-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    /* Tighter gap between cards */
 }
 
 .tool-card {
-    padding: 1rem;
-    background-color: var(--md-sys-color-surface);
-    /* Surface color for card */
+    padding: 0.75rem;
+    /* Reduced padding */
+    background-color: var(--md-sys-color-surface-container-high);
+    /* Surface Container High for better contrast */
     border-radius: var(--radius-md);
     /* 12px */
     border: none;
@@ -967,15 +1118,9 @@ textarea::placeholder {
     display: flex;
     flex-direction: column;
     height: 100%;
-    gap: 1rem;
-}
-
-/* Remove side borders and use indicators if needed, but reference uses border + badge */
-.tool-card.overdue,
-.tool-card.borrowed,
-.tool-card.available {
-    border-left: 1px solid var(--border);
-    /* Reset left border */
+    gap: 0.75rem;
+    align-items: flex-start;
+    /* Align top for better density? Or center? Let's try start */
 }
 
 /* Card Header: Image + Title Side-by-Side */
@@ -983,16 +1128,18 @@ textarea::placeholder {
     display: flex;
     flex-direction: row;
     /* Always row */
-    align-items: center;
-    gap: 1rem;
+    align-items: flex-start;
+    /* Image top aligned */
+    gap: 0.75rem;
+    width: 100%;
 }
 
 .tool-image-placeholder {
-    width: 5rem;
-    /* 80px */
-    height: 5rem;
+    width: 4.5rem;
+    /* 72px square */
+    height: 4.5rem;
     background-color: var(--gray-light);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     border: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -1010,20 +1157,23 @@ textarea::placeholder {
 }
 
 .tool-name {
-    font-size: 1.125rem;
-    font-weight: 800;
-    color: var(--text-primary);
+    font-size: 1rem;
+    /* Smaller font */
+    font-weight: 700;
+    line-height: 1.3;
     margin-bottom: 0.25rem;
-    line-height: 1.2;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    /* Allow wrap */
 }
 
 .tool-id {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    font-family: monospace;
     margin-bottom: 0.25rem;
 }
 
@@ -1044,16 +1194,14 @@ textarea::placeholder {
 .tool-location {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
     color: var(--text-primary);
-    font-size: 0.875rem;
-    font-weight: 700;
-    background-color: var(--background);
-    padding: 0.75rem;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
-    margin-bottom: 0;
-    /* Remove bottom margin */
+    font-size: 0.75rem;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    margin-bottom: 0.25rem;
 }
 
 .tool-location span:first-child {
@@ -1234,5 +1382,14 @@ textarea::placeholder {
 
     .modal-actions {
         padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    }
+}
+
+/* Hide Inline Search and Filters on Mobile (Google Go Style) */
+@media (max-width: 767px) {
+
+    .search-container,
+    .filter-chips {
+        display: none !important;
     }
 }

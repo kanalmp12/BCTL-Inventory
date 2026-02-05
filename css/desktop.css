@@ -1,63 +1,95 @@
 @media (min-width: 768px) {
+
+    /* Restore Header Search/Filter on Desktop */
+    .search-container {
+        display: block !important;
+    }
+
+    .filter-chips {
+        display: flex !important;
+    }
+
+    /* Hide Mobile Elements on Desktop */
+    .bottom-app-bar {
+        display: none !important;
+    }
+
+    #floatingSearchBar {
+        display: none !important;
+    }
+
     h1 {
         font-size: 1.75rem;
     }
-    
+
     .tools-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 2rem; /* More breathing room */
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 2rem;
+        /* More breathing room */
     }
-    
+
     .dates-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
     }
-    
+
     .tool-card .tool-header {
-        flex-direction: column; /* Back to column for grid layout on desktop */
+        flex-direction: column;
+        /* Back to column for grid layout on desktop */
         align-items: flex-start;
         width: 100%;
     }
-    
+
+    .tool-card .tool-card-content {
+        align-items: stretch !important;
+    }
+
     .tool-card .tool-image-placeholder {
         width: 100%;
         height: 220px;
         margin-bottom: var(--spacing-xs);
     }
-    
+
     .tool-info {
         width: 100%;
         margin-top: var(--spacing-xs);
     }
-    
+
     .tool-name {
         font-size: 1.25rem;
-        white-space: normal; /* Allow wrapping on desktop cards */
+        white-space: normal;
+        /* Allow wrapping on desktop cards */
         line-height: 1.4;
     }
 
     /* Admin Styles for Desktop */
     .profile-img.admin-gold-border {
         border: 2px solid #FFD700 !important;
-        box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3); /* Slightly stronger shadow on desktop */
+        box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3);
+        /* Slightly stronger shadow on desktop */
     }
 
     /* Fix for User Profile Truncation on Desktop */
     .app-header .user-info {
-        max-width: none !important; /* Remove the restriction on desktop */
+        max-width: none !important;
+        /* Remove the restriction on desktop */
+        width: auto !important;
+        flex-shrink: 0 !important;
         width: auto !important;
         flex-shrink: 0 !important;
     }
 
     .app-header .user-name-wrapper {
-        max-width: none !important; /* Let the name expand fully */
+        max-width: none !important;
+        /* Let the name expand fully */
         overflow: visible !important;
         width: auto !important;
         flex-shrink: 0 !important;
         display: block !important;
     }
-    
+
     .user-name-wrapper.is-long #userName {
         animation: none;
         display: block;
@@ -67,7 +99,8 @@
     /* Skeleton Loading Fix for Desktop */
     .skeleton-name {
         display: inline-block !important;
-        width: 120px; /* Slightly wider on desktop */
+        width: 120px;
+        /* Slightly wider on desktop */
         height: 1rem;
         vertical-align: middle;
     }
@@ -76,7 +109,7 @@
     .cart-btn-header {
         display: flex !important;
     }
-    
+
     .cart-fab-mobile {
         display: none !important;
     }
@@ -86,8 +119,8 @@
     .main-content {
         padding: var(--spacing-lg);
     }
-    
+
     .tools-grid {
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
 }

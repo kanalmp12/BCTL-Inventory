@@ -1,7 +1,7 @@
 const translations = {
     "en": {
         // Header
-        "app_title": "BUCA Talent Inventory (BETA)",
+        "app_title": "BCTL Inventory (BETA)",
         "btn_login": "Login",
         "btn_logout": "Logout",
         "menu_admin": "Admin Portal",
@@ -221,10 +221,10 @@ const translations = {
  */
 function setLanguage(lang) {
     if (!translations[lang]) return;
-    
+
     // Save to local storage
     localStorage.setItem('app_lang', lang);
-    
+
     // Update all elements with data-i18n attribute
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -261,17 +261,17 @@ function updateSelectOptions(lang) {
     // For now, most options are static, but "Select..." options need update
     const deptSelect = document.getElementById('department');
     if (deptSelect && deptSelect.options[0]) deptSelect.options[0].text = translations[lang]['reg_select_dept'];
-    
+
     const cohortSelect = document.getElementById('cohort');
     if (cohortSelect && cohortSelect.options[0]) cohortSelect.options[0].text = translations[lang]['reg_select_cohort'];
 
     const condSelect = document.getElementById('returnCondition');
     if (condSelect) {
-        if(condSelect.options[0]) condSelect.options[0].text = translations[lang]['return_select_condition'];
+        if (condSelect.options[0]) condSelect.options[0].text = translations[lang]['return_select_condition'];
         // Update values visually
-        if(condSelect.options[1]) condSelect.options[1].text = translations[lang]['return_cond_good'];
-        if(condSelect.options[2]) condSelect.options[2].text = translations[lang]['return_cond_damaged'];
-        if(condSelect.options[3]) condSelect.options[3].text = translations[lang]['return_cond_lost'];
+        if (condSelect.options[1]) condSelect.options[1].text = translations[lang]['return_cond_good'];
+        if (condSelect.options[2]) condSelect.options[2].text = translations[lang]['return_cond_damaged'];
+        if (condSelect.options[3]) condSelect.options[3].text = translations[lang]['return_cond_lost'];
     }
 }
 
