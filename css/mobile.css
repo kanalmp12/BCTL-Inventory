@@ -97,9 +97,10 @@
 /* Dark Mode Overrides (Media Query) */
 @media (prefers-color-scheme: dark) {
     :root {
-        --md-sys-color-primary: #D0BCFF;
-        --md-sys-color-on-primary: #381E72;
-        --md-sys-color-primary-container: #4F378B;
+        /* Vibrant Purple for Dark Mode */
+        --md-sys-color-primary: #A855F7;
+        --md-sys-color-on-primary: #FFFFFF;
+        --md-sys-color-primary-container: #581c87;
         --md-sys-color-on-primary-container: #EADDFF;
 
         --md-sys-color-secondary: #CCC2DC;
@@ -112,8 +113,9 @@
         --md-sys-color-tertiary-container: #633B48;
         --md-sys-color-on-tertiary-container: #FFD8E4;
 
-        --md-sys-color-error: #F2B8B5;
-        --md-sys-color-on-error: #601410;
+        /* Vibrant Red for Error/Toast */
+        --md-sys-color-error: #EF4444;
+        --md-sys-color-on-error: #FFFFFF;
         --md-sys-color-error-container: #8C1D18;
         --md-sys-color-on-error-container: #F9DEDC;
 
@@ -137,9 +139,10 @@
 
 /* Class-based Dark Mode (for Tailwind consistency) */
 .dark :root {
-    --md-sys-color-primary: #D0BCFF;
-    --md-sys-color-on-primary: #381E72;
-    --md-sys-color-primary-container: #4F378B;
+    /* Vibrant Purple for Dark Mode */
+    --md-sys-color-primary: #A855F7;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #581c87;
     --md-sys-color-on-primary-container: #EADDFF;
 
     --md-sys-color-secondary: #CCC2DC;
@@ -152,8 +155,9 @@
     --md-sys-color-tertiary-container: #633B48;
     --md-sys-color-on-tertiary-container: #FFD8E4;
 
-    --md-sys-color-error: #F2B8B5;
-    --md-sys-color-on-error: #601410;
+    /* Vibrant Red for Error/Toast */
+    --md-sys-color-error: #EF4444;
+    --md-sys-color-on-error: #FFFFFF;
     --md-sys-color-error-container: #8C1D18;
     --md-sys-color-on-error-container: #F9DEDC;
 

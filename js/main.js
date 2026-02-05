@@ -1343,6 +1343,12 @@ function handleFilterClick(event) {
     const btn = event.target.closest('.filter-btn');
     if (!btn || btn.id === 'locationFilterBtn' || btn.id === 'returnModeBtn') return;
 
+    // Special behavior: If "All Items" is clicked, reset location and everything to default
+    if (btn.dataset.filter === 'all') {
+        handleLocationSelect('all');
+        return;
+    }
+
     if (isReturnMode && btn.dataset.filter !== 'borrowed') {
         toggleReturnMode();
     }
