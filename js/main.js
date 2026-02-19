@@ -932,14 +932,14 @@ function renderReturnCartItems() {
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                 <div class="relative">
-                    <select id="ret-cond-${index}" class="h-10 w-full pl-3 pr-10 rounded-lg border-gray-300 text-sm font-medium bg-gray-50 dark:bg-[#19141e] dark:text-white dark:border-gray-600 appearance-none cursor-pointer focus:ring-2 focus:ring-primary focus:border-transparent transition-all" onchange="returnCart[${index}].condition = this.value">
+                    <select id="ret-cond-${index}" class="h-10 w-full pl-3 pr-10 rounded-lg border-gray-300 text-sm font-medium bg-gray-50 text-gray-900 dark:bg-[#19141e] dark:text-white dark:border-gray-600 appearance-none cursor-pointer focus:ring-2 focus:ring-primary focus:border-transparent transition-all" onchange="returnCart[${index}].condition = this.value">
                         <option value="สภาพดี" ${item.condition === 'สภาพดี' ? 'selected' : ''}>สภาพดี (Good)</option>
                         <option value="ได้รับความเสียหาย" ${item.condition === 'ได้รับความเสียหาย' ? 'selected' : ''}>เสียหาย (Damaged)</option>
                         <option value="ใช้แล้วหมดไป" ${item.condition === 'ใช้แล้วหมดไป' ? 'selected' : ''}>สูญหาย/หมด (Lost/Consumed)</option>
                     </select>
-                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-[20px]">expand_more</span>
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-white pointer-events-none text-[20px]">expand_more</span>
                 </div>
-                <input type="text" placeholder="Notes..." class="h-10 rounded-lg border-gray-300 text-sm bg-gray-50 dark:bg-[#19141e] dark:text-white dark:border-gray-600 px-3 font-medium" value="${item.notes}" onchange="returnCart[${index}].notes = this.value">
+                <input type="text" placeholder="Notes..." class="h-10 rounded-lg border-gray-300 text-sm bg-gray-50 text-gray-900 dark:bg-[#19141e] dark:text-white dark:placeholder-gray-400 dark:border-gray-600 px-3 font-medium" value="${item.notes}" onchange="returnCart[${index}].notes = this.value">
             </div>
             
             <div class="mt-2">
