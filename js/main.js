@@ -108,7 +108,7 @@ elements.cartBtnDesktop?.addEventListener('click', openCartModal);
 document.getElementById('closeCartModal')?.addEventListener('click', closeCartModal);
 document.getElementById('closeCartBtn')?.addEventListener('click', closeCartModal);
 document.getElementById('clearCartBtn')?.addEventListener('click', clearCart);
-document.getElementById('confirmCartBorrow')?.addEventListener('click', handleCartSubmit);
+
 
 // Return Mode Toggle
 elements.returnModeBtn?.addEventListener('click', toggleReturnMode);
@@ -1111,14 +1111,14 @@ async function handleCartSubmit() {
         const el = document.getElementById(`cart-item-${index}`);
         if (!item.imageBase64) {
             if (el) {
-                el.classList.remove('border-gray-200', 'dark:border-gray-700');
-                el.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+                el.classList.remove('border-gray-200', 'dark:border-gray-500', 'dark:border-gray-700');
+                el.classList.add('border-2', 'border-red-500', 'dark:border-red-500', 'ring-4', 'ring-red-500/30');
             }
             hasError = true;
         } else {
             if (el) {
                 el.classList.add('border-gray-200', 'dark:border-gray-700');
-                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+                el.classList.remove('border-2', 'border-red-500', 'dark:border-red-500', 'ring-4', 'ring-red-500/30', 'ring-2', 'ring-red-500/20');
             }
         }
     });
@@ -1254,14 +1254,14 @@ window.submitBatchReturn = async function () {
         const el = document.getElementById(`return-item-${index}`);
         if (!item.imageBase64) {
             if (el) {
-                el.classList.remove('border-gray-200', 'dark:border-gray-700');
-                el.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+                el.classList.remove('border-gray-200', 'dark:border-gray-500', 'dark:border-gray-700');
+                el.classList.add('border-2', 'border-red-500', 'dark:border-red-500', 'ring-4', 'ring-red-500/30');
             }
             hasError = true;
         } else {
             if (el) {
                 el.classList.add('border-gray-200', 'dark:border-gray-700');
-                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+                el.classList.remove('border-2', 'border-red-500', 'dark:border-red-500', 'ring-4', 'ring-red-500/30', 'ring-2', 'ring-red-500/20');
             }
         }
     });
