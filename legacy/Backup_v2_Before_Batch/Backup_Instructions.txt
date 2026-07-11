@@ -1,0 +1,9 @@
+PLEASE MANUALLY BACKUP YOUR GOOGLE SHEET DATA:
+1. Open your Google Sheet.
+2. Go to File > Make a copy.
+3. Name it 'Backup_Data_Before_Admin_Update'.
+------------------------------------------------
+PLEASE MANUALLY VERSION YOUR APPS SCRIPT:
+1. Open Extensions > Apps Script.
+2. Click 'Manage Deployments' or Project History.
+3. Save the current state as a version.

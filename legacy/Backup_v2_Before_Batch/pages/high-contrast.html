@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Inventory List (High Contrast)</title>
+    <link rel="icon" type="image/x-icon" href="../img/favicon.ico">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000000",
+                        "background-light": "#ffffff",
+                        "background-dark": "#000000",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#000000",
+                        "text-primary-light": "#000000",
+                        "text-primary-dark": "#ffffff",
+                        "border-light": "#000000",
+                        "border-dark": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+        .high-contrast-card {
+            border: 2px solid #000000 !important;
+            background-color: #ffffff !important;
+        }
+        .high-contrast-text {
+            color: #000000 !important;
+        }
+        .high-contrast-bg {
+            background-color: #ffffff !important;
+        }
+        .high-contrast-border {
+            border-color: #000000 !important;
+        }
+        .high-contrast-button {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border: 2px solid #000000 !important;
+        }
+        .high-contrast-button:hover {
+            background-color: #333333 !important;
+        }
+        .status-available {
+            color: #006400 !important; /* Dark green */
+            border: 2px solid #006400 !important;
+            background-color: #ffffff !important;
+        }
+        .status-borrowed {
+            color: #ff8c00 !important; /* Dark orange */
+            border: 2px solid #ff8c00 !important;
+            background-color: #ffffff !important;
+        }
+        .status-overdue {
+            color: #8b0000 !important; /* Dark red */
+            border: 2px solid #8b0000 !important;
+            background-color: #ffffff !important;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen text-[#000000] dark:text-white">
+    <!-- Header -->
+    <header class="bg-surface-light dark:bg-surface-dark border-b-2 border-[#000000] dark:border-[#ffffff] p-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold high-contrast-text">Tool Inventory (High Contrast)</h1>
+                <a href="../index.html" class="high-contrast-button px-4 py-2 rounded-lg font-bold">← Back to Home</a>
+            </div>
+            <p class="high-contrast-text mt-2">Enhanced visibility for improved accessibility</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto py-12 px-4">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr class="border-2 border-[#000000] dark:border-[#ffffff]">
+                        <th class="border-2 border-[#000000] dark:border-[#ffffff] p-4 text-left high-contrast-text font-bold">Tool Name</th>
+                        <th class="border-2 border-[#000000] dark:border-[#ffffff] p-4 text-left high-contrast-text font-bold">ID</th>
+                        <th class="border-2 border-[#000000] dark:border-[#ffffff] p-4 text-left high-contrast-text font-bold">Location</th>
+                        <th class="border-2 border-[#000000] dark:border-[#ffffff] p-4 text-left high-contrast-text font-bold">Status</th>
+                        <th class="border-2 border-[#000000] dark:border-[#ffffff] p-4 text-left high-contrast-text font-bold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-2 border-[#000000] dark:border-[#ffffff] high-contrast-card">
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text font-bold">DeWalt Hammer Drill</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">T-104-B</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">Cabinet A-04</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4"><span class="status-available px-3 py-1 rounded-full font-bold">Available</span></td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4">
+                            <button class="high-contrast-button px-4 py-2 rounded-lg font-bold mr-2">Borrow</button>
+                            <button class="px-4 py-2 rounded-lg font-bold border-2 border-[#000000] dark:border-[#ffffff]">Details</button>
+                        </td>
+                    </tr>
+                    <tr class="border-2 border-[#000000] dark:border-[#ffffff] high-contrast-card">
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text font-bold">Digital Caliper</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">M-202-A</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">Drawer 3, Section B</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4"><span class="status-borrowed px-3 py-1 rounded-full font-bold">Borrowed</span></td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4">
+                            <button class="high-contrast-button px-4 py-2 rounded-lg font-bold">Return</button>
+                        </td>
+                    </tr>
+                    <tr class="border-2 border-[#000000] dark:border-[#ffffff] high-contrast-card">
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text font-bold">Welding Mask</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">W-881-X</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">Safety Equipment Room</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4"><span class="status-overdue px-3 py-1 rounded-full font-bold">Overdue</span></td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4">
+                            <button class="px-4 py-2 rounded-lg font-bold border-2 border-[#8b0000] text-[#8b0000] mr-2">Report</button>
+                            <button class="high-contrast-button px-4 py-2 rounded-lg font-bold bg-[#8b0000]">Force Return</button>
+                        </td>
+                    </tr>
+                    <tr class="border-2 border-[#000000] dark:border-[#ffffff] high-contrast-card">
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text font-bold">Socket Set (Metric)</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">T-400-M</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">Shelf C-12</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4"><span class="status-available px-3 py-1 rounded-full font-bold">Available</span></td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4">
+                            <button class="high-contrast-button px-4 py-2 rounded-lg font-bold mr-2">Borrow</button>
+                            <button class="px-4 py-2 rounded-lg font-bold border-2 border-[#000000] dark:border-[#ffffff]">Details</button>
+                        </td>
+                    </tr>
+                    <tr class="border-2 border-[#000000] dark:border-[#ffffff] high-contrast-card">
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text font-bold">Portable Generator</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">G-505-P</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">Floor Bay 2</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4"><span class="status-available px-3 py-1 rounded-full font-bold">Available</span></td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4">
+                            <button class="high-contrast-button px-4 py-2 rounded-lg font-bold mr-2">Borrow</button>
+                            <button class="px-4 py-2 rounded-lg font-bold border-2 border-[#000000] dark:border-[#ffffff]">Details</button>
+                        </td>
+                    </tr>
+                    <tr class="border-2 border-[#000000] dark:border-[#ffffff] high-contrast-card">
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text font-bold">Thermal Camera</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">S-330-T</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4 high-contrast-text">Calibration Lab</td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4"><span class="status-borrowed px-3 py-1 rounded-full font-bold">Borrowed</span></td>
+                        <td class="border-2 border-[#000000] dark:border-[#ffffff] p-4">
+                            <button class="high-contrast-button px-4 py-2 rounded-lg font-bold">Return</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface-light dark:bg-surface-dark border-t-2 border-[#000000] dark:border-[#ffffff] py-8 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="high-contrast-text">Tool Crib Management System v2.0</p>
+            <p class="high-contrast-text mt-2">High Contrast Mode - Enhanced Accessibility</p>
+        </div>
+    </footer>
+</body>
+</html>
