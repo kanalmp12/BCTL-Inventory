@@ -67,8 +67,7 @@ export default function InventoryDashboard() {
     unlinkLine, 
     isAdmin,
     loginWithCredentials,
-    registerStudent,
-    mockLineLogin
+    registerStudent
   } = useAuth() as any;
   const { language, setLanguage, t } = useLanguage();
 
@@ -1569,13 +1568,6 @@ export default function InventoryDashboard() {
                       className="w-full py-3 bg-[#06C755] hover:bg-[#05B34C] text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm admin-btn-press"
                     >
                       {language === "th" ? "เข้าสู่ระบบด้วย LINE" : "Log In with LINE"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => mockLineLogin()}
-                      className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs border border-amber-600/20 admin-btn-press"
-                    >
-                      {language === "th" ? "⚡ เข้าสู่ระบบ LINE (จำลองสำหรับทดสอบ)" : "⚡ Mock LINE Login (Dev Test)"}
                     </button>
                   </div>
                 </div>
