@@ -12,6 +12,9 @@ import {
   updateInventoryItem,
   deleteInventoryItem,
   uploadToolImage,
+  updateStudentProfile,
+  updateStudentActiveStatus,
+  updateProfileRole,
   AdminTransaction,
   AdminUser,
 } from "@/lib/admin";
@@ -64,6 +67,16 @@ export default function AdminPortal() {
   const [usersSearch, setUsersSearch] = useState("");
   const [toolsCategoryFilter, setToolsCategoryFilter] = useState("all");
 
+  // User selection / inspection state
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [isEditingUser, setIsEditingUser] = useState(false);
+  const [userEditForm, setUserEditForm] = useState({
+    full_name: "",
+    nickname: "",
+    current_department: "",
+  });
+  const [savingUser, setSavingUser] = useState(false);
+
   // System Toast Notification State
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [confettiParticles, setConfettiParticles] = useState<any[]>([]);
@@ -76,6 +89,22 @@ export default function AdminPortal() {
     language === "th" ? "กำลังอัปเดตข้อมูลผู้ใช้งานระบบ..." : "Loading student rosters...",
   ], [language]);
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
+
+  const selectedUser = React.useMemo(() => {
+    return users.find((u) => u.id === selectedUserId) || null;
+  }, [users, selectedUserId]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setUserEditForm({
+        full_name: selectedUser.full_name,
+        nickname: selectedUser.nickname || "",
+        current_department: selectedUser.current_department,
+      });
+    } else {
+      setIsEditingUser(false);
+    }
+  }, [selectedUser]);
 
   useEffect(() => {
     if (!loadingData) return;
@@ -191,7 +220,7 @@ export default function AdminPortal() {
   }, []);
 
   // Load Admin Data
-  const loadAdminData = async () => {
+  async function loadAdminData() {
     setLoadingData(true);
     try {
       const adminTools = await getAdminTools();
@@ -440,6 +469,90 @@ export default function AdminPortal() {
     link.click();
     document.body.removeChild(link);
     showToast("Users list exported successfully!", "success");
+  };
+
+  const handleToggleActive = async (studentId: string, currentStatus: boolean) => {
+    try {
+      const { success, error } = await updateStudentActiveStatus(studentId, !currentStatus);
+      if (success) {
+        showToast(
+          language === "th"
+            ? `สลับสถานะผู้ใช้สำเร็จ: ${!currentStatus ? "เปิดใช้งาน" : "ระงับสิทธิ์"}`
+            : `User status updated to ${!currentStatus ? "Active" : "Blocked"}.`,
+          "success"
+        );
+        loadAdminData();
+      } else {
+        showToast(error || "Failed to update user status.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error updating user status.", "error");
+    }
+  };
+
+  const handleToggleAdmin = async (profileId: string | null | undefined, currentRole: string | undefined) => {
+    if (!profileId) {
+      showToast(
+        language === "th" ? "ไม่พบข้อมูลโปรไฟล์ระบบ" : "System profile not found.",
+        "error"
+      );
+      return;
+    }
+    // Prevent self-lockout
+    if (profileId === session?.user?.id) {
+      showToast(
+        language === "th" ? "คุณไม่สามารถเปลี่ยนบทบาทของตัวเองได้" : "You cannot change your own role.",
+        "error"
+      );
+      return;
+    }
+    const newRole = currentRole === "admin" ? "student" : "admin";
+    try {
+      const { success, error } = await updateProfileRole(profileId, newRole);
+      if (success) {
+        showToast(
+          language === "th"
+            ? `อัปเดตบทบาทสำเร็จเป็น: ${newRole === "admin" ? "ผู้ดูแลระบบ" : "นักศึกษา"}`
+            : `Role updated to ${newRole === "admin" ? "Administrator" : "Student"}.`,
+          "success"
+        );
+        loadAdminData();
+      } else {
+        showToast(error || "Failed to update user role.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error updating user role.", "error");
+    }
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserId) return;
+    setSavingUser(true);
+    try {
+      const { success, error } = await updateStudentProfile(selectedUserId, {
+        full_name: userEditForm.full_name,
+        nickname: userEditForm.nickname || null,
+        current_department: userEditForm.current_department,
+      });
+      if (success) {
+        showToast(
+          language === "th" ? "อัปเดตข้อมูลผู้ใช้สำเร็จ!" : "User profile updated successfully!",
+          "success"
+        );
+        setIsEditingUser(false);
+        loadAdminData();
+      } else {
+        showToast(error || "Failed to update profile.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error updating profile.", "error");
+    } finally {
+      setSavingUser(false);
+    }
   };
 
   // Filter lists based on search queries
@@ -1171,62 +1284,361 @@ export default function AdminPortal() {
                   </button>
                 </div>
 
-                {/* User Search */}
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    <Search size={18} />
-                  </span>
-                  <input
-                    type="text"
-                    value={usersSearch}
-                    onChange={(e) => setUsersSearch(e.target.value)}
-                    placeholder="Search users by name, student code, email..."
-                    className="w-full h-11 pl-11 pr-4 bg-card border border-border rounded-lg outline-none font-medium text-xs text-foreground focus-ring transition-all"
-                  />
-                </div>
+                <div className="flex flex-col lg:flex-row gap-6 items-start">
+                  {/* Left directory: 58% on desktop */}
+                  <div className="lg:w-[58%] w-full flex flex-col gap-4">
+                    {/* User Search */}
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+                        <Search size={18} />
+                      </span>
+                      <input
+                        type="text"
+                        value={usersSearch}
+                        onChange={(e) => setUsersSearch(e.target.value)}
+                        placeholder="Search users by name, student code, email..."
+                        className="w-full h-11 pl-11 pr-4 bg-card border border-border rounded-lg outline-none font-medium text-xs text-foreground focus-ring transition-all"
+                      />
+                    </div>
 
-                {/* Table */}
-                <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                  <div className="overflow-x-auto custom-scrollbar">
-                    <table className="w-full text-left border-collapse text-xs font-medium">
-                      <thead>
-                        <tr className="bg-muted/10 border-b border-border text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                          <th className="px-4 py-3">Student Code</th>
-                          <th className="px-4 py-3">Name</th>
-                          <th className="px-4 py-3">Nickname</th>
-                          <th className="px-4 py-3">Email</th>
-                          <th className="px-4 py-3">Department</th>
-                          <th className="px-4 py-3">Join Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredUsers.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="text-center py-12 text-muted-foreground font-bold">
-                              <Users size={24} className="mx-auto mb-2 text-muted-foreground/60" />
-                              {language === "th" ? "ไม่พบรายชื่อผู้ใช้งาน" : "No matching users found."}
-                            </td>
-                          </tr>
-                        ) : (
-                          filteredUsers.map((user) => (
-                            <tr key={user.id} className="border-b border-border hover:bg-muted/10 transition-colors">
-                              <td className="px-4 py-3 font-bold text-foreground">{user.student_code}</td>
-                              <td className="px-4 py-3 font-bold text-foreground text-sm">{user.full_name}</td>
-                              <td className="px-4 py-3 text-muted-foreground font-bold">{user.nickname || "-"}</td>
-                              <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
-                              <td className="px-4 py-3 shrink-0">
-                                <span className="text-[10px] text-admin-document bg-admin-document/10 border border-admin-document/20 rounded px-1.5 py-0.5 w-fit font-bold uppercase">
-                                  {user.current_department}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-muted-foreground">
-                                {new Date(user.created_at).toLocaleDateString()}
-                              </td>
+                    {/* Table */}
+                    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+                      <div className="overflow-x-auto custom-scrollbar">
+                        <table className="w-full text-left border-collapse text-xs font-medium">
+                          <thead>
+                            <tr className="bg-muted/10 border-b border-border text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+                              <th className="px-4 py-3">{language === "th" ? "ชื่อ / รหัส" : "User Details"}</th>
+                              <th className="px-4 py-3">{language === "th" ? "ฝ่าย" : "Department"}</th>
+                              <th className="px-4 py-3">{language === "th" ? "การเช่า" : "Rentals"}</th>
+                              <th className="px-4 py-3">{language === "th" ? "สถานะ" : "Status"}</th>
                             </tr>
-                          ))
+                          </thead>
+                          <tbody>
+                            {filteredUsers.length === 0 ? (
+                              <tr>
+                                <td colSpan={4} className="text-center py-12 text-muted-foreground font-bold">
+                                  <Users size={24} className="mx-auto mb-2 text-muted-foreground/60" />
+                                  {language === "th" ? "ไม่พบรายชื่อผู้ใช้งาน" : "No matching users found."}
+                                </td>
+                              </tr>
+                            ) : (
+                              filteredUsers.map((user) => {
+                                const activeRentals = transactions.filter(
+                                  (t) => t.student?.id === user.id && (t.status === "borrowed" || t.status === "overdue")
+                                );
+                                const overdueRentals = activeRentals.filter((t) => t.status === "overdue");
+                                const isSelected = selectedUserId === user.id;
+
+                                return (
+                                  <tr
+                                    key={user.id}
+                                    onClick={() => {
+                                      setSelectedUserId(user.id);
+                                      setIsEditingUser(false);
+                                    }}
+                                    className={`border-b border-border hover:bg-muted/10 transition-colors cursor-pointer ${
+                                      isSelected ? "bg-primary/5 border-r-2 border-primary" : ""
+                                    }`}
+                                  >
+                                    <td className="px-4 py-3">
+                                      <div className="flex items-center gap-3">
+                                        {user.avatar_url ? (
+                                          <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-border flex-shrink-0" />
+                                        ) : (
+                                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-bold text-foreground text-xs uppercase flex-shrink-0">
+                                            {user.nickname ? user.nickname.substring(0, 2) : user.full_name.substring(0, 2)}
+                                          </div>
+                                        )}
+                                        <div className="flex flex-col gap-0.5">
+                                          <span className="font-bold text-foreground text-sm flex items-center gap-1.5">
+                                            {user.full_name}
+                                            {user.nickname && <span className="text-xs text-muted-foreground font-medium">({user.nickname})</span>}
+                                          </span>
+                                          <span className="text-muted-foreground font-mono text-[10px]">ID: {user.student_code}</span>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3 shrink-0">
+                                      <span className="text-[9px] text-admin-document bg-admin-document/10 border border-admin-document/20 rounded px-1.5 py-0.5 w-fit font-bold uppercase tracking-wider">
+                                        {user.current_department === "organize_operation"
+                                          ? "Organize"
+                                          : user.current_department === "public_relations_digital_marketing"
+                                          ? "PR & Marketing"
+                                          : user.current_department === "visual_arts_special_technique"
+                                          ? "Visual Arts"
+                                          : user.current_department === "media_production"
+                                          ? "Media Prod"
+                                          : user.current_department}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <div className="flex flex-col gap-0.5">
+                                        {overdueRentals.length > 0 ? (
+                                          <span className="text-destructive font-bold text-[10px] uppercase flex items-center gap-1">
+                                            <AlertTriangle size={10} />
+                                            {overdueRentals.length} {language === "th" ? "คืนช้า" : "overdue"}
+                                          </span>
+                                        ) : activeRentals.length > 0 ? (
+                                          <span className="text-success font-bold text-[10px] uppercase">
+                                            {activeRentals.length} {language === "th" ? "รายการ" : "active"}
+                                          </span>
+                                        ) : (
+                                          <span className="text-muted-foreground text-[10px]">—</span>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                        user.is_active
+                                          ? "text-success bg-success/10 border border-success/20"
+                                          : "text-destructive bg-destructive/10 border border-destructive/20"
+                                      }`}>
+                                        {user.is_active 
+                                          ? (language === "th" ? "ใช้งานอยู่" : "Active") 
+                                          : (language === "th" ? "ระงับสิทธิ์" : "Blocked")}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right inspector detail panel: 42% on desktop */}
+                  <div className="lg:w-[42%] w-full">
+                    {!selectedUser ? (
+                      <div className="bg-card border border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center h-[350px] shadow-sm">
+                        <Users size={32} className="text-muted-foreground/40 mb-3 admin-empty-icon" />
+                        <p className="font-bold text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                          {language === "th" 
+                            ? "เลือกรายชื่อนักศึกษาจากด้านซ้าย\nเพื่อดูรายละเอียดการเช่าและตั้งค่าสิทธิ์" 
+                            : "Select a student from the directory\nto view active rentals and manage account status."}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-card border border-border rounded-2xl p-5 flex flex-col gap-6 shadow-sm animate-fade-in">
+                        {/* Profile header */}
+                        <div className="flex items-start justify-between border-b border-border/80 pb-4">
+                          <div className="flex items-center gap-3.5">
+                            {selectedUser.avatar_url ? (
+                              <img src={selectedUser.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover border border-border flex-shrink-0" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-base uppercase flex-shrink-0">
+                                {selectedUser.nickname ? selectedUser.nickname.substring(0, 2) : selectedUser.full_name.substring(0, 2)}
+                              </div>
+                            )}
+                            <div className="flex flex-col">
+                              <h3 className="font-black text-sm text-foreground flex items-center gap-1.5 leading-snug">
+                                {selectedUser.full_name}
+                                {selectedUser.nickname && <span className="text-xs text-muted-foreground font-medium">({selectedUser.nickname})</span>}
+                              </h3>
+                              <span className="text-[10px] text-muted-foreground font-mono mt-0.5">Code: {selectedUser.student_code}</span>
+                              <span className="text-[10px] text-muted-foreground font-medium mt-0.5">{selectedUser.email}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setIsEditingUser(!isEditingUser)}
+                            className="text-xs font-bold px-3 py-1.5 rounded-lg border border-border hover:bg-muted/30 transition-all flex items-center gap-1 focus-ring"
+                          >
+                            <Edit2 size={12} />
+                            {isEditingUser ? (language === "th" ? "ยกเลิก" : "Cancel") : (language === "th" ? "แก้ไข" : "Edit")}
+                          </button>
+                        </div>
+
+                        {/* Edit mode vs Display mode */}
+                        {isEditingUser ? (
+                          <form onSubmit={handleSaveProfile} className="flex flex-col gap-4 border-b border-border/80 pb-6">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+                                {language === "th" ? "ชื่อ-นามสกุล *" : "Full Name *"}
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                value={userEditForm.full_name}
+                                onChange={(e) => setUserEditForm((prev) => ({ ...prev, full_name: e.target.value }))}
+                                className="w-full h-10 px-3 border border-border bg-background rounded-lg text-xs font-medium focus-ring"
+                              />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+                                {language === "th" ? "ชื่อเล่น" : "Nickname"}
+                              </label>
+                              <input
+                                type="text"
+                                value={userEditForm.nickname}
+                                onChange={(e) => setUserEditForm((prev) => ({ ...prev, nickname: e.target.value }))}
+                                className="w-full h-10 px-3 border border-border bg-background rounded-lg text-xs font-medium focus-ring"
+                              />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+                                {language === "th" ? "ฝ่ายประจำ iFIT/BCTL *" : "Department *"}
+                              </label>
+                              <select
+                                value={userEditForm.current_department}
+                                onChange={(e) => setUserEditForm((prev) => ({ ...prev, current_department: e.target.value }))}
+                                className="w-full h-10 px-3 border border-border bg-background rounded-lg text-xs font-bold focus-ring cursor-pointer"
+                              >
+                                <option value="organize_operation">Organize &amp; Operation</option>
+                                <option value="public_relations_digital_marketing">PR &amp; Digital Marketing</option>
+                                <option value="visual_arts_special_technique">Visual Arts &amp; Special Technique</option>
+                                <option value="media_production">Media Production</option>
+                              </select>
+                            </div>
+
+                            <button
+                              type="submit"
+                              disabled={savingUser}
+                              className="w-full h-10 bg-primary hover:bg-primary/95 text-primary-foreground font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors focus-ring"
+                            >
+                              {savingUser ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                              {language === "th" ? "บันทึกการแก้ไข" : "Save Changes"}
+                            </button>
+                          </form>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-4 text-[11px] border-b border-border/80 pb-5">
+                            <div>
+                              <span className="block text-[9px] font-black text-muted-foreground uppercase tracking-wider">
+                                {language === "th" ? "ฝ่ายงาน" : "Department"}
+                              </span>
+                              <span className="font-bold text-foreground mt-0.5 block">
+                                {selectedUser.current_department === "organize_operation"
+                                  ? "Organize & Operation"
+                                  : selectedUser.current_department === "public_relations_digital_marketing"
+                                  ? "PR & Digital Marketing"
+                                  : selectedUser.current_department === "visual_arts_special_technique"
+                                  ? "Visual Arts & Special Technique"
+                                  : selectedUser.current_department === "media_production"
+                                  ? "Media Production"
+                                  : selectedUser.current_department}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="block text-[9px] font-black text-muted-foreground uppercase tracking-wider">
+                                {language === "th" ? "เบอร์โทรศัพท์" : "Phone Number"}
+                              </span>
+                              <span className="font-bold text-foreground mt-0.5 block">{selectedUser.phone || "—"}</span>
+                            </div>
+                            <div>
+                              <span className="block text-[9px] font-black text-muted-foreground uppercase tracking-wider">
+                                {language === "th" ? "บัญชี LINE" : "LINE Account"}
+                              </span>
+                              {selectedUser.profile?.line_links && selectedUser.profile.line_links.filter(l => !l.unlinked_at).length > 0 ? (
+                                <span className="font-bold text-success mt-0.5 block flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                                  {selectedUser.profile.line_links.find(l => !l.unlinked_at)?.line_display_name}
+                                </span>
+                              ) : (
+                                <span className="font-bold text-muted-foreground mt-0.5 block">Not Linked</span>
+                              )}
+                            </div>
+                            <div>
+                              <span className="block text-[9px] font-black text-muted-foreground uppercase tracking-wider">
+                                {language === "th" ? "วันที่ร่วมระบบ" : "Join Date"}
+                              </span>
+                              <span className="font-bold text-foreground mt-0.5 block">
+                                {new Date(selectedUser.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
                         )}
-                      </tbody>
-                    </table>
+
+                        {/* Account Access Controls Toggles */}
+                        <div className="flex flex-col gap-3.5 border-b border-border/80 pb-5">
+                          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+                            {language === "th" ? "สิทธิ์การเข้าถึงและความปลอดภัย" : "Access & Security Controls"}
+                          </h4>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col text-left">
+                              <span className="text-xs font-bold text-foreground">{language === "th" ? "สิทธิ์การยืมอุปกรณ์" : "Loan Privileges"}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {selectedUser.is_active 
+                                  ? (language === "th" ? "อนุญาตให้ยืม-คืนอุปกรณ์ได้" : "Allowed to check out equipment.") 
+                                  : (language === "th" ? "ระงับสิทธิ์การยืมอุปกรณ์ชั่วคราว" : "Temporary checkout ban active.")}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => handleToggleActive(selectedUser.id, selectedUser.is_active)}
+                              className={`w-12 h-6 rounded-full p-1 transition-all focus-ring ${
+                                selectedUser.is_active ? "bg-success" : "bg-muted border border-border"
+                              }`}
+                            >
+                              <div className={`w-4 h-4 rounded-full bg-white shadow transition-all ${
+                                selectedUser.is_active ? "translate-x-6" : "translate-x-0 bg-muted-foreground/60"
+                              }`} />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col text-left">
+                              <span className="text-xs font-bold text-foreground">{language === "th" ? "สิทธิ์ผู้ดูแลระบบ (Admin)" : "Administrator Access"}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {selectedUser.profile?.role === "admin"
+                                  ? (language === "th" ? "สิทธิ์การเข้าถึงหน้าแอดมินหลังบ้าน" : "Granted full portal management rights.")
+                                  : (language === "th" ? "สิทธิ์เข้าถึงเฉพาะแดชบอร์ดนักศึกษา" : "Regular student portal access only.")}
+                              </span>
+                            </div>
+                            <button
+                              disabled={selectedUser.profile_id === session?.user?.id}
+                              onClick={() => handleToggleAdmin(selectedUser.profile_id, selectedUser.profile?.role)}
+                              className={`w-12 h-6 rounded-full p-1 transition-all focus-ring ${
+                                selectedUser.profile?.role === "admin" ? "bg-primary" : "bg-muted border border-border"
+                              } ${selectedUser.profile_id === session?.user?.id ? "opacity-50 cursor-not-allowed" : ""}`}
+                              title={selectedUser.profile_id === session?.user?.id ? "Self-demotion disabled" : ""}
+                            >
+                              <div className={`w-4 h-4 rounded-full bg-white shadow transition-all ${
+                                selectedUser.profile?.role === "admin" ? "translate-x-6" : "translate-x-0 bg-muted-foreground/60"
+                              }`} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Active Rentals Roster */}
+                        <div className="flex flex-col gap-3">
+                          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+                            <span>{language === "th" ? "รายการที่กำลังยืมอยู่" : "Active Borrowed Gear"}</span>
+                            <span className="text-xs font-bold text-foreground">
+                              {transactions.filter(t => t.student?.id === selectedUser.id && (t.status === "borrowed" || t.status === "overdue")).length}
+                            </span>
+                          </h4>
+
+                          <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto custom-scrollbar">
+                            {transactions.filter(t => t.student?.id === selectedUser.id && (t.status === "borrowed" || t.status === "overdue")).length === 0 ? (
+                              <p className="text-[11px] text-muted-foreground italic py-3 text-center">
+                                {language === "th" ? "ไม่มีอุปกรณ์ค้างส่ง" : "No borrowed items currently."}
+                              </p>
+                            ) : (
+                              transactions
+                                .filter(t => t.student?.id === selectedUser.id && (t.status === "borrowed" || t.status === "overdue"))
+                                .map((tx) => (
+                                  <div key={tx.id} className="flex items-center justify-between p-2.5 bg-muted/10 border border-border/80 rounded-xl text-xs hover:border-primary/20 transition-all text-left">
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="font-bold text-foreground">{language === "th" ? tx.item?.name_th : tx.item?.name_en}</span>
+                                      <span className="text-[10px] text-muted-foreground">Qty: {tx.quantity} · Borrowed: {new Date(tx.borrow_date).toLocaleDateString()}</span>
+                                    </div>
+                                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                                      tx.status === "overdue"
+                                        ? "text-destructive bg-destructive/10 border border-destructive/20 animate-pulse"
+                                        : "text-success bg-success/10 border border-success/20"
+                                    }`}>
+                                      {tx.status === "overdue" ? (language === "th" ? "เกินกำหนด" : "Overdue") : (language === "th" ? "กำลังยืม" : "Borrowed")}
+                                    </span>
+                                  </div>
+                                ))
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

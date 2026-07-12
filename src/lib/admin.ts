@@ -31,12 +31,24 @@ export interface AdminTransaction {
 
 export interface AdminUser {
   id: string;
+  profile_id: string | null;
   full_name: string;
   nickname: string | null;
   student_code: string;
   email: string;
+  phone: string | null;
   current_department: string;
+  is_active: boolean;
+  avatar_url: string | null;
   created_at: string;
+  profile?: {
+    role: "student" | "staff" | "admin";
+    line_links?: Array<{
+      line_display_name: string;
+      linked_at: string;
+      unlinked_at: string | null;
+    }>;
+  };
 }
 
 /**
@@ -111,14 +123,92 @@ export async function getAdminTransactions(): Promise<AdminTransaction[]> {
 export async function getAdminUsers(): Promise<AdminUser[]> {
   const { data, error } = await supabase
     .from("students")
-    .select("*")
+    .select(`
+      *,
+      profile:profiles (
+        role,
+        line_links:line_account_links (
+          line_display_name,
+          linked_at,
+          unlinked_at
+        )
+      )
+    `)
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Admin fetch users error:", error);
     return [];
   }
-  return data || [];
+  return (data as any) || [];
+}
+
+/**
+ * Update student profile details (Name, Nickname, Department)
+ */
+export async function updateStudentProfile(
+  studentId: string,
+  profileData: { full_name: string; nickname: string | null; current_department: string }
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("students")
+    .update({
+      full_name: profileData.full_name,
+      nickname: profileData.nickname,
+      current_department: profileData.current_department,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", studentId);
+
+  if (error) {
+    console.error("Update student profile error:", error);
+    return { success: false, error: error.message };
+  }
+  return { success: true };
+}
+
+/**
+ * Toggle student active status (Loan privileges)
+ */
+export async function updateStudentActiveStatus(
+  studentId: string,
+  isActive: boolean
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("students")
+    .update({
+      is_active: isActive,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", studentId);
+
+  if (error) {
+    console.error("Update student active status error:", error);
+    return { success: false, error: error.message };
+  }
+  return { success: true };
+}
+
+/**
+ * Update user role (profiles table)
+ */
+export async function updateProfileRole(
+  profileId: string,
+  role: "admin" | "staff" | "student"
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      role,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", profileId);
+
+  if (error) {
+    console.error("Update profile role error:", error);
+    return { success: false, error: error.message };
+  }
+  return { success: true };
 }
 
 /**
