@@ -1286,7 +1286,7 @@ export default function AdminPortal() {
 
                 <div className="flex flex-col lg:flex-row gap-6 items-start">
                   {/* Left directory: 58% on desktop */}
-                  <div className="lg:w-[58%] w-full flex flex-col gap-4">
+                  <div className={`lg:w-[58%] w-full flex flex-col gap-4 ${selectedUserId !== null ? "hidden lg:flex" : "flex"}`}>
                     {/* User Search */}
                     <div className="relative">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -1332,13 +1332,23 @@ export default function AdminPortal() {
                                 return (
                                   <tr
                                     key={user.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`${user.full_name} ${user.nickname ? `(${user.nickname})` : ""}· ID: ${user.student_code}`}
                                     onClick={() => {
                                       setSelectedUserId(user.id);
                                       setIsEditingUser(false);
                                     }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        setSelectedUserId(user.id);
+                                        setIsEditingUser(false);
+                                      }
+                                    }}
                                     className={`border-b border-border hover:bg-muted/10 transition-colors cursor-pointer ${
                                       isSelected ? "bg-primary/5 border-r-2 border-primary" : ""
-                                    }`}
+                                    } focus-ring`}
                                   >
                                     <td className="px-4 py-3">
                                       <div className="flex items-center gap-3">
@@ -1409,7 +1419,7 @@ export default function AdminPortal() {
                   </div>
 
                   {/* Right inspector detail panel: 42% on desktop */}
-                  <div className="lg:w-[42%] w-full">
+                  <div className={`lg:w-[42%] w-full ${selectedUserId === null ? "hidden lg:block" : "block"}`}>
                     {!selectedUser ? (
                       <div className="bg-card border border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center h-[350px] shadow-sm">
                         <Users size={32} className="text-muted-foreground/40 mb-3 admin-empty-icon" />
@@ -1421,6 +1431,19 @@ export default function AdminPortal() {
                       </div>
                     ) : (
                       <div className="bg-card border border-border rounded-2xl p-5 flex flex-col gap-6 shadow-sm animate-fade-in">
+                        {/* Back button for mobile navigation */}
+                        <div className="lg:hidden">
+                          <button
+                            onClick={() => {
+                              setSelectedUserId(null);
+                              setIsEditingUser(false);
+                            }}
+                            className="text-xs font-bold px-3 py-2 rounded-xl border border-border hover:bg-muted bg-background/50 text-foreground flex items-center gap-1.5 transition-all focus-ring admin-btn-press"
+                          >
+                            <ArrowLeft size={14} />
+                            {language === "th" ? "กลับไปหน้ารายชื่อ" : "Back to List"}
+                          </button>
+                        </div>
                         {/* Profile header */}
                         <div className="flex items-start justify-between border-b border-border/80 pb-4">
                           <div className="flex items-center gap-3.5">
@@ -1568,6 +1591,12 @@ export default function AdminPortal() {
                             </div>
                             <button
                               onClick={() => handleToggleActive(selectedUser.id, selectedUser.is_active)}
+                              aria-pressed={selectedUser.is_active}
+                              aria-label={
+                                language === "th"
+                                  ? `สลับสิทธิ์การยืมของ ${selectedUser.full_name}`
+                                  : `Toggle loan privileges for ${selectedUser.full_name}`
+                              }
                               className={`w-12 h-6 rounded-full p-1 transition-all focus-ring ${
                                 selectedUser.is_active ? "bg-success" : "bg-muted border border-border"
                               }`}
@@ -1590,6 +1619,12 @@ export default function AdminPortal() {
                             <button
                               disabled={selectedUser.profile_id === session?.user?.id}
                               onClick={() => handleToggleAdmin(selectedUser.profile_id, selectedUser.profile?.role)}
+                              aria-pressed={selectedUser.profile?.role === "admin"}
+                              aria-label={
+                                language === "th"
+                                  ? `สลับสิทธิ์ผู้ดูแลระบบของ ${selectedUser.full_name}`
+                                  : `Toggle admin privilege for ${selectedUser.full_name}`
+                              }
                               className={`w-12 h-6 rounded-full p-1 transition-all focus-ring ${
                                 selectedUser.profile?.role === "admin" ? "bg-primary" : "bg-muted border border-border"
                               } ${selectedUser.profile_id === session?.user?.id ? "opacity-50 cursor-not-allowed" : ""}`}
