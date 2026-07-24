@@ -37,27 +37,6 @@ export async function fetchCurrentStudent(existingSession?: Session | null): Pro
 
       if (student && !error) return student;
     }
-
-    // 2. Fallback to LINE LIFF profile check
-    const lineProfile = await getLineProfile();
-    if (lineProfile?.userId) {
-      const { data: link, error: linkError } = await supabase
-        .from("line_account_links")
-        .select("profile_id")
-        .eq("line_user_id", lineProfile.userId)
-        .is("unlinked_at", null)
-        .maybeSingle();
-
-      if (link?.profile_id && !linkError) {
-        const { data: student, error: studentError } = await supabase
-          .from("students")
-          .select("id, profile_id, full_name, nickname, student_code, email, phone, year_level, current_department, cohort_id, is_onboarded, is_active, avatar_url")
-          .eq("profile_id", link.profile_id)
-          .maybeSingle();
-
-        if (student && !studentError) return student;
-      }
-    }
   } catch (error) {
     console.error("Error fetching current student profile:", error);
   }

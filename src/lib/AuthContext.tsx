@@ -261,16 +261,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isLoggedInLine) {
           activeLineProfile = await getLineProfile();
           setLineProfile(activeLineProfile);
-        } else {
-          // Detect if mobile (iOS/Android) outside LINE and not logged in to LINE -> auto-login
-          if (typeof window !== "undefined") {
-            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const isInLine = /Line\//i.test(navigator.userAgent);
-            if (isMobile && !isInLine) {
-              lineLogin();
-              return;
-            }
-          }
         }
 
         // Fetch student profile based on session first
@@ -356,7 +346,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, [lineProfile?.userId]);
+  }, []);
 
   const loginWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
